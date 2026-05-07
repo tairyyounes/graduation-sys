@@ -1,7 +1,8 @@
-import './bootstrap';
+import { createApp } from 'vue'
+import App from './App.vue'
 
-import Alpine from 'alpinejs';
+const appRoot = document.getElementById('app')
 
-window.Alpine = Alpine;
-
-Alpine.start();
+if (appRoot) {
+    createApp(App).mount(appRoot)
+}

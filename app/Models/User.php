@@ -4,18 +4,30 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, LogsActivity;
+
+    protected $fillable = [
+        'full_name',
+        'email',
+        'password',
+        'role',
+        'department_id',
+        'is_active',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -28,5 +40,22 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Configure the activity logging options for the Spatie Activitylog package.
+     * This defines which attributes are tracked and how the log is described.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            // Log all attributes inside $fillable automatically when they are changed
+            ->logFillable()
+            // Only log an event if an attribute actually changed
+            ->logOnlyDirty()
+            // Prevent logging the password field directly for security reasons
+            ->dontLogIfAttributesChangedOnly(['password', 'remember_token'])
+            // Specify a human-readable log name to easily filter later
+            ->useLogName('system');
     }
 }
