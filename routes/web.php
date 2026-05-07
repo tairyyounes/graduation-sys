@@ -45,9 +45,9 @@ Route::middleware(['auth'])->group(function () {
         });
     });
 
-    Route::get('/student/dashboard', function () {
-        return "Student Dashboard";
-    })->middleware('role:student')->name('student.dashboard');
+    Route::get('/student/dashboard/{any?}', function () {
+        return view('student.dashboard');
+    })->where('any', '.*')->middleware('role:student')->name('student.dashboard');
 
     Route::get('/department/dashboard/{any?}', function () {
         return view('department.vue-dashboard');
