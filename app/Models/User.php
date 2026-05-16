@@ -7,6 +7,7 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
@@ -57,5 +58,15 @@ class User extends Authenticatable
             ->dontLogIfAttributesChangedOnly(['password', 'remember_token'])
             // Specify a human-readable log name to easily filter later
             ->useLogName('system');
+    }
+
+    public function student()
+    {
+        return $this->hasOne(Student::class, 'official_email', 'email');
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(Department::class, 'department_id', 'department_id');
     }
 }
