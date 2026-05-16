@@ -173,6 +173,7 @@
       :is-open="showNewProposalForm"
       :form="newProposal"
       :is-editing="isEditingProposal"
+      :student-department="studentData.department"
       @close="showNewProposalForm = false"
       @save-draft="saveAsDraft"
       @confirm-proposal="saveAndConfirmProposal"
