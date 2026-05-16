@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Department\StudentImportController;
+use App\Http\Controllers\Department\DepartmentProposalController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -75,10 +76,16 @@ Route::middleware(['auth'])->group(function () {
         return view('department.vue-dashboard');
     })->where('any', '.*')->middleware('role:department_member')->name('department.dashboard');
 
-    Route::middleware('role:department_member')->prefix('/department/students')->group(function () {
-        Route::get('/', [StudentImportController::class, 'index'])->name('department.students.index');
-        Route::post('/', [StudentImportController::class, 'store'])->name('department.students.store');
-        Route::post('/import', [StudentImportController::class, 'import'])->name('department.students.import');
+    Route::middleware('role:department_member')->prefix('/department')->group(function () {
+        Route::get('/students', [StudentImportController::class, 'index'])->name('department.students.index');
+        Route::post('/students', [StudentImportController::class, 'store'])->name('department.students.store');
+        Route::post('/students/import', [StudentImportController::class, 'import'])->name('department.students.import');
+
+        // Proposal Management
+        Route::get('/proposals', [DepartmentProposalController::class, 'index']);
+        Route::get('/stats', [DepartmentProposalController::class, 'stats']);
+        Route::get('/proposals/{proposal}', [DepartmentProposalController::class, 'show']);
+        Route::post('/proposals/{proposal}/review', [DepartmentProposalController::class, 'review']);
     });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
