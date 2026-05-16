@@ -20,13 +20,14 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">Domain</label>
-            <select v-model="form.domain" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border bg-white">
-              <option value="" disabled>Select Domain</option>
-              <option>Programming</option>
-              <option>Network</option>
-              <option>Control</option>
-            </select>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Domain / Department</label>
+            <input 
+              :value="studentDepartment" 
+              type="text" 
+              class="w-full rounded-lg border-slate-200 bg-slate-50 shadow-sm sm:text-sm px-4 py-2 border cursor-not-allowed text-slate-500 font-medium" 
+              disabled
+            >
+            <p class="mt-1 text-[11px] text-slate-400 italic">Proposals are automatically assigned to your specialization.</p>
           </div>
 
           <div>
@@ -101,6 +102,10 @@ defineProps({
   isEditing: {
     type: Boolean,
     default: false,
+  },
+  studentDepartment: {
+    type: String,
+    default: '',
   },
 })
 
