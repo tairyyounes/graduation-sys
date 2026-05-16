@@ -25,7 +25,7 @@
           </div>
           <div class="flex items-center gap-2">
             <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">{{ proposal.similarity }}</span>
-            <span :class="statusClass(proposal.status)" class="rounded-full px-2.5 py-1 text-xs font-semibold">{{ proposal.status }}</span>
+            <span :class="statusClass(proposal.status)" class="rounded-full px-2.5 py-1 text-xs font-semibold">{{ formatStatus(proposal.status) }}</span>
           </div>
         </div>
       </div>
@@ -34,24 +34,49 @@
 </template>
 
 <script setup>
-const overviewCards = [
-  { title: 'Review queue', value: '2' },
-  { title: 'Accepted', value: '1' },
-  { title: 'Needs revision', value: '1' },
-  { title: 'Overall similarity', value: '47%' },
-]
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
 
-const queueRows = [
-  { title: 'Smart Library Management System with NFC', author: 'Tayri Mousa Ali', department: 'Programming', similarity: '34%', status: 'Accepted' },
-  { title: 'AI-based Network Intrusion Detection', author: 'Shaymaa Salem Ambashi', department: 'Networks', similarity: '78%', status: 'Needs revision' },
-  { title: 'Smart Greenhouse Control System', author: 'Ahmed Khalid', department: 'Control', similarity: '22%', status: 'Pending' },
-]
+const overviewCards = ref([
+  { title: 'Review queue', value: '0' },
+  { title: 'Accepted', value: '0' },
+  { title: 'Needs revision', value: '0' },
+  { title: 'Rejected', value: '0' },
+])
+
+const queueRows = ref([])
+
+onMounted(async () => {
+  try {
+    const [statsRes, proposalsRes] = await Promise.all([
+      axios.get('/department/stats'),
+      axios.get('/department/proposals?status=submitted')
+    ])
+    
+    const stats = statsRes.data.stats
+    overviewCards.value = [
+      { title: 'Review queue', value: stats.pending.toString() },
+      { title: 'Accepted', value: stats.accepted.toString() },
+      { title: 'Needs revision', value: stats.revision.toString() },
+      { title: 'Rejected', value: stats.rejected.toString() },
+    ]
+    
+    queueRows.value = proposalsRes.data.proposals
+  } catch (error) {
+    console.error('Error fetching department overview:', error)
+  }
+})
 
 const statusClass = (status) => {
-  if (status === 'Accepted') return 'bg-emerald-100 text-emerald-700'
-  if (status === 'Needs revision') return 'bg-cyan-100 text-cyan-700'
-  if (status === 'Rejected') return 'bg-red-100 text-red-700'
-  if (status === 'Pending') return 'bg-amber-100 text-amber-700'
+  if (status === 'accepted') return 'bg-emerald-100 text-emerald-700'
+  if (status === 'revision_requested') return 'bg-cyan-100 text-cyan-700'
+  if (status === 'rejected') return 'bg-red-100 text-red-700'
+  if (status === 'pending') return 'bg-amber-100 text-amber-700'
   return 'bg-slate-100 text-slate-700'
+}
+
+const formatStatus = (status) => {
+  if (status === 'revision_requested') return 'Revision Needed'
+  return status.charAt(0).toUpperCase() + status.slice(1)
 }
 </script>
