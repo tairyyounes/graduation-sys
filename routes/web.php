@@ -45,9 +45,31 @@ Route::middleware(['auth'])->group(function () {
         });
     });
 
-    Route::get('/student/dashboard/{any?}', function () {
-        return view('student.dashboard');
-    })->where('any', '.*')->middleware('role:student')->name('student.dashboard');
+    Route::middleware('role:student')->group(function () {
+        Route::get('/student/dashboard/{any?}', function () {
+            return view('student.dashboard');
+        })->where('any', '.*')->name('student.dashboard');
+
+        // Student API Routes
+        Route::get('/student/data', [\App\Http\Controllers\Student\StudentDashboardController::class, 'getData']);
+        Route::get('/student/activity', [\App\Http\Controllers\Student\StudentDashboardController::class, 'getActivity']);
+        
+        Route::prefix('/student/proposals')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Student\StudentProposalController::class, 'index']);
+            Route::post('/', [\App\Http\Controllers\Student\StudentProposalController::class, 'store']);
+            Route::put('/{proposal}', [\App\Http\Controllers\Student\StudentProposalController::class, 'update']);
+            Route::put('/{proposal}/submit', [\App\Http\Controllers\Student\StudentProposalController::class, 'submit']);
+            Route::put('/{proposal}/archive', [\App\Http\Controllers\Student\StudentProposalController::class, 'archive']);
+            Route::delete('/{proposal}', [\App\Http\Controllers\Student\StudentProposalController::class, 'destroy']);
+            
+            Route::get('/{proposal}/versions', [\App\Http\Controllers\Student\StudentProposalController::class, 'versions']);
+            Route::get('/{proposal}/decision', [\App\Http\Controllers\Student\StudentProposalController::class, 'decision']);
+            Route::get('/{proposal}/similarity', [\App\Http\Controllers\Student\StudentProposalController::class, 'similarity']);
+            
+            Route::get('/{proposal}/team', [\App\Http\Controllers\Student\StudentTeamController::class, 'getTeam']);
+            Route::post('/{proposal}/invite', [\App\Http\Controllers\Student\StudentTeamController::class, 'invite']);
+        });
+    });
 
     Route::get('/department/dashboard/{any?}', function () {
         return view('department.vue-dashboard');
