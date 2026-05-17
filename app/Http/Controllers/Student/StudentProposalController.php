@@ -225,28 +225,55 @@ class StudentProposalController extends Controller
 
     public function similarity(Proposal $proposal): JsonResponse
     {
-        // Security: only compare within the same department
         $departmentId = $proposal->department_id;
+        $latestVersion = $proposal->latestVersion;
 
-        $matches = Proposal::where('department_id', $departmentId)
-            ->where('proposal_id', '!=', $proposal->proposal_id)
-            ->where('submission_status', 'submitted')
-            ->with('latestVersion')
+        if (!$latestVersion) {
+            return response()->json(['results' => [], 'message' => 'No versions found.']);
+        }
+
+        $existingResults = \App\Models\SimilarityResult::where('proposal_version_id', $latestVersion->version_id)->count();
+
+        if ($existingResults === 0) {
+            $otherProposals = Proposal::where('department_id', $departmentId)
+                ->where('proposal_id', '!=', $proposal->proposal_id)
+                ->where('submission_status', 'submitted')
+                ->with('latestVersion')
+                ->get();
+
+            foreach ($otherProposals as $other) {
+                if ($other->latestVersion) {
+                    \App\Models\SimilarityResult::create([
+                        'proposal_version_id' => $latestVersion->version_id,
+                        'compared_version_id' => $other->latestVersion->version_id,
+                        'similarity_score' => rand(5, 45), // Mock score
+                    ]);
+                }
+            }
+            
+            activity()
+                ->performedOn($proposal)
+                ->causedBy(request()->user())
+                ->log('similarity analysis completed');
+        }
+
+        $results = \App\Models\SimilarityResult::where('proposal_version_id', $latestVersion->version_id)
+            ->with('comparedVersion.proposal.students')
+            ->orderByDesc('similarity_score')
             ->get()
-            ->map(function($other) {
-                // Mock similarity score calculation
+            ->map(function($res) {
                 return [
-                    'id' => $other->proposal_id,
-                    'title' => $other->latestVersion->title,
-                    'author' => $other->students->first()->full_name ?? 'Anonymous',
-                    'score' => rand(5, 45) . '%', // Mock score
-                    'year' => $other->created_at->format('Y'),
+                    'id' => $res->comparedVersion->proposal_id,
+                    'title' => $res->comparedVersion->title,
+                    'author' => $res->comparedVersion->proposal->students->first()->full_name ?? 'Anonymous',
+                    'score' => $res->similarity_score . '%',
+                    'year' => $res->comparedVersion->created_at->format('Y'),
                 ];
             });
 
         return response()->json([
-            'results' => $matches,
-            'message' => $matches->isEmpty() ? 'No other proposals found in this department to compare.' : 'Similarity analysis generated.'
+            'results' => $results,
+            'message' => 'Similarity analysis retrieved successfully.'
         ]);
     }
 

@@ -25,4 +25,14 @@ class ProposalVersion extends Model
     {
         return $this->belongsTo(Proposal::class, 'proposal_id', 'proposal_id');
     }
+
+    public function similarityResults(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SimilarityResult::class, 'proposal_version_id', 'version_id');
+    }
+
+    public function comparedInResults(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SimilarityResult::class, 'compared_version_id', 'version_id');
+    }
 }

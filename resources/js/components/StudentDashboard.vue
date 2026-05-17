@@ -159,11 +159,6 @@
             :domain-feedback="domainFeedback"
           />
 
-          <StudentActivitySection
-            v-else-if="currentView === 'Recent Activity'"
-            :activities="activities"
-          />
-
         </div>
       </main>
     </div>
@@ -216,7 +211,6 @@ import StudentTeamSection from './student/StudentTeamSection.vue';
 import StudentSimilaritySection from './student/StudentSimilaritySection.vue';
 import StudentVersionHistorySection from './student/StudentVersionHistorySection.vue';
 import StudentFeedbackSection from './student/StudentFeedbackSection.vue';
-import StudentActivitySection from './student/StudentActivitySection.vue';
 import StudentNewProposalModal from './student/StudentNewProposalModal.vue';
 import StudentProposalModal from './student/StudentProposalModal.vue';
 import StudentInviteMemberModal from './student/StudentInviteMemberModal.vue';
@@ -232,7 +226,6 @@ const navItems = [
   { name: 'Project Team', icon: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>' },
   { name: 'Similarity Report', icon: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>' },
   { name: 'Version History', icon: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' },
-  { name: 'Recent Activity', icon: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>' },
   { name: 'Domain Feedback', icon: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>' },
 ];
 
@@ -277,7 +270,6 @@ const teamMembers = ref([]);
 const topMatches = ref([]);
 const versionHistory = ref([]);
 const domainFeedback = ref(null);
-const activities = ref([]);
 
 // API calls
 async function fetchStudentData() {
@@ -295,14 +287,6 @@ async function fetchProposals() {
     draftIdeas.value = data.drafts;
     activeProposal.value = data.active;
     archivedIdeas.value = data.archived;
-  }
-}
-
-async function fetchActivities() {
-  const res = await fetch('/student/activity');
-  if (res.ok) {
-    const data = await res.json();
-    activities.value = data.activities;
   }
 }
 
@@ -357,7 +341,6 @@ async function saveAsDraft() {
     toast.success('Draft saved.');
     showNewProposalForm.value = false;
     fetchProposals();
-    fetchActivities();
   } else {
     const data = await res.json();
     toast.error(data.message || 'Error saving draft.');
@@ -384,7 +367,6 @@ async function saveAndConfirmProposal() {
       toast.success('Proposal submitted.');
       showNewProposalForm.value = false;
       fetchProposals();
-      fetchActivities();
       workspaceTab.value = 'Active Proposal';
     }
   }
@@ -401,7 +383,6 @@ async function updateProposal(proposal) {
     showNewProposalForm.value = false;
     closeProposalDetails();
     fetchProposals();
-    fetchActivities();
   } else {
     const data = await res.json();
     toast.error(data.message || 'Error updating proposal.');
@@ -429,7 +410,6 @@ async function confirmDraftProposal(proposal) {
     toast.success('Proposal submitted.');
     closeProposalDetails();
     fetchProposals();
-    fetchActivities();
     workspaceTab.value = 'Active Proposal';
   } else {
     const data = await res.json();
@@ -446,7 +426,6 @@ async function archiveProposal(proposal) {
     toast.success('Proposal archived.');
     closeProposalDetails();
     fetchProposals();
-    fetchActivities();
   }
 }
 
@@ -460,7 +439,6 @@ async function deleteProposal(proposal) {
     toast.success('Draft deleted.');
     closeProposalDetails();
     fetchProposals();
-    fetchActivities();
   } else {
     const data = await res.json();
     toast.error(data.message || 'Error deleting proposal.');
@@ -495,7 +473,6 @@ async function sendInvitation() {
     toast.success('Member added.');
     closeInviteModal();
     fetchTeam(activeProposal.value.id);
-    fetchActivities();
   } else {
     const data = await res.json();
     inviteError.value = data.message || 'Error inviting member.';
@@ -544,14 +521,10 @@ watch(currentView, (newView) => {
   if (newView === 'Similarity Report' && activeProposal.value) {
     fetchSimilarity(activeProposal.value.id);
   }
-  if (newView === 'Recent Activity') {
-    fetchActivities();
-  }
 });
 
 onMounted(() => {
   fetchStudentData();
   fetchProposals();
-  fetchActivities();
 });
 </script>

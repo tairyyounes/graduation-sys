@@ -43,19 +43,40 @@
 </template>
 
 <script setup>
-const overviewCards = [
-  { title: 'Proposals analyzed', value: '1,240' },
-  { title: 'User management', value: '382' },
-  { title: 'Departments', value: '3' },
-  { title: 'Semantic accuracy', value: '94%' },
-]
+import { ref, onMounted } from 'vue'
 
-const submissionsBars = [
-  { month: 'Jan', height: 35 },
-  { month: 'Feb', height: 55 },
-  { month: 'Mar', height: 68 },
-  { month: 'Apr', height: 90 },
-  { month: 'May', height: 63 },
-  { month: 'Jun', height: 52 },
-]
+const overviewCards = ref([
+  { title: 'Proposals analyzed', value: '...' },
+  { title: 'User management', value: '...' },
+  { title: 'Departments', value: '...' },
+  { title: 'Semantic accuracy', value: '...' },
+])
+
+const submissionsBars = ref([
+  { month: 'Jan', height: 0 },
+  { month: 'Feb', height: 0 },
+  { month: 'Mar', height: 0 },
+  { month: 'Apr', height: 0 },
+  { month: 'May', height: 0 },
+  { month: 'Jun', height: 0 },
+])
+
+const fetchStats = async () => {
+  try {
+    const res = await fetch('/admin/stats', {
+      headers: { Accept: 'application/json' }
+    })
+    if (res.ok) {
+      const data = await res.json()
+      overviewCards.value = data.overviewCards
+      submissionsBars.value = data.submissionsBars
+    }
+  } catch (err) {
+    console.error('Failed to load admin stats:', err)
+  }
+}
+
+onMounted(() => {
+  fetchStats()
+})
 </script>

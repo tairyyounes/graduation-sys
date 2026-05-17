@@ -35,6 +35,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::middleware('role:admin')->group(function () {
+        Route::get('/admin/stats', [\App\Http\Controllers\Admin\AdminStatsController::class, 'index'])->name('admin.stats.index');
         Route::get('/admin/activity-logs', [\App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('admin.activity.index');
         
         Route::prefix('/admin/departments')->group(function () {
@@ -53,7 +54,6 @@ Route::middleware(['auth'])->group(function () {
 
         // Student API Routes
         Route::get('/student/data', [\App\Http\Controllers\Student\StudentDashboardController::class, 'getData']);
-        Route::get('/student/activity', [\App\Http\Controllers\Student\StudentDashboardController::class, 'getActivity']);
         
         Route::prefix('/student/proposals')->group(function () {
             Route::get('/', [\App\Http\Controllers\Student\StudentProposalController::class, 'index']);
