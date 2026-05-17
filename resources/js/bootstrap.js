@@ -2,5 +2,4 @@ import axios from 'axios';
 
 window.axios = axios;
 
-window.axios.defaults.header.common['X-Requested-With']
-
+window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';

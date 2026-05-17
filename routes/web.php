@@ -57,6 +57,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [StudentImportController::class, 'index'])->name('department.students.index');
         Route::post('/', [StudentImportController::class, 'store'])->name('department.students.store');
         Route::post('/import', [StudentImportController::class, 'import'])->name('department.students.import');
+        Route::post('/import-confirm', [StudentImportController::class, 'confirmImport'])->name('department.students.import.confirm');
+        Route::get('/template', [StudentImportController::class, 'downloadTemplate'])->name('department.students.template');
     });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

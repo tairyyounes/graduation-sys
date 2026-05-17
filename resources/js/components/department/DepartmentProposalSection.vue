@@ -1,6 +1,6 @@
 <template>
   <section class="space-y-5">
-    <router-link :to="{ name: 'DepartmentQueue' }" class="inline-flex items-center text-sm font-medium text-slate-500 hover:text-indigo-600 transition">
+    <router-link :to="{ name: 'DepartmentQueue' }" class="inline-flex items-center text-sm font-medium text-slate-500 hover:text-teal-600 transition">
       <svg class="mr-1 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
       Back to queue
     </router-link>
@@ -24,8 +24,7 @@
       <article class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:col-span-8">
         <h2 class="text-lg font-semibold text-slate-900">Description</h2>
         <p class="mt-2 text-sm leading-6 text-slate-600">
-          A web platform to manage library operations including borrowing, returns, and inventory using NFC technology
-          and a recommendation engine.
+          {{ selectedProposal.description }}
         </p>
         <div class="mt-3 flex flex-wrap gap-2">
           <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">#library</span>
@@ -45,7 +44,12 @@
           </div>
           <div class="flex items-center gap-2">
             <span class="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">{{ match.score }}</span>
-            <button class="rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50">Compare</button>
+            <router-link 
+              :to="{ name: 'DepartmentCompare', params: { id: match.id } }"
+              class="rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
+            >
+              Compare
+            </router-link>
           </div>
         </div>
       </div>
@@ -56,13 +60,13 @@
       <textarea
         v-model="reviewerNote"
         rows="4"
-        class="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition"
+        class="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition"
         placeholder="Optional note for the student..."
       ></textarea>
       <div class="mt-3 flex flex-wrap justify-end gap-2">
-        <button class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Request revision</button>
-        <button class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">Reject</button>
-        <button class="rounded-lg bg-blue-900 px-4 py-2 text-sm font-medium text-white hover:bg-blue-950">Accept</button>
+        <button class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition">Request revision</button>
+        <button class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition">Reject</button>
+        <button class="rounded-lg bg-blue-900 px-4 py-2 text-sm font-medium text-white hover:bg-blue-950 transition">Accept</button>
       </div>
     </article>
   </section>
@@ -78,13 +82,38 @@ const selectedProposal = ref({
   author: 'Tayri Mousa Ali',
   department: 'Programming',
   similarity: '34%',
-  status: 'Accepted'
+  status: 'Accepted',
+  description: 'A web platform to manage library operations including borrowing, returns, and inventory using NFC technology and a recommendation engine. The system will track book usage, predict popular categories, and offer an interactive portal for students to find study materials based on their major.'
 })
 
 const closestMatches = [
-  { title: 'Network Traffic Anomaly Detector using ML', author: 'Karim Adel', year: '2024', score: '78%' },
-  { title: 'Real-time IDS with Random Forests', author: 'Lina Hassen', year: '2023', score: '64%' },
-  { title: 'Hybrid IDS combining Snort and Neural Nets', author: 'Yousef Tariq', year: '2022', score: '51%' },
-  { title: 'Anomaly-based Network Security Toolkit', author: 'Mariam Khaled', year: '2024', score: '47%' },
+  { 
+    id: 1,
+    title: 'Network Traffic Anomaly Detector using ML', 
+    author: 'Karim Adel', 
+    year: '2024', 
+    score: '78%'
+  },
+  { 
+    id: 2,
+    title: 'Real-time IDS with Random Forests', 
+    author: 'Lina Hassen', 
+    year: '2023', 
+    score: '64%'
+  },
+  { 
+    id: 3,
+    title: 'Hybrid IDS combining Snort and Neural Nets', 
+    author: 'Yousef Tariq', 
+    year: '2022', 
+    score: '51%'
+  },
+  { 
+    id: 4,
+    title: 'Anomaly-based Network Security Toolkit', 
+    author: 'Mariam Khaled', 
+    year: '2024', 
+    score: '47%'
+  },
 ]
 </script>

@@ -26,7 +26,7 @@
             v-model="form.full_name"
             type="text"
             class="w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm outline-none transition focus:ring-2"
-            :class="errors.full_name ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-500/20'"
+            :class="errors.full_name ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-500/20'"
             required
           />
           <p v-if="errors.full_name" class="mt-1 text-xs text-red-600">{{ errors.full_name[0] }}</p>
@@ -38,7 +38,7 @@
             v-model="form.email"
             type="email"
             class="w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm outline-none transition focus:ring-2"
-            :class="errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-500/20'"
+            :class="errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-500/20'"
             required
           />
           <p v-if="errors.email" class="mt-1 text-xs text-red-600">{{ errors.email[0] }}</p>
@@ -50,7 +50,7 @@
             <select
               v-model="form.role"
               class="w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm outline-none transition focus:ring-2"
-              :class="errors.role ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-500/20'"
+              :class="errors.role ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-500/20'"
             >
               <option value="admin">Admin</option>
               <option value="student">Student</option>
@@ -64,7 +64,7 @@
               v-model="form.student_number"
               type="text"
               class="w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm outline-none transition focus:ring-2"
-              :class="errors.student_number ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-500/20'"
+              :class="errors.student_number ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-500/20'"
               required
             />
             <p v-if="errors.student_number" class="mt-1 text-xs text-red-600">{{ errors.student_number[0] }}</p>
@@ -74,7 +74,7 @@
             <select
               v-model="form.is_active"
               class="w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm outline-none transition focus:ring-2"
-              :class="errors.is_active ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-500/20'"
+              :class="errors.is_active ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-500/20'"
             >
               <option :value="true">Active</option>
               <option :value="false">Disabled</option>
@@ -89,7 +89,7 @@
             v-model="form.department_id"
             :disabled="form.role === 'admin'"
             class="w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm outline-none transition focus:ring-2 disabled:cursor-not-allowed disabled:bg-slate-50"
-            :class="errors.department_id ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-500/20'"
+            :class="errors.department_id ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-500/20'"
           >
             <option :value="null">No department</option>
             <option v-for="department in departments" :key="department.department_id" :value="department.department_id">
@@ -107,7 +107,7 @@
             v-model="form.password"
             type="password"
             class="w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm outline-none transition focus:ring-2"
-            :class="errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-500/20'"
+            :class="errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-500/20'"
             :required="!isEditing"
             minlength="8"
           />

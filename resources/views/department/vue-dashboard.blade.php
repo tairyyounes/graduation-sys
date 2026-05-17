@@ -10,6 +10,7 @@
     @vite(['resources/css/app.css', 'resources/js/department-dashboard.js'])
 </head>
 <body class="font-sans antialiased">
+    
     <div id="department-dashboard"></div>
 </body>
 </html>

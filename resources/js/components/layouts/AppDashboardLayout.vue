@@ -54,13 +54,26 @@
               <p class="truncate text-xs text-slate-500">{{ user.email }}</p>
             </div>
           </div>
-          <div v-if="$slots.footerActions" class="mt-4">
-            <slot name="footerActions" />
+          <div class="mt-4">
+             <div class="flex items-center justify-between">
+                <form method="POST" action="/logout">
+                  <input type="hidden" name="_token" :value="csrfToken">
+                  <button
+                    type="submit"
+                    class="rounded-md p-1.5 text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400"
+                    title="Logout"
+                  >
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1m0-10V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2v-1" />
+                    </svg>
+                  </button>
+                </form>
+             </div>
           </div>
         </div>
       </aside>
 
-      <main class="flex-1 p-4 sm:p-6 lg:p-8">
+      <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto relative">
         <div class="mb-5 flex items-center justify-between lg:mb-8">
           <button
             type="button"
@@ -73,6 +86,8 @@
             Menu
           </button>
           
+          <div class="hidden lg:block text-2xl font-bold text-slate-900 tracking-tight">{{ currentTitle }}</div>
+
           <a
             href="/"
             class="ml-auto inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
@@ -83,6 +98,8 @@
             Back to Home
           </a>
         </div>
+
+        <div class="lg:hidden text-2xl font-bold text-slate-900 tracking-tight mb-6">{{ currentTitle }}</div>
 
         <slot name="alerts" />
         <router-view v-slot="{ Component }">
@@ -108,7 +125,8 @@
 </style>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
 
 const props = defineProps({
   navItems: {
@@ -133,5 +151,12 @@ const props = defineProps({
   },
 })
 
+const route = useRoute()
+const currentTitle = computed(() => {
+  const activeItem = props.navItems.find(i => i.routeName === route.name)
+  return activeItem ? activeItem.label : props.navTitle
+})
+
 const sidebarOpen = ref(false)
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 </script>

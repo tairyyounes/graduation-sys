@@ -1,9 +1,5 @@
 <template>
   <section class="space-y-5 sm:space-y-6">
-    <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Activity logs</h1>
-    </div>
-
     <!-- Skeleton Loader -->
     <div v-if="loading" class="animate-pulse space-y-4">
       <div class="h-12 w-full rounded-2xl bg-slate-200"></div>
@@ -38,7 +34,7 @@
               <td class="px-6 py-4 text-slate-500 whitespace-nowrap">{{ log.time }}</td>
               <td class="px-6 py-4 font-medium text-slate-900">{{ log.actor }}</td>
               <td class="px-6 py-4 text-slate-700">
-                <span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">{{ log.action }}</span>
+                <span class="inline-flex items-center rounded-md bg-teal-50 px-2 py-1 text-xs font-medium text-teal-700 ring-1 ring-inset ring-teal-700/10">{{ log.action }}</span>
               </td>
               <td class="px-6 py-4 text-slate-500">{{ log.target }}</td>
             </tr>
@@ -80,7 +76,7 @@
             </div>
           </div>
           <div class="mt-3">
-            <span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">{{ log.action }}</span>
+            <span class="inline-flex items-center rounded-md bg-teal-50 px-2 py-1 text-xs font-medium text-teal-700 ring-1 ring-inset ring-teal-700/10">{{ log.action }}</span>
           </div>
           <p class="mt-2 text-sm text-slate-600">{{ log.target }}</p>
         </article>

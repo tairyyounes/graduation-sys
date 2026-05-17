@@ -69,7 +69,7 @@
             @click="activeTab = 'members'"
             :class="[
               activeTab === 'members'
-                ? 'border-indigo-500 text-indigo-600'
+                ? 'border-teal-500 text-teal-600'
                 : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700',
               'whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors'
             ]"
@@ -80,7 +80,7 @@
             @click="activeTab = 'students'"
             :class="[
               activeTab === 'students'
-                ? 'border-indigo-500 text-indigo-600'
+                ? 'border-teal-500 text-teal-600'
                 : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700',
               'whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors'
             ]"
@@ -91,7 +91,7 @@
             @click="activeTab = 'proposals'"
             :class="[
               activeTab === 'proposals'
-                ? 'border-indigo-500 text-indigo-600'
+                ? 'border-teal-500 text-teal-600'
                 : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700',
               'whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors'
             ]"
