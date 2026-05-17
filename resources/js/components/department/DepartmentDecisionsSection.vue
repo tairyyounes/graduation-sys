@@ -1,6 +1,5 @@
 <template>
   <section class="space-y-5">
-    <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-4xl">Decisions</h1>
     <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
       <table class="min-w-full text-left text-sm">
         <thead class="bg-slate-50 text-slate-500">

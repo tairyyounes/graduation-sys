@@ -1,12 +1,16 @@
 <template>
   <section class="space-y-5">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-4xl">Students</h1>
-        <p class="mt-1 text-sm text-slate-500">Upload CSV or manually add students into your department database records.</p>
-      </div>
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+      <a
+        href="/department/students/template"
+        class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
+        download
+      >
+        <svg class="mr-2 h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        Download CSV Template
+      </a>
       <button
-        class="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        class="inline-flex items-center justify-center rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
         @click="openStudentModal"
       >
         <svg class="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -22,15 +26,15 @@
 
     <div v-else class="space-y-5">
       <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 class="text-lg font-semibold text-slate-900">CSV upload</h2>
-        <p class="mt-1 text-sm text-slate-500">Required columns: <code class="bg-slate-100 px-1 py-0.5 rounded text-indigo-600 text-xs">student_number,full_name,official_email,semester</code>. Optional: <code class="bg-slate-100 px-1 py-0.5 rounded text-indigo-600 text-xs">is_active</code></p>
+        <h2 class="text-lg font-semibold text-slate-900">CSV Bulk Import</h2>
+        <p class="mt-1 text-sm text-slate-500">Upload a CSV file to preview and import multiple students at once.</p>
 
         <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
           <input
             ref="fileInput"
             type="file"
             accept=".csv,.txt"
-            class="block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100 transition-colors"
+            class="block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-teal-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-teal-700 hover:file:bg-teal-100 transition-colors"
             @change="onCsvChange"
           />
           <button
@@ -38,14 +42,70 @@
             :disabled="!selectedCsv || uploadingCsv"
             @click="uploadCsv"
           >
-            {{ uploadingCsv ? 'Importing...' : 'Import CSV' }}
+            {{ uploadingCsv ? 'Parsing...' : 'Preview CSV' }}
           </button>
+        </div>
+      </article>
+
+      <!-- Staged Students Section -->
+      <article v-if="stagedStudents.length > 0" class="rounded-2xl border border-teal-200 bg-teal-50/30 p-5 shadow-sm">
+        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 class="text-lg font-semibold text-teal-900">Staged for Import</h2>
+            <p class="text-sm text-teal-700 mt-1">Review the parsed students. Existing students are highlighted in red and will be ignored. You can edit names and emails before confirming.</p>
+          </div>
+          <button
+            class="inline-flex items-center justify-center rounded-lg bg-teal-600 px-5 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition disabled:opacity-50"
+            :disabled="confirmingImport"
+            @click="confirmImport"
+          >
+            {{ confirmingImport ? 'Saving...' : 'Confirm & Add Students' }}
+          </button>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-teal-100 bg-white shadow-sm">
+          <table class="min-w-full text-left text-sm">
+            <thead class="bg-teal-50 text-teal-700 border-b border-teal-100">
+              <tr>
+                <th class="px-4 py-3 font-semibold">Status</th>
+                <th class="px-4 py-3 font-semibold">Student number</th>
+                <th class="px-4 py-3 font-semibold">Full name</th>
+                <th class="px-4 py-3 font-semibold">Email</th>
+                <th class="px-4 py-3 font-semibold text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-teal-50">
+              <tr v-for="(student, index) in stagedStudents" :key="index" :class="student.exists ? 'bg-red-50/50' : 'hover:bg-slate-50'">
+                <td class="px-4 py-3">
+                  <span v-if="student.exists" class="inline-flex items-center rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/10">Already Exists</span>
+                  <span v-else class="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Ready</span>
+                </td>
+                <td class="px-4 py-3">
+                  <input v-if="!student.exists" v-model="student.student_number" type="text" class="w-28 rounded border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500" />
+                  <span v-else class="text-slate-500 line-through">{{ student.student_number }}</span>
+                </td>
+                <td class="px-4 py-3">
+                  <input v-if="!student.exists" v-model="student.full_name" type="text" class="w-full rounded border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500" />
+                  <span v-else class="text-slate-500 line-through">{{ student.full_name }}</span>
+                </td>
+                <td class="px-4 py-3">
+                  <input v-if="!student.exists" v-model="student.email" type="email" class="w-full rounded border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500" />
+                  <span v-else class="text-slate-500 line-through">{{ student.email }}</span>
+                </td>
+                <td class="px-4 py-3 text-center">
+                  <button @click="stagedStudents.splice(index, 1)" class="text-red-500 hover:text-red-700 transition" title="Remove row">
+                    <svg class="h-4 w-4 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </article>
 
       <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 class="text-lg font-semibold text-slate-900">Imported students</h2>
+          <h2 class="text-lg font-semibold text-slate-900">Current students</h2>
           
           <!-- Search Bar -->
           <div class="relative w-full sm:w-72">
@@ -57,7 +117,7 @@
             <input
               v-model="searchQuery"
               type="text"
-              class="block w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition"
+              class="block w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm placeholder-slate-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition"
               placeholder="Search students..."
             />
           </div>
@@ -158,6 +218,9 @@ const fileInput = ref(null)
 const selectedCsv = ref(null)
 const uploadingCsv = ref(false)
 
+const stagedStudents = ref([])
+const confirmingImport = ref(false)
+
 // Searching & Pagination
 const searchQuery = ref('')
 const currentPage = ref(1)
@@ -193,7 +256,7 @@ const formErrors = ref({})
 const studentForm = reactive({
   student_number: '',
   full_name: '',
-  official_email: '',
+  email: '',
   semester: 8,
   is_active: true,
 })
@@ -205,9 +268,15 @@ const getCsrfToken = () => {
 
 const parseErrors = (payload) => {
   if (!payload || !payload.errors) {
-    return { general: payload?.message || 'Unable to save student.' }
+    return { general: payload?.message || 'Unable to save data.' }
   }
-  return payload.errors
+  
+  // Transform dot notation (students.0.email) back to row level if needed
+  const flattened = {}
+  for (const [key, msgs] of Object.entries(payload.errors)) {
+      flattened[key] = msgs
+  }
+  return flattened
 }
 
 const loadStudents = async () => {
@@ -236,6 +305,7 @@ const uploadCsv = async () => {
   if (!selectedCsv.value) return
 
   uploadingCsv.value = true
+  stagedStudents.value = []
 
   const formData = new FormData()
   formData.append('file', selectedCsv.value)
@@ -252,24 +322,65 @@ const uploadCsv = async () => {
 
     const data = await response.json()
     if (!response.ok) {
-      throw new Error(data.message || 'Import failed.')
+      throw new Error(data.message || 'Import parsing failed.')
     }
 
-    toast.success(`${data.imported_count} students imported successfully.`)
+    stagedStudents.value = data.staged_students || []
+    toast.info('CSV parsed. Please review the staged students before confirming.')
+  } catch (error) {
+    toast.error(error.message || 'Import parsing failed.')
+  } finally {
+    uploadingCsv.value = false
+  }
+}
+
+const confirmImport = async () => {
+  // Filter out any students marked as exists
+  const validStudents = stagedStudents.value.filter(s => !s.exists)
+
+  if (validStudents.length === 0) {
+    toast.warning('No new students to import.')
+    return
+  }
+
+  confirmingImport.value = true
+  try {
+    const response = await fetch('/department/students/import-confirm', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        'X-CSRF-TOKEN': getCsrfToken(),
+      },
+      body: JSON.stringify({ students: validStudents }),
+    })
+
+    const data = await response.json()
+    if (!response.ok) {
+        if (data.errors) {
+            toast.error('Validation failed for one or more students. Check the data.')
+        } else {
+            throw new Error(data.message || 'Import confirmation failed.')
+        }
+        return
+    }
+
+    toast.success(data.message || `${data.imported_count} students added successfully.`)
+    stagedStudents.value = []
     selectedCsv.value = null
     if (fileInput.value) fileInput.value.value = ''
     await loadStudents()
   } catch (error) {
-    toast.error(error.message || 'Import failed.')
+    toast.error(error.message || 'Import confirmation failed.')
   } finally {
-    uploadingCsv.value = false
+    confirmingImport.value = false
   }
 }
 
 const clearStudentForm = () => {
   studentForm.student_number = ''
   studentForm.full_name = ''
-  studentForm.official_email = ''
+  studentForm.email = ''
   studentForm.semester = 8
   studentForm.is_active = true
 }
@@ -289,6 +400,13 @@ const submitStudentForm = async () => {
   submittingStudentForm.value = true
   formErrors.value = {}
 
+  // Inject required properties for AddingUserRequest
+  const payload = {
+      ...studentForm,
+      role: 'student',
+      password: studentForm.student_number // Use student number as default password
+  }
+
   try {
     const response = await fetch('/department/students', {
       method: 'POST',
@@ -297,7 +415,7 @@ const submitStudentForm = async () => {
         Accept: 'application/json',
         'X-CSRF-TOKEN': getCsrfToken(),
       },
-      body: JSON.stringify(studentForm),
+      body: JSON.stringify(payload),
     })
 
     const data = await response.json()

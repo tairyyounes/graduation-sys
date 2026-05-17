@@ -1,9 +1,8 @@
 <template>
   <section class="space-y-5 sm:space-y-6">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">User management</h1>
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
       <button
-        class="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        class="inline-flex items-center justify-center rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
         @click="openCreateModal"
       >
         <svg class="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -42,7 +41,7 @@
           <input
             v-model="searchQuery"
             type="text"
-            class="block w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-3 text-sm placeholder-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition"
+            class="block w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-3 text-sm placeholder-slate-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition"
             placeholder="Search by name, email, or department..."
           />
         </div>
@@ -71,7 +70,7 @@
               <td class="px-6 py-4 font-medium text-slate-900">{{ user.name }}</td>
               <td class="px-6 py-4 text-slate-500">{{ user.email }}</td>
               <td class="px-6 py-4">
-                <span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 capitalize">{{ roleLabel(user.role) }}</span>
+                <span class="inline-flex items-center rounded-md bg-teal-50 px-2 py-1 text-xs font-medium text-teal-700 ring-1 ring-inset ring-teal-700/10 capitalize">{{ roleLabel(user.role) }}</span>
               </td>
               <td class="px-6 py-4 text-slate-500">{{ user.department }}</td>
               <td class="px-6 py-4">
@@ -81,7 +80,7 @@
               </td>
               <td class="px-6 py-4 text-right">
                 <div class="flex items-center justify-end gap-3">
-                  <button class="text-slate-400 hover:text-indigo-600 transition" @click="openEditModal(user)">
+                  <button class="text-slate-400 hover:text-teal-600 transition" @click="openEditModal(user)">
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                   </button>
                   <button class="text-slate-400 hover:text-red-600 transition" @click="deleteUser(user)">
@@ -135,7 +134,7 @@
             </span>
           </div>
           <div class="mt-4 flex items-center justify-between text-sm">
-            <span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10 capitalize">{{ roleLabel(user.role) }}</span>
+            <span class="inline-flex items-center rounded-md bg-teal-50 px-2 py-1 font-medium text-teal-700 ring-1 ring-inset ring-teal-700/10 capitalize">{{ roleLabel(user.role) }}</span>
             <span class="text-slate-500">{{ user.department }}</span>
           </div>
           <div class="mt-5 flex gap-3">

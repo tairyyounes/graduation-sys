@@ -20,6 +20,12 @@ const routes = [
     meta: { page: 'proposal' }
   },
   {
+    path: '/department/dashboard/compare/:id?',
+    name: 'DepartmentCompare',
+    component: () => import('../components/department/DepartmentCompareSection.vue'),
+    meta: { page: 'proposal' }
+  },
+  {
     path: '/department/dashboard/decisions',
     name: 'DepartmentDecisions',
     component: () => import('../components/department/DepartmentDecisionsSection.vue'),

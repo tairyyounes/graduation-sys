@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use App\Http\Requests\AddingUserRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+
 
 class UserManagementController extends Controller
 {
@@ -50,30 +52,12 @@ class UserManagementController extends Controller
     /**
      * Create a new user in the system.
      *
-     * @param Request $request
+     * @param AddingUserRequest $request
      * @return JsonResponse
      */
-    public function store(Request $request): JsonResponse
+    public function store(AddingUserRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'full_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'role' => ['required', Rule::in(['admin', 'student', 'department_member'])],
-            'department_id' => [
-                Rule::requiredIf(fn() => $request->role === 'student' || $request->role === 'department_member'), 
-                'nullable', 
-                'exists:departments,department_id'
-            ],
-            'student_number' => [
-                Rule::requiredIf(fn() => $request->role === 'student'), 
-                'nullable', 
-                'string', 
-                'max:255', 
-                'unique:students,student_number'
-            ],
-            'is_active' => ['required', 'boolean'],
-            'password' => ['required', 'string', 'min:8'],
-        ]);
+        $validated = $request->validated();
 
         if ($validated['role'] === 'admin') {
             $validated['department_id'] = null;
@@ -241,23 +225,29 @@ class UserManagementController extends Controller
      * @return JsonResponse
      */
     public function destroy(User $user): JsonResponse
-    {
-        DB::beginTransaction();
-        try {
-            if ($user->role === 'student') {
-                DB::table('students')->where('official_email', $user->email)->delete();
-            }
-            $user->delete();
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
+{
+    DB::beginTransaction();
+    try {
+        if ($user->role === 'student') {
+            DB::table('students')->where('official_email', $user->email)->update([
+                'deleted_at' => now(),
+                'is_active' => false,
+            ]);
         }
 
-        return response()->json([
-            'message' => 'User deleted successfully.',
-        ]);
+        $user->is_active = false;
+        $user->save();
+        $user->delete(); // now soft deletes (sets deleted_at) instead of hard delete
+
+        DB::commit();
+    } catch (\Exception $e) {
+        DB::rollBack();
+        throw $e;
     }
+
+    return response()->json(['message' => 'User deleted successfully.']);
+}
+    
 
     /**
      * Helper function to normalize user data for the frontend.

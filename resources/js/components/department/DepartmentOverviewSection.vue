@@ -1,12 +1,9 @@
 <template>
   <section class="space-y-5">
-    <div>
-      <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-4xl">Dashboard</h1>
-      <p class="mt-1 text-sm text-slate-500 sm:text-base">Here's what's happening today.</p>
-    </div>
+    <!-- Page title moved to layout header -->
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <article v-for="card in overviewCards" :key="card.title" class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <article v-for="card in overviewCards" :key="card.title" class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
         <p class="text-sm text-slate-500">{{ card.title }}</p>
         <p class="mt-2 text-3xl font-semibold text-slate-900">{{ card.value }}</p>
       </article>
@@ -15,7 +12,7 @@
     <article class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div class="mb-3 flex items-center justify-between">
         <h2 class="text-lg font-semibold text-slate-900">Review queue</h2>
-        <router-link :to="{ name: 'DepartmentQueue' }" class="text-sm font-medium text-slate-700 hover:text-indigo-600 transition">View all</router-link>
+        <router-link :to="{ name: 'DepartmentQueue' }" class="text-sm font-medium text-slate-700 hover:text-teal-600 transition">View all</router-link>
       </div>
       <div class="space-y-3">
         <div v-for="proposal in queueRows.slice(0, 2)" :key="proposal.title" class="flex flex-col gap-2 border-t border-slate-100 pt-3 sm:flex-row sm:items-center sm:justify-between">

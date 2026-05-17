@@ -1,15 +1,12 @@
 <template>
   <section class="space-y-5 sm:space-y-6">
-    <div>
-      <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Admin dashboard</h1>
-      <p class="mt-1 text-sm text-slate-500 sm:text-base">Here's what's happening today.</p>
-    </div>
+    <!-- Page title moved to layout header -->
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <article
         v-for="card in overviewCards"
         :key="card.title"
-        class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow"
       >
         <p class="text-sm font-medium text-slate-500">{{ card.title }}</p>
         <p class="mt-3 text-3xl font-semibold leading-none text-slate-900 sm:text-4xl">{{ card.value }}</p>

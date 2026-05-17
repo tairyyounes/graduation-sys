@@ -56,10 +56,10 @@ class StudentImportController extends Controller
      * Manually add a single student to the department.
      * Also automatically generates a user account for them so they can log in.
      *
-     * @param Request $request
+     * @param \App\Http\Requests\AddingUserRequest $request
      * @return JsonResponse
      */
-    public function store(Request $request): JsonResponse
+    public function store(\App\Http\Requests\AddingUserRequest $request): JsonResponse
     {
         $departmentId = $request->user()->department_id;
 
@@ -69,52 +69,43 @@ class StudentImportController extends Controller
             ], 422);
         }
 
-        // Validate the incoming student data
-        $validator = Validator::make($request->all(), [
-            // Student numbers must be unique across the entire students table
-            'student_number' => ['required', 'string', 'max:255', 'unique:students,student_number'],
-            'full_name' => ['required', 'string', 'max:255'],
-            // Official email must also be unique
-            'official_email' => ['required', 'email', 'max:255', 'unique:students,official_email'],
-            // Business rule: Student must specifically be in the 8th semester
-            'semester' => ['required', 'integer', 'in:8'],
-            'is_active' => ['boolean'],
-        ], [
-            // Custom error message for the semester validation
-            'semester.in' => 'The student must be in the 8th semester.',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation failed.',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
-        $validated = $validator->validated();
+        $validated = $request->validated();
         $validated['department_id'] = $departmentId;
 
-        // Insert the student profile into the 'students' table
-        DB::table('students')->insert($validated);
-
-        // Additionally, we create a corresponding User account so they can log into the system
-        // We use insertOrIgnore to prevent crashes in case an identical email already exists in users table
-        DB::table('users')->insertOrIgnore([
+        // Ensure we handle email correctly for the students table
+        $studentData = [
+            'student_number' => $validated['student_number'],
             'full_name' => $validated['full_name'],
-            'email' => $validated['official_email'],
-            // The default login password is set to their student number
-            'password' => Hash::make($validated['student_number']),
-            'role' => 'student',
+            'official_email' => $validated['email'],
+            'semester' => $validated['semester'],
             'department_id' => $departmentId,
-            'is_active' => $validated['is_active'],
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+            'is_active' => $validated['is_active'] ?? true,
+        ];
 
-        // Log this action using Spatie Activitylog since we are using raw DB queries
-        activity()
-            ->causedBy($request->user())
-            ->log('Manually added a student profile: ' . $validated['student_number']);
+        DB::beginTransaction();
+        try {
+            DB::table('students')->insert($studentData);
+
+            DB::table('users')->insertOrIgnore([
+                'full_name' => $validated['full_name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'role' => 'student',
+                'department_id' => $departmentId,
+                'is_active' => $validated['is_active'] ?? true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            activity()
+                ->causedBy($request->user())
+                ->log('Manually added a student profile: ' . $validated['student_number']);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Failed to save student.', 'error' => $e->getMessage()], 500);
+        }
 
         return response()->json([
             'message' => 'Student created successfully.',
@@ -122,8 +113,31 @@ class StudentImportController extends Controller
     }
 
     /**
-     * Bulk import students via a CSV or TXT file.
-     * Reads the file, validates the data row by row, and creates both Student profiles and User accounts.
+     * Download an empty CSV template with required columns.
+     *
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
+     */
+    public function downloadTemplate()
+    {
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="students_template.csv"',
+        ];
+
+        $columns = ['student_number', 'full_name', 'email', 'semester', 'is_active'];
+
+        $callback = function () use ($columns) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $columns);
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Bulk parse students via a CSV or TXT file.
+     * Reads the file and returns a staged array of students, marking those that already exist.
      *
      * @param Request $request
      * @return JsonResponse
@@ -133,42 +147,32 @@ class StudentImportController extends Controller
         $departmentId = $request->user()->department_id;
 
         if (!$departmentId) {
-            return response()->json([
-                'message' => 'Your account is not linked to a department.',
-            ], 422);
+            return response()->json(['message' => 'Your account is not linked to a department.'], 422);
         }
 
-        // Validate that a file was actually uploaded, and that it's a CSV or text file under 2MB
         $request->validate([
             'file' => ['required', 'file', 'mimes:csv,txt', 'max:2048'],
         ]);
 
         $file = $request->file('file');
-        
-        // Open the uploaded file securely in read mode
         $handle = fopen($file->getRealPath(), 'r');
 
         if ($handle === false) {
             return response()->json(['message' => 'Unable to read uploaded file.'], 422);
         }
 
-        // Read the very first line of the CSV to get the headers/column names
         $header = fgetcsv($handle);
         if (!$header) {
             fclose($handle);
             return response()->json(['message' => 'CSV file is empty.'], 422);
         }
 
-        // Normalize the headers (convert to lowercase and trim spaces) to ensure matching
-        $normalizedHeader = array_map(
-            fn ($value) => strtolower(trim((string) $value)),
-            $header
-        );
+        $normalizedHeader = array_map(fn ($value) => strtolower(trim((string) $value)), $header);
 
-        // Define the minimum required columns the CSV must have
-        $requiredColumns = ['student_number', 'full_name', 'official_email', 'semester'];
+        // We mapped official_email to email in the template
+        $requiredColumns = ['student_number', 'full_name', 'email', 'semester'];
         foreach ($requiredColumns as $column) {
-            if (!in_array($column, $normalizedHeader, true)) {
+            if (!in_array($column, $normalizedHeader, true) && !($column === 'email' && in_array('official_email', $normalizedHeader, true))) {
                 fclose($handle);
                 return response()->json([
                     'message' => "Missing required column: {$column}",
@@ -176,97 +180,168 @@ class StudentImportController extends Controller
             }
         }
 
-        // Create a map of column names to their index numbers (e.g., 'full_name' => 1)
         $columnIndexes = array_flip($normalizedHeader);
+        $emailIndex = $columnIndexes['email'] ?? $columnIndexes['official_email'];
 
         $rows = [];
-        $rowNumber = 1;
+        $emailsToCheck = [];
+        $studentNumbersToCheck = [];
 
-        // Loop through the rest of the CSV line by line
         while (($data = fgetcsv($handle)) !== false) {
-            $rowNumber++;
-
-            // Skip completely empty rows
             if (count(array_filter($data, fn ($value) => trim((string) $value) !== '')) === 0) {
                 continue;
             }
 
-            // Map the CSV data to an associative array using our known indexes
+            $email = trim((string) ($data[$emailIndex] ?? ''));
+            $studentNumber = trim((string) ($data[$columnIndexes['student_number']] ?? ''));
+
             $row = [
-                'student_number' => trim((string) ($data[$columnIndexes['student_number']] ?? '')),
+                'student_number' => $studentNumber,
                 'full_name' => trim((string) ($data[$columnIndexes['full_name']] ?? '')),
-                'official_email' => trim((string) ($data[$columnIndexes['official_email']] ?? '')),
+                'email' => $email,
                 'semester' => (int) trim((string) ($data[$columnIndexes['semester']] ?? '')),
-                'is_active' => true, // default to active if column is missing
-                'department_id' => $departmentId,
+                'is_active' => true,
+                'exists' => false, // Will be updated
             ];
 
-            // If the CSV provides an 'is_active' column, parse its truthy value
             if (array_key_exists('is_active', $columnIndexes)) {
                 $isActiveValue = strtolower(trim((string) ($data[$columnIndexes['is_active']] ?? '')));
                 $row['is_active'] = in_array($isActiveValue, ['1', 'true', 'yes', 'active'], true);
             }
 
-            // Validate the parsed row data before inserting to ensure database integrity
-            $validator = Validator::make($row, [
-                'student_number' => ['required', 'string', 'max:255'],
-                'full_name' => ['required', 'string', 'max:255'],
-                'official_email' => ['required', 'email', 'max:255'],
-                'semester' => ['required', 'integer', 'in:8'],
-                'department_id' => ['required', 'integer'],
-                'is_active' => ['required', Rule::in([true, false])],
-            ], [
-                'semester.in' => 'The student must be in the 8th semester.',
-            ]);
-
-            // If any row fails validation, reject the entire file and inform the user which row failed
-            if ($validator->fails()) {
-                fclose($handle);
-                return response()->json([
-                    'message' => "Validation failed at CSV row {$rowNumber}.",
-                    'errors' => $validator->errors(),
-                ], 422);
-            }
-
             $rows[] = $row;
+            if ($email) $emailsToCheck[] = $email;
+            if ($studentNumber) $studentNumbersToCheck[] = $studentNumber;
         }
-
-        fclose($handle); // Always close the file handle when done reading
+        fclose($handle);
 
         if (empty($rows)) {
             return response()->json(['message' => 'No valid rows found in CSV.'], 422);
         }
 
-        // Use insertOrIgnore to batch-insert all students. If a student number already exists, it skips it instead of crashing.
-        DB::table('students')->insertOrIgnore($rows);
+        // Check for existing users/students in bulk
+        $existingEmails = DB::table('users')->whereIn('email', $emailsToCheck)->pluck('email')->toArray();
+        $existingNumbers = DB::table('students')->whereIn('student_number', $studentNumbersToCheck)->pluck('student_number')->toArray();
 
-        // Prepare the payload for batch creating the actual login accounts
+        foreach ($rows as &$row) {
+            if (in_array($row['email'], $existingEmails) || in_array($row['student_number'], $existingNumbers)) {
+                $row['exists'] = true;
+            }
+        }
+
+        return response()->json([
+            'message' => 'CSV parsed successfully.',
+            'staged_students' => $rows,
+        ]);
+    }
+
+    /**
+     * Confirm and bulk insert the staged students.
+     * Uses AddingUserRequest logic via manual validation.
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function confirmImport(Request $request): JsonResponse
+    {
+        $departmentId = $request->user()->department_id;
+        if (!$departmentId) {
+            return response()->json(['message' => 'Your account is not linked to a department.'], 422);
+        }
+
+        $students = $request->input('students', []);
+        
+        // We will validate using the rules from AddingUserRequest
+        $rules = (new \App\Http\Requests\AddingUserRequest())->rules();
+        // Adjust rules for batch processing
+        $studentRules = [
+            'students' => ['required', 'array'],
+            'students.*.student_number' => $rules['student_number'],
+            'students.*.full_name' => $rules['full_name'],
+            'students.*.email' => $rules['email'],
+            'students.*.semester' => $rules['semester'],
+            'students.*.is_active' => $rules['is_active'],
+        ];
+
+        // Ensure we pass the required role for validation closures to work properly
+        foreach ($students as &$student) {
+            $student['role'] = 'student';
+            $student['password'] = $student['student_number'] ?? 'password'; // Password required by AddingUserRequest
+        }
+        $request->merge(['students' => $students]);
+
+        // Manually instantiate the request with the data so the closure logic in AddingUserRequest works
+        $addingRequest = new \App\Http\Requests\AddingUserRequest();
+        $addingRequest->merge(['role' => 'student']);
+
+        // Since the array validation is complex, we will validate row by row using the validator
+        $validStudents = [];
+        $errors = [];
+
+        foreach ($students as $index => $student) {
+            $validator = Validator::make($student, $rules);
+            if ($validator->fails()) {
+                $errors["row_$index"] = $validator->errors();
+            } else {
+                $validStudents[] = $student;
+            }
+        }
+
+        if (count($errors) > 0) {
+            return response()->json([
+                'message' => 'Validation failed for some students.',
+                'errors' => $errors,
+            ], 422);
+        }
+
+        if (empty($validStudents)) {
+            return response()->json(['message' => 'No students to import.'], 422);
+        }
+
+        $studentRows = [];
         $userRows = [];
         $now = now();
-        foreach ($rows as $row) {
+
+        foreach ($validStudents as $student) {
+            $studentRows[] = [
+                'student_number' => $student['student_number'],
+                'full_name' => $student['full_name'],
+                'official_email' => $student['email'],
+                'department_id' => $departmentId,
+                'semester' => $student['semester'],
+                'is_active' => $student['is_active'],
+            ];
+
             $userRows[] = [
-                'full_name' => $row['full_name'],
-                'email' => $row['official_email'],
-                'password' => Hash::make($row['student_number']), // Default password is the student number
+                'full_name' => $student['full_name'],
+                'email' => $student['email'],
+                'password' => Hash::make($student['password']),
                 'role' => 'student',
                 'department_id' => $departmentId,
-                'is_active' => $row['is_active'],
+                'is_active' => $student['is_active'],
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
         }
 
-        // Batch insert the login accounts
-        DB::table('users')->insertOrIgnore($userRows);
+        DB::beginTransaction();
+        try {
+            DB::table('students')->insertOrIgnore($studentRows);
+            DB::table('users')->insertOrIgnore($userRows);
 
-        // Log this bulk action since DB facade operations bypass Eloquent event hooks
-        activity()
-            ->causedBy($request->user())
-            ->log('Imported ' . count($rows) . ' students via CSV');
+            activity()
+                ->causedBy($request->user())
+                ->log('Confirmed import of ' . count($studentRows) . ' students via CSV');
+            
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Failed to save students.', 'error' => $e->getMessage()], 500);
+        }
 
         return response()->json([
-            'message' => 'Students processed successfully.',
-            'imported_count' => count($rows),
+            'message' => 'Students imported successfully.',
+            'imported_count' => count($studentRows),
         ]);
     }
 }
