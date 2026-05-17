@@ -34,7 +34,7 @@
       </div>
       <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
         <p class="text-sm font-medium text-slate-500">Team Size</p>
-        <p class="mt-2 text-xl font-bold text-slate-900">{{ teamSize }} / 3</p>
+        <p class="mt-2 text-xl font-bold text-slate-900">{{ Math.max(1, teamSize) }} / 3</p>
       </div>
     </div>
 
