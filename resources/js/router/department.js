@@ -14,7 +14,7 @@ const routes = [
     meta: { page: 'queue' }
   },
   {
-    path: '/department/dashboard/proposal',
+    path: '/department/dashboard/proposal/:id',
     name: 'DepartmentProposal',
     component: () => import('../components/department/DepartmentProposalSection.vue'),
     meta: { page: 'proposal' }

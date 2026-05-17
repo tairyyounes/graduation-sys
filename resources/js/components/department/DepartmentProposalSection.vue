@@ -6,11 +6,11 @@
     </router-link>
     <div>
       <div class="mb-2 flex items-center gap-2 text-xs">
-        <span class="rounded-full bg-emerald-100 px-2.5 py-1 font-semibold text-emerald-700">Accepted</span>
-        <span class="text-slate-500">Programming</span>
+        <span :class="statusClass(selectedProposal.status)" class="rounded-full px-2.5 py-1 font-semibold">{{ formatStatus(selectedProposal.status) }}</span>
+        <span class="text-slate-500">{{ selectedProposal.department }}</span>
       </div>
       <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-4xl">{{ selectedProposal.title }}</h1>
-      <p class="mt-1 text-sm text-slate-500">{{ selectedProposal.author }} · 222075</p>
+      <p class="mt-1 text-sm text-slate-500">{{ selectedProposal.author }} · {{ selectedProposal.author_email }}</p>
     </div>
 
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
@@ -23,13 +23,18 @@
       </article>
       <article class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:col-span-8">
         <h2 class="text-lg font-semibold text-slate-900">Description</h2>
-        <p class="mt-2 text-sm leading-6 text-slate-600">
-          {{ selectedProposal.description }}
-        </p>
-        <div class="mt-3 flex flex-wrap gap-2">
-          <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">#library</span>
-          <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">#NFC</span>
-          <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">#recommendation</span>
+        <div class="mt-2 space-y-4">
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Problem</h3>
+            <p class="text-sm leading-6 text-slate-600">{{ selectedProposal.problem }}</p>
+          </div>
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Solution</h3>
+            <p class="text-sm leading-6 text-slate-600">{{ selectedProposal.solution }}</p>
+          </div>
+        </div>
+        <div class="mt-4 flex flex-wrap gap-2">
+          <span v-for="tag in selectedProposal.tags.split(',')" :key="tag" class="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">#{{ tag.trim() }}</span>
         </div>
       </article>
     </div>
@@ -52,10 +57,13 @@
             </router-link>
           </div>
         </div>
+        <div v-if="closestMatches.length === 0" class="py-4 text-center text-sm text-slate-400">
+          No similarity analysis has been generated yet.
+        </div>
       </div>
     </article>
 
-    <article class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <article v-if="selectedProposal.status === 'pending' || selectedProposal.status === 'revision_requested'" class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <h2 class="text-lg font-semibold text-slate-900">Reviewer note</h2>
       <textarea
         v-model="reviewerNote"
@@ -64,56 +72,105 @@
         placeholder="Optional note for the student..."
       ></textarea>
       <div class="mt-3 flex flex-wrap justify-end gap-2">
-        <button class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition">Request revision</button>
-        <button class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition">Reject</button>
-        <button class="rounded-lg bg-blue-900 px-4 py-2 text-sm font-medium text-white hover:bg-blue-950 transition">Accept</button>
+        <button 
+          @click="submitReview('revision_requested')" 
+          :disabled="isSubmitting"
+          class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+        >
+          Request revision
+        </button>
+        <button 
+          @click="submitReview('rejected')" 
+          :disabled="isSubmitting"
+          class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
+        >
+          Reject
+        </button>
+        <button 
+          @click="submitReview('accepted')" 
+          :disabled="isSubmitting"
+          class="rounded-lg bg-blue-900 px-4 py-2 text-sm font-medium text-white hover:bg-blue-950 disabled:opacity-50"
+        >
+          Accept
+        </button>
       </div>
     </article>
   </section>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import axios from 'axios'
+import { useToast } from 'vue-toastification'
+
+const route = useRoute()
+const router = useRouter()
+const toast = useToast()
 
 const reviewerNote = ref('')
+const isSubmitting = ref(false)
 
 const selectedProposal = ref({
-  title: 'Smart Library Management System with NFC',
-  author: 'Tayri Mousa Ali',
-  department: 'Programming',
-  similarity: '34%',
-  status: 'Accepted',
-  description: 'A web platform to manage library operations including borrowing, returns, and inventory using NFC technology and a recommendation engine. The system will track book usage, predict popular categories, and offer an interactive portal for students to find study materials based on their major.'
+  title: 'Loading...',
+  author: '',
+  department: '',
+  similarity: '0%',
+  status: 'pending',
+  problem: '',
+  solution: '',
+  tags: ''
 })
 
-const closestMatches = [
-  { 
-    id: 1,
-    title: 'Network Traffic Anomaly Detector using ML', 
-    author: 'Karim Adel', 
-    year: '2024', 
-    score: '78%'
-  },
-  { 
-    id: 2,
-    title: 'Real-time IDS with Random Forests', 
-    author: 'Lina Hassen', 
-    year: '2023', 
-    score: '64%'
-  },
-  { 
-    id: 3,
-    title: 'Hybrid IDS combining Snort and Neural Nets', 
-    author: 'Yousef Tariq', 
-    year: '2022', 
-    score: '51%'
-  },
-  { 
-    id: 4,
-    title: 'Anomaly-based Network Security Toolkit', 
-    author: 'Mariam Khaled', 
-    year: '2024', 
-    score: '47%'
-  },
-]
+const closestMatches = ref([])
+
+onMounted(async () => {
+  fetchProposal()
+})
+
+const fetchProposal = async () => {
+  try {
+    const [propRes, simRes] = await Promise.all([
+      axios.get(`/department/proposals/${route.params.id}`),
+      axios.get(`/student/proposals/${route.params.id}/similarity`) // Reusing student similarity endpoint for now
+    ])
+    selectedProposal.value = propRes.data.proposal
+    closestMatches.value = simRes.data.results
+  } catch (error) {
+    console.error('Error fetching proposal details:', error)
+    toast.error('Failed to load proposal details.')
+  }
+}
+
+const submitReview = async (decision) => {
+  if (isSubmitting.value) return
+  
+  isSubmitting.value = true
+  try {
+    await axios.post(`/department/proposals/${route.params.id}/review`, {
+      decision: decision,
+      note: reviewerNote.value
+    })
+    toast.success(`Proposal ${decision.replace('_', ' ')} successfully.`)
+    router.push({ name: 'DepartmentQueue' })
+  } catch (error) {
+    console.error('Error submitting review:', error)
+    toast.error('Failed to submit review.')
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+const formatStatus = (status) => {
+  if (status === 'revision_requested') return 'Revision Needed'
+  return status.charAt(0).toUpperCase() + status.slice(1)
+}
+
+const statusClass = (status) => {
+  if (status === 'accepted') return 'bg-emerald-100 text-emerald-700'
+  if (status === 'revision_requested') return 'bg-cyan-100 text-cyan-700'
+  if (status === 'rejected') return 'bg-red-100 text-red-700'
+  if (status === 'pending') return 'bg-amber-100 text-amber-700'
+  return 'bg-slate-100 text-slate-700'
+}
 </script>

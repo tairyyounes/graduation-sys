@@ -18,9 +18,9 @@
             <td class="px-4 py-3 text-slate-600">{{ row.author }}</td>
             <td class="px-4 py-3 text-slate-600">{{ row.department }}</td>
             <td class="px-4 py-3"><span class="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">{{ row.similarity }}</span></td>
-            <td class="px-4 py-3"><span :class="statusClass(row.status)" class="rounded-full px-2.5 py-1 text-xs font-semibold">{{ row.status }}</span></td>
+            <td class="px-4 py-3"><span :class="statusClass(row.status)" class="rounded-full px-2.5 py-1 text-xs font-semibold">{{ formatStatus(row.status) }}</span></td>
             <td class="px-4 py-3">
-              <router-link :to="{ name: 'DepartmentProposal' }" class="rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition">
+              <router-link :to="{ name: 'DepartmentProposal', params: { id: row.id } }" class="rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition">
                 View
               </router-link>
             </td>
@@ -32,19 +32,30 @@
 </template>
 
 <script setup>
-const queueRows = [
-  { title: 'Smart Library Management System with NFC', author: 'Tayri Mousa Ali', department: 'Programming', similarity: '34%', status: 'Accepted' },
-  { title: 'AI-based Network Intrusion Detection', author: 'Shaymaa Salem Ambashi', department: 'Networks', similarity: '78%', status: 'Needs revision' },
-  { title: 'Smart Greenhouse Control System', author: 'Ahmed Khalid', department: 'Control', similarity: '22%', status: 'Pending' },
-  { title: 'Graduation Project Similarity Detection Platform', author: 'Tayri Mousa Ali', department: 'Programming', similarity: '12%', status: 'Analyzing' },
-  { title: 'Campus Mesh Wi-Fi Optimization', author: 'Sara Omar', department: 'Networks', similarity: '41%', status: 'Rejected' },
-]
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
+
+const queueRows = ref([])
+
+onMounted(async () => {
+  try {
+    const res = await axios.get('/department/proposals?status=submitted')
+    queueRows.value = res.data.proposals
+  } catch (error) {
+    console.error('Error fetching review queue:', error)
+  }
+})
 
 const statusClass = (status) => {
-  if (status === 'Accepted') return 'bg-emerald-100 text-emerald-700'
-  if (status === 'Needs revision') return 'bg-cyan-100 text-cyan-700'
-  if (status === 'Rejected') return 'bg-red-100 text-red-700'
-  if (status === 'Pending') return 'bg-amber-100 text-amber-700'
+  if (status === 'accepted') return 'bg-emerald-100 text-emerald-700'
+  if (status === 'revision_requested') return 'bg-cyan-100 text-cyan-700'
+  if (status === 'rejected') return 'bg-red-100 text-red-700'
+  if (status === 'pending') return 'bg-amber-100 text-amber-700'
   return 'bg-slate-100 text-slate-700'
+}
+
+const formatStatus = (status) => {
+  if (status === 'revision_requested') return 'Revision Needed'
+  return status.charAt(0).toUpperCase() + status.slice(1)
 }
 </script>
