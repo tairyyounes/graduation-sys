@@ -67,13 +67,6 @@ class AddingUserRequest extends FormRequest
                 'unique:students,student_number'
             ],
 
-            // Semester
-            'semester' => [
-                \Illuminate\Validation\Rule::requiredIf(fn() => $this->role === 'student'),
-                'nullable',
-                'integer',
-                'in:8'
-            ],
 
             // Status
             'is_active' => ['required', 'boolean'],
