@@ -96,6 +96,14 @@
             Cancel
           </button>
           <button
+            v-if="!isEditing"
+            type="button"
+            class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400"
+            @click="$emit('clear')"
+          >
+            Clear
+          </button>
+          <button
             type="submit"
             class="rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50"
             :disabled="submitting"
@@ -132,5 +140,5 @@ defineProps({
   },
 })
 
-defineEmits(['close', 'submit'])
+defineEmits(['close', 'submit', 'clear'])
 </script>

@@ -55,6 +55,7 @@
               <option value="admin">Admin</option>
               <option value="student">Student</option>
               <option value="department_member">Department member</option>
+              <option value="department_head">Department head</option>
             </select>
             <p v-if="errors.role" class="mt-1 text-xs text-red-600">{{ errors.role[0] }}</p>
           </div>
@@ -125,6 +126,14 @@
             Cancel
           </button>
           <button
+            v-if="!isEditing"
+            type="button"
+            class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400"
+            @click="$emit('clear')"
+          >
+            Clear
+          </button>
+          <button
             type="submit"
             class="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 disabled:opacity-50"
             :disabled="submitting"
@@ -165,5 +174,5 @@ defineProps({
   },
 })
 
-defineEmits(['close', 'submit'])
+defineEmits(['close', 'submit', 'clear'])
 </script>

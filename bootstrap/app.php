@@ -21,7 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 if ($role === 'admin') {
                     return '/admin/dashboard';
                 }
-                if ($role === 'department_member') {
+                if ($role === 'department_member' || $role === 'department_head') {
                     return '/department/dashboard';
                 }
                 return '/student/dashboard';

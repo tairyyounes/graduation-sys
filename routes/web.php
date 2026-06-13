@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\Department\StudentImportController;
 use App\Http\Controllers\Department\DepartmentProposalController;
+use App\Http\Controllers\Shared\HistoricalProposalController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,7 +16,7 @@ Route::get('/dashboard', function () {
     if ($user->role === 'admin') {
         return redirect()->route('admin.dashboard');
     }
-    if ($user->role === 'department_member') {
+    if ($user->role === 'department_member' || $user->role === 'department_head') {
         return redirect()->route('department.dashboard');
     }
     return redirect()->route('student.dashboard');
@@ -44,6 +45,11 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}', [\App\Http\Controllers\Admin\DepartmentController::class, 'show'])->name('admin.departments.show');
             Route::put('/{id}', [\App\Http\Controllers\Admin\DepartmentController::class, 'update'])->name('admin.departments.update');
             Route::delete('/{id}', [\App\Http\Controllers\Admin\DepartmentController::class, 'destroy'])->name('admin.departments.destroy');
+        });
+
+        Route::prefix('/admin/previous-proposals')->group(function () {
+            Route::post('/', [HistoricalProposalController::class, 'store']);
+            Route::post('/import', [HistoricalProposalController::class, 'import']);
         });
     });
 
@@ -74,13 +80,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/department/dashboard/{any?}', function () {
         return view('department.vue-dashboard');
-    })->where('any', '.*')->middleware('role:department_member')->name('department.dashboard');
+    })->where('any', '.*')->middleware('role:department_member,department_head')->name('department.dashboard');
 
-    Route::middleware('role:department_member')->prefix('/department')->group(function () {
-        Route::get('/students', [StudentImportController::class, 'index'])->name('department.students.index');
-        Route::post('/students', [StudentImportController::class, 'store'])->name('department.students.store');
-        Route::post('/students/import', [StudentImportController::class, 'import'])->name('department.students.import');
-
+    // Both department_member and department_head have access to proposals and stats
+    Route::middleware('role:department_member,department_head')->prefix('/department')->group(function () {
         // Proposal Management
         Route::get('/proposals', [DepartmentProposalController::class, 'index']);
         Route::get('/stats', [DepartmentProposalController::class, 'stats']);
@@ -88,9 +91,39 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/proposals/{proposal}/review', [DepartmentProposalController::class, 'review']);
     });
 
+    // ONLY department_head has access to students and department members management
+    Route::middleware('role:department_head')->prefix('/department')->group(function () {
+        Route::post('/proposals/{proposal}/grant-revision', [DepartmentProposalController::class, 'grantExtraRevision']);
+        Route::get('/students', [StudentImportController::class, 'index'])->name('department.students.index');
+        Route::post('/students', [StudentImportController::class, 'store'])->name('department.students.store');
+        Route::get('/students/template', [StudentImportController::class, 'downloadTemplate'])->name('department.students.template');
+        Route::post('/students/import', [StudentImportController::class, 'import'])->name('department.students.import');
+        Route::post('/students/import-confirm', [StudentImportController::class, 'confirmImport'])->name('department.students.import-confirm');
+        Route::put('/students/{studentId}', [StudentImportController::class, 'update'])->name('department.students.update');
+        Route::delete('/students/{studentId}', [StudentImportController::class, 'destroy'])->name('department.students.destroy');
+
+        // Department Members Management
+        Route::get('/members', [\App\Http\Controllers\Department\DepartmentMemberManagementController::class, 'index'])->name('department.members.index');
+        Route::post('/members', [\App\Http\Controllers\Department\DepartmentMemberManagementController::class, 'store'])->name('department.members.store');
+        Route::put('/members/{user}', [\App\Http\Controllers\Department\DepartmentMemberManagementController::class, 'update'])->name('department.members.update');
+        Route::delete('/members/{user}', [\App\Http\Controllers\Department\DepartmentMemberManagementController::class, 'destroy'])->name('department.members.destroy');
+
+        // Review Committees
+        Route::get('/committees', [\App\Http\Controllers\Department\ReviewCommitteeController::class, 'index'])->name('department.committees.index');
+        Route::post('/committees', [\App\Http\Controllers\Department\ReviewCommitteeController::class, 'store'])->name('department.committees.store');
+        Route::put('/committees/{committee}', [\App\Http\Controllers\Department\ReviewCommitteeController::class, 'update'])->name('department.committees.update');
+        Route::delete('/committees/{committee}', [\App\Http\Controllers\Department\ReviewCommitteeController::class, 'destroy'])->name('department.committees.destroy');
+
+        // Historical Proposals
+        Route::post('/previous-proposals', [HistoricalProposalController::class, 'store']);
+        Route::post('/previous-proposals/import', [HistoricalProposalController::class, 'import']);
+    });
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/previous-proposals', [HistoricalProposalController::class, 'index']);
 });
 
 require __DIR__.'/auth.php';

@@ -20,6 +20,7 @@ class Proposal extends Model
         'submission_status',
         'review_status',
         'is_locked',
+        'extra_revisions_allowed',
     ];
 
     public function getActivitylogOptions(): LogOptions

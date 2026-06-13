@@ -174,6 +174,7 @@
     :errors="formErrors"
     @close="closeUserModal"
     @submit="submitUserForm"
+    @clear="clearForm"
   />
 
   <DeleteConfirmationModal

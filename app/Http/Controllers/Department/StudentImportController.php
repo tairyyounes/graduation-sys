@@ -252,16 +252,6 @@ class StudentImportController extends Controller
         $students = $request->input('students', []);
         
         // We will validate using the rules from AddingUserRequest
-        $rules = (new \App\Http\Requests\AddingUserRequest())->rules();
-        // Adjust rules for batch processing
-        $studentRules = [
-            'students' => ['required', 'array'],
-            'students.*.student_number' => $rules['student_number'],
-            'students.*.full_name' => $rules['full_name'],
-            'students.*.email' => $rules['email'],
-            'students.*.semester' => $rules['semester'],
-            'students.*.is_active' => $rules['is_active'],
-        ];
 
         // Ensure we pass the required role for validation closures to work properly
         foreach ($students as &$student) {
@@ -273,6 +263,10 @@ class StudentImportController extends Controller
         // Manually instantiate the request with the data so the closure logic in AddingUserRequest works
         $addingRequest = new \App\Http\Requests\AddingUserRequest();
         $addingRequest->merge(['role' => 'student']);
+        $rules = $addingRequest->rules();
+        
+        // Remove rules for fields we handle automatically
+        unset($rules['password'], $rules['department_id']);
 
         // Since the array validation is complex, we will validate row by row using the validator
         $validStudents = [];
@@ -343,5 +337,111 @@ class StudentImportController extends Controller
             'message' => 'Students imported successfully.',
             'imported_count' => count($studentRows),
         ]);
+    }
+
+    /**
+     * Update a student and their corresponding user account.
+     */
+    public function update(Request $request, $studentId): JsonResponse
+    {
+        $departmentId = $request->user()->department_id;
+        
+        $student = DB::table('students')
+            ->where('student_id', $studentId)
+            ->where('department_id', $departmentId)
+            ->first();
+
+        if (!$student) {
+            return response()->json(['message' => 'Student not found.'], 404);
+        }
+
+        $validated = $request->validate([
+            'student_number' => ['required', 'digits:6', Rule::unique('students', 'student_number')->ignore($student->student_id, 'student_id')],
+            'full_name' => ['required', 'string', 'max:255', 'regex:/^[\pL\s]+$/u'],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($student->official_email, 'email')],
+            'semester' => ['nullable', 'integer'],
+            'is_active' => ['required', 'boolean'],
+            'password' => ['nullable', 'string', 'min:6'],
+        ]);
+
+        DB::beginTransaction();
+        try {
+            DB::table('students')
+                ->where('student_id', $studentId)
+                ->update([
+                    'student_number' => $validated['student_number'],
+                    'full_name' => $validated['full_name'],
+                    'official_email' => $validated['email'],
+                    'semester' => $validated['semester'],
+                    'is_active' => $validated['is_active'],
+                ]);
+
+            $userData = [
+                'full_name' => $validated['full_name'],
+                'email' => $validated['email'],
+                'is_active' => $validated['is_active'],
+            ];
+
+            if (!empty($validated['password'])) {
+                $userData['password'] = Hash::make($validated['password']);
+            }
+
+            // Update user associated with old official_email
+            DB::table('users')
+                ->where('email', $student->official_email)
+                ->where('role', 'student')
+                ->update($userData);
+
+            activity()
+                ->causedBy($request->user())
+                ->log('Updated student profile: ' . $validated['student_number']);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Failed to update student.', 'error' => $e->getMessage()], 500);
+        }
+
+        return response()->json(['message' => 'Student updated successfully.']);
+    }
+
+    /**
+     * Delete a student and their corresponding user account.
+     */
+    public function destroy(Request $request, $studentId): JsonResponse
+    {
+        $departmentId = $request->user()->department_id;
+        
+        $student = DB::table('students')
+            ->where('student_id', $studentId)
+            ->where('department_id', $departmentId)
+            ->first();
+
+        if (!$student) {
+            return response()->json(['message' => 'Student not found.'], 404);
+        }
+
+        DB::beginTransaction();
+        try {
+            DB::table('users')
+                ->where('email', $student->official_email)
+                ->where('role', 'student')
+                ->delete();
+
+            DB::table('students')
+                ->where('student_id', $studentId)
+                ->delete();
+
+            activity()
+                ->causedBy($request->user())
+                ->log('Deleted student profile: ' . $student->student_number);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Failed to delete student.', 'error' => $e->getMessage()], 500);
+        }
+
+        return response()->json(['message' => 'Student deleted successfully.']);
     }
 }

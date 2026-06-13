@@ -126,9 +126,9 @@ class UserManagementController extends Controller
         $validated = $request->validate([
             'full_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
-            'role' => ['required', Rule::in(['admin', 'student', 'department_member'])],
+            'role' => ['required', Rule::in(['admin', 'student', 'department_member', 'department_head'])],
             'department_id' => [
-                Rule::requiredIf(fn() => $request->role === 'student' || $request->role === 'department_member'), 
+                Rule::requiredIf(fn() => in_array($request->role, ['student', 'department_member', 'department_head'])), 
                 'nullable', 
                 'exists:departments,department_id'
             ],

@@ -70,4 +70,12 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Department::class, 'department_id', 'department_id');
     }
+
+    /**
+     * The committees that the user belongs to.
+     */
+    public function committees(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(ReviewCommittee::class, 'committee_user');
+    }
 }

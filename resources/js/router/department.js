@@ -37,6 +37,24 @@ const routes = [
     component: () => import('../components/department/DepartmentStudentsSection.vue'),
     meta: { page: 'students' }
   },
+  {
+    path: '/department/dashboard/members',
+    name: 'DepartmentMembers',
+    component: () => import('../components/department/DepartmentMembersSection.vue'),
+    meta: { page: 'members' }
+  },
+  {
+    path: '/department/dashboard/committees',
+    name: 'DepartmentCommittees',
+    component: () => import('../components/department/DepartmentCommitteesSection.vue'),
+    meta: { page: 'committees' }
+  },
+  {
+    path: '/department/dashboard/previous-proposals',
+    name: 'DepartmentPreviousProposals',
+    component: () => import('../components/common/HistoricalProposalsManager.vue'),
+    meta: { page: 'previous-proposals' }
+  },
   // Catch all unmatched routes and redirect to overview
   {
     path: '/department/dashboard/:pathMatch(.*)*',

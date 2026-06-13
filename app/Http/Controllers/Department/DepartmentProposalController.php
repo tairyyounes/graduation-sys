@@ -78,14 +78,30 @@ class DepartmentProposalController extends Controller
      */
     public function review(Request $request, Proposal $proposal): JsonResponse
     {
-        if ($proposal->department_id !== $request->user()->department_id) {
+        $user = $request->user();
+
+        if ($proposal->department_id !== $user->department_id) {
             return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        // Only department heads and members of ANY review committee can review
+        $isCommitteeMember = $user->committees()->where('department_id', $user->department_id)->exists();
+        if ($user->role !== 'department_head' && !$isCommitteeMember) {
+            return response()->json(['message' => 'Only Review Committee members can review proposals.'], 403);
         }
 
         $request->validate([
             'decision' => 'required|in:accepted,rejected,revision_requested',
             'note' => 'nullable|string',
         ]);
+
+        if ($request->decision === 'revision_requested') {
+            $revisionCount = $proposal->decisions()->where('decision_type', 'revision_requested')->count();
+            $maxRevisions = 2 + $proposal->extra_revisions_allowed;
+            if ($revisionCount >= $maxRevisions) {
+                return response()->json(['message' => 'Maximum number of revisions reached for this proposal.'], 403);
+            }
+        }
 
         return DB::transaction(function () use ($request, $proposal) {
             $decision = Decision::create([
@@ -134,8 +150,38 @@ class DepartmentProposalController extends Controller
             'status' => $proposal->review_status,
             'submission_status' => $proposal->submission_status,
             'is_locked' => $proposal->is_locked,
+            'revision_count' => $proposal->decisions()->where('decision_type', 'revision_requested')->count(),
+            'max_revisions' => 2 + $proposal->extra_revisions_allowed,
             'date' => $proposal->updated_at->format('Y-m-d'),
             'similarity' => '12%', // Mock for now, logic to be added
         ];
+    }
+
+    /**
+     * Grant an extra revision for a proposal.
+     */
+    public function grantExtraRevision(Request $request, Proposal $proposal): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($proposal->department_id !== $user->department_id) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        if ($user->role !== 'department_head') {
+            return response()->json(['message' => 'Only Department Heads can grant extra revisions.'], 403);
+        }
+
+        $proposal->increment('extra_revisions_allowed');
+
+        activity()
+            ->performedOn($proposal)
+            ->causedBy($user)
+            ->log('granted 1 extra revision');
+
+        return response()->json([
+            'message' => 'Extra revision granted successfully.',
+            'max_revisions' => 2 + $proposal->extra_revisions_allowed,
+        ]);
     }
 }

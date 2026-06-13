@@ -34,13 +34,13 @@ class StudentProposalController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'domain' => 'nullable|string',
-            'problem' => 'nullable|string',
-            'solution' => 'nullable|string',
-            'functions' => 'nullable|string',
-            'objectives' => 'nullable|string',
-            'tags' => 'nullable|string',
-            'tech' => 'nullable|string',
+            'domain' => 'nullable|string', // Domain is automatically set from student's department, so keep it nullable from frontend perspective.
+            'problem' => 'required|string',
+            'solution' => 'required|string',
+            'functions' => 'required|string',
+            'objectives' => 'required|string',
+            'tags' => 'required|string',
+            'tech' => 'required|string',
         ]);
 
         $student = $request->user()->student;
@@ -97,13 +97,13 @@ class StudentProposalController extends Controller
 
         $request->validate([
             'title' => 'required|string|max:255',
-            'problem' => 'nullable|string',
-            'solution' => 'nullable|string',
-            'functions' => 'nullable|string',
-            'objectives' => 'nullable|string',
-            'tags' => 'nullable|string',
-            'tech' => 'nullable|string',
-            'note' => 'nullable|string|max:255', // Version note
+            'problem' => 'required|string',
+            'solution' => 'required|string',
+            'functions' => 'required|string',
+            'objectives' => 'required|string',
+            'tags' => 'required|string',
+            'tech' => 'required|string',
+            'note' => 'nullable|string|max:255', // Version note can remain optional
         ]);
 
         return DB::transaction(function () use ($request, $proposal) {

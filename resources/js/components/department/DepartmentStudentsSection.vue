@@ -54,13 +54,6 @@
             <h2 class="text-lg font-semibold text-teal-900">Staged for Import</h2>
             <p class="text-sm text-teal-700 mt-1">Review the parsed students. Existing students are highlighted in red and will be ignored. You can edit names and emails before confirming.</p>
           </div>
-          <button
-            class="inline-flex items-center justify-center rounded-lg bg-teal-600 px-5 py-2 text-sm font-semibold text-white hover:bg-teal-700 transition disabled:opacity-50"
-            :disabled="confirmingImport"
-            @click="confirmImport"
-          >
-            {{ confirmingImport ? 'Saving...' : 'Confirm & Add Students' }}
-          </button>
         </div>
 
         <div class="overflow-x-auto rounded-xl border border-teal-100 bg-white shadow-sm">
@@ -101,6 +94,16 @@
             </tbody>
           </table>
         </div>
+
+        <div class="mt-5 flex justify-end">
+          <button
+            class="inline-flex items-center justify-center rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-700 transition disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 shadow-sm"
+            :disabled="confirmingImport"
+            @click="confirmImport"
+          >
+            {{ confirmingImport ? 'Saving...' : 'Confirm & Add Students' }}
+          </button>
+        </div>
       </article>
 
       <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -140,11 +143,12 @@
                 <th class="px-5 py-3 font-semibold">Email</th>
                 <th class="px-5 py-3 font-semibold">Semester</th>
                 <th class="px-5 py-3 font-semibold">Status</th>
+                <th class="px-5 py-3 font-semibold text-right">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
               <tr v-if="paginatedStudents.length === 0">
-                <td colspan="5" class="px-5 py-8 text-center text-slate-500">
+                <td colspan="6" class="px-5 py-8 text-center text-slate-500">
                   No students match your search.
                 </td>
               </tr>
@@ -160,6 +164,16 @@
                   >
                     {{ student.is_active ? 'Active' : 'Disabled' }}
                   </span>
+                </td>
+                <td class="px-5 py-4 text-right">
+                  <div class="flex items-center justify-end gap-3">
+                    <button class="text-slate-400 hover:text-teal-600 transition" @click="openEditModal(student)">
+                      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    </button>
+                    <button class="text-slate-400 hover:text-red-600 transition" @click="deleteStudent(student)">
+                      <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -201,6 +215,16 @@
       :errors="formErrors"
       @close="closeStudentModal"
       @submit="submitStudentForm"
+      @clear="clearStudentForm"
+    />
+
+    <DeleteConfirmationModal
+      :is-open="isDeleteModalOpen"
+      :is-deleting="isDeleting"
+      title="Delete Student"
+      :message="`Are you sure you want to delete ${studentToDelete?.full_name}? This action cannot be undone.`"
+      @close="closeDeleteModal"
+      @confirm="confirmDelete"
     />
   </section>
 </template>
@@ -209,6 +233,7 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useToast } from 'vue-toastification'
 import DepartmentStudentModal from './DepartmentStudentModal.vue'
+import DeleteConfirmationModal from '../common/DeleteConfirmationModal.vue'
 
 const toast = useToast()
 
@@ -250,8 +275,13 @@ watch(searchQuery, () => {
 
 const isStudentModalOpen = ref(false)
 const isEditingStudent = ref(false)
+const editingStudentId = ref(null)
 const submittingStudentForm = ref(false)
 const formErrors = ref({})
+
+const isDeleteModalOpen = ref(false)
+const isDeleting = ref(false)
+const studentToDelete = ref(null)
 
 const studentForm = reactive({
   student_number: '',
@@ -389,6 +419,19 @@ const openStudentModal = () => {
   clearStudentForm()
   formErrors.value = {}
   isEditingStudent.value = false
+  editingStudentId.value = null
+  isStudentModalOpen.value = true
+}
+
+const openEditModal = (student) => {
+  formErrors.value = {}
+  isEditingStudent.value = true
+  editingStudentId.value = student.student_id
+  studentForm.student_number = student.student_number
+  studentForm.full_name = student.full_name
+  studentForm.email = student.official_email
+  studentForm.semester = student.semester
+  studentForm.is_active = student.is_active
   isStudentModalOpen.value = true
 }
 
@@ -408,8 +451,11 @@ const submitStudentForm = async () => {
   }
 
   try {
-    const response = await fetch('/department/students', {
-      method: 'POST',
+    const url = isEditingStudent.value ? `/department/students/${editingStudentId.value}` : '/department/students'
+    const method = isEditingStudent.value ? 'PUT' : 'POST'
+
+    const response = await fetch(url, {
+      method,
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
@@ -425,7 +471,7 @@ const submitStudentForm = async () => {
       throw new Error('Validation failed')
     }
 
-    toast.success(data.message || 'Student added successfully.')
+    toast.success(data.message || (isEditingStudent.value ? 'Student updated successfully.' : 'Student added successfully.'))
     closeStudentModal()
     await loadStudents()
   } catch (error) {
@@ -434,6 +480,48 @@ const submitStudentForm = async () => {
     }
   } finally {
     submittingStudentForm.value = false
+  }
+}
+
+const deleteStudent = (student) => {
+  studentToDelete.value = student
+  isDeleteModalOpen.value = true
+}
+
+const closeDeleteModal = () => {
+  isDeleteModalOpen.value = false
+  studentToDelete.value = null
+}
+
+const confirmDelete = async () => {
+  if (!studentToDelete.value) return
+  
+  isDeleting.value = true
+  try {
+    const response = await fetch(`/department/students/${studentToDelete.value.student_id}`, {
+      method: 'DELETE',
+      headers: {
+        Accept: 'application/json',
+        'X-CSRF-TOKEN': getCsrfToken(),
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error('Unable to delete student.')
+    }
+
+    students.value = students.value.filter((item) => item.student_id !== studentToDelete.value.student_id)
+    
+    if (paginatedStudents.value.length === 0 && currentPage.value > 1) {
+      currentPage.value--
+    }
+
+    toast.success('Student deleted successfully.')
+    closeDeleteModal()
+  } catch (error) {
+    toast.error(error.message || 'Unable to delete student.')
+  } finally {
+    isDeleting.value = false
   }
 }
 

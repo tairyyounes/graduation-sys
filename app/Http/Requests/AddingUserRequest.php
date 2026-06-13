@@ -15,6 +15,18 @@ class AddingUserRequest extends FormRequest
     }
 
     /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        if (in_array($this->role, ['student', 'department_member', 'department_head']) && !$this->has('department_id')) {
+            $this->merge([
+                'department_id' => $this->user()?->department_id,
+            ]);
+        }
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
@@ -34,7 +46,7 @@ class AddingUserRequest extends FormRequest
             // Role
             'role' => [
                 'required',
-                \Illuminate\Validation\Rule::in(['admin', 'student', 'department_member']),
+                \Illuminate\Validation\Rule::in(['admin', 'student', 'department_member', 'department_head']),
             ],
 
             'email' => [
@@ -54,7 +66,7 @@ class AddingUserRequest extends FormRequest
 
             // Department ID
             'department_id' => [
-                \Illuminate\Validation\Rule::requiredIf(fn() => $this->role === 'student' || $this->role === 'department_member'), 
+                \Illuminate\Validation\Rule::requiredIf(fn() => in_array($this->role, ['student', 'department_member', 'department_head'])), 
                 'nullable', 
                 'exists:departments,department_id'
             ],
@@ -67,12 +79,19 @@ class AddingUserRequest extends FormRequest
                 'unique:students,student_number'
             ],
 
+            // Semester
+            'semester' => [
+                \Illuminate\Validation\Rule::requiredIf(fn() => $this->role === 'student'),
+                'nullable',
+                'integer'
+            ],
+
 
             // Status
             'is_active' => ['required', 'boolean'],
 
             // Password
-            'password' => ['required', 'string', 'min:8'],
+            'password' => ['required', 'string', 'min:6'],
         ];
     }
 }

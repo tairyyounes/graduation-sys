@@ -31,6 +31,12 @@ const routes = [
     component: () => import('../components/admin/AdminActivitySection.vue'),
     meta: { page: 'activity' }
   },
+  {
+    path: '/admin/dashboard/previous-proposals',
+    name: 'AdminPreviousProposals',
+    component: () => import('../components/common/HistoricalProposalsManager.vue'),
+    meta: { page: 'previous-proposals' }
+  },
   // Catch all unmatched routes and redirect to overview
   {
     path: '/admin/dashboard/:pathMatch(.*)*',

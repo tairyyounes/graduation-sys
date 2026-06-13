@@ -64,7 +64,12 @@
     </article>
 
     <article v-if="selectedProposal.status === 'pending' || selectedProposal.status === 'revision_requested'" class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <h2 class="text-lg font-semibold text-slate-900">Reviewer note</h2>
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-lg font-semibold text-slate-900">Reviewer note</h2>
+        <span class="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+          Revisions used: {{ selectedProposal.revision_count }} / {{ selectedProposal.max_revisions }}
+        </span>
+      </div>
       <textarea
         v-model="reviewerNote"
         rows="4"
@@ -73,9 +78,18 @@
       ></textarea>
       <div class="mt-3 flex flex-wrap justify-end gap-2">
         <button 
-          @click="submitReview('revision_requested')" 
+          v-if="isDepartmentHead && selectedProposal.revision_count >= selectedProposal.max_revisions"
+          @click="grantExtraRevision" 
           :disabled="isSubmitting"
-          class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+          class="rounded-lg border border-teal-300 bg-teal-50 px-4 py-2 text-sm font-medium text-teal-700 hover:bg-teal-100 disabled:opacity-50"
+        >
+          Grant Extra Edit
+        </button>
+        <button 
+          @click="submitReview('revision_requested')" 
+          :disabled="isSubmitting || selectedProposal.revision_count >= selectedProposal.max_revisions"
+          class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          :title="selectedProposal.revision_count >= selectedProposal.max_revisions ? 'Maximum revisions reached' : ''"
         >
           Request revision
         </button>
@@ -108,6 +122,9 @@ const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 
+const authUser = window.authUser || {}
+const isDepartmentHead = authUser.role === 'department_head'
+
 const reviewerNote = ref('')
 const isSubmitting = ref(false)
 
@@ -119,7 +136,9 @@ const selectedProposal = ref({
   status: 'pending',
   problem: '',
   solution: '',
-  tags: ''
+  tags: '',
+  revision_count: 0,
+  max_revisions: 2
 })
 
 const closestMatches = ref([])
@@ -156,6 +175,21 @@ const submitReview = async (decision) => {
   } catch (error) {
     console.error('Error submitting review:', error)
     toast.error('Failed to submit review.')
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+const grantExtraRevision = async () => {
+  if (isSubmitting.value) return
+  isSubmitting.value = true
+  try {
+    const res = await axios.post(`/department/proposals/${route.params.id}/grant-revision`)
+    selectedProposal.value.max_revisions = res.data.max_revisions
+    toast.success('Extra revision granted successfully.')
+  } catch (error) {
+    console.error('Error granting extra revision:', error)
+    toast.error('Failed to grant extra revision.')
   } finally {
     isSubmitting.value = false
   }

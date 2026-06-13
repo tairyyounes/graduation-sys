@@ -16,7 +16,7 @@
         <div class="px-6 py-6 overflow-y-auto flex-1 space-y-5">
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1">Proposal Title</label>
-            <input v-model="form.title" type="text" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border" placeholder="Enter a descriptive title">
+            <input v-model="form.title" type="text" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border" placeholder="Enter a descriptive title" required>
           </div>
 
           <div>
@@ -32,33 +32,33 @@
 
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1">Problem Statement</label>
-            <textarea v-model="form.problem" rows="3" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border" placeholder="What specific problem are you solving?"></textarea>
+            <textarea v-model="form.problem" rows="3" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border" placeholder="What specific problem are you solving?" required></textarea>
           </div>
 
           <div>
             <label class="block text-sm font-medium text-slate-700 mb-1">Proposed Solution</label>
-            <textarea v-model="form.solution" rows="3" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border" placeholder="How does your project solve this problem?"></textarea>
+            <textarea v-model="form.solution" rows="3" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border" placeholder="How does your project solve this problem?" required></textarea>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1">Objectives</label>
-              <textarea v-model="form.objectives" rows="2" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border" placeholder="Main goals..."></textarea>
+              <textarea v-model="form.objectives" rows="2" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border" placeholder="Main goals..." required></textarea>
             </div>
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1">Core Functions</label>
-              <textarea v-model="form.functions" rows="2" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border" placeholder="Key features..."></textarea>
+              <textarea v-model="form.functions" rows="2" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border" placeholder="Key features..." required></textarea>
             </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1">Tags / Keywords</label>
-              <input v-model="form.tags" type="text" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border" placeholder="e.g. AI, Web App, Healthcare">
+              <input v-model="form.tags" type="text" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border" placeholder="e.g. AI, Web App, Healthcare" required>
             </div>
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1">Technology Used</label>
-              <input v-model="form.tech" type="text" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border" placeholder="e.g. Vue, Laravel, Python">
+              <input v-model="form.tech" type="text" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border" placeholder="e.g. Vue, Laravel, Python" required>
             </div>
           </div>
         </div>
