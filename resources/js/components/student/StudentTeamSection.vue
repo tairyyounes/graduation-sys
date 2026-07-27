@@ -31,7 +31,7 @@
               <td class="whitespace-nowrap py-4 pl-6 pr-3 text-sm font-medium text-slate-900">
                 <div class="flex items-center">
                   <div class="h-8 w-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs mr-3">
-                    {{ member.name.split(' ').map(n => n[0]).join('') }}
+                    {{ member.name ? member.name.split(' ').map(n => n[0]).join('') : '' }}
                   </div>
                   {{ member.name }}
                 </div>
