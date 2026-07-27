@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\CheckProposalSimilarity;
 use App\Models\Proposal;
 use App\Models\ProposalVersion;
 use App\Models\Decision;
+use App\Models\SimilarityResult;
+use App\Http\Requests\StoreProposalRequest;
+use App\Http\Requests\UpdateProposalRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -30,19 +34,8 @@ class StudentProposalController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreProposalRequest $request): JsonResponse
     {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'domain' => 'nullable|string', // Domain is automatically set from student's department, so keep it nullable from frontend perspective.
-            'problem' => 'required|string',
-            'solution' => 'required|string',
-            'functions' => 'required|string',
-            'objectives' => 'required|string',
-            'tags' => 'required|string',
-            'tech' => 'required|string',
-        ]);
-
         $student = $request->user()->student;
 
         return DB::transaction(function () use ($request, $student) {
@@ -82,7 +75,7 @@ class StudentProposalController extends Controller
         });
     }
 
-    public function update(Request $request, Proposal $proposal): JsonResponse
+    public function update(UpdateProposalRequest $request, Proposal $proposal): JsonResponse
     {
         // Security: Student can only access their own proposals
         $student = $request->user()->student;
@@ -94,18 +87,6 @@ class StudentProposalController extends Controller
         if ($proposal->is_locked || $proposal->review_status === 'accepted') {
             return response()->json(['message' => 'Proposal is locked or already accepted.'], 403);
         }
-
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'problem' => 'required|string',
-            'solution' => 'required|string',
-            'functions' => 'required|string',
-            'objectives' => 'required|string',
-            'tags' => 'required|string',
-            'tech' => 'required|string',
-            'note' => 'nullable|string|max:255', // Version note can remain optional
-        ]);
-
         return DB::transaction(function () use ($request, $proposal) {
             $latestVersion = $proposal->latestVersion;
             
@@ -152,6 +133,86 @@ class StudentProposalController extends Controller
             return response()->json(['message' => 'You already have an active submitted proposal.'], 422);
         }
 
+        // Strict validation of the latest version of the proposal before allowing final submission
+        $latestVersion = $proposal->latestVersion;
+        if (!$latestVersion) {
+            return response()->json(['message' => 'No proposal content found.'], 422);
+        }
+
+        $validator = \Illuminate\Support\Facades\Validator::make($latestVersion->toArray() + [
+            'tech' => $latestVersion->technologies_used,
+        ], [
+            'title' => [
+                'required',
+                'string',
+                $this->validateWordCountHelper(5, 20, 'proposal title', 'The proposal title must be clear and contain at least 5 words.'),
+                'regex:/^(?![\W_]+$).+$/',
+            ],
+            'problem' => [
+                'required',
+                'string',
+                $this->validateWordCountHelper(30, 250, 'problem statement', 'The problem statement must contain at least 30 words and clearly explain the issue.'),
+            ],
+            'solution' => [
+                'required',
+                'string',
+                $this->validateWordCountHelper(30, 250, 'proposed solution', 'The proposed solution must contain at least 30 words and clearly explain how the system solves the problem.'),
+            ],
+            'functions' => [
+                'required',
+                'string',
+                $this->validateWordCountHelper(20, 200, 'system functions', 'Please describe the main system functions in at least 20 words.'),
+            ],
+            'objectives' => [
+                'required',
+                'string',
+                $this->validateWordCountHelper(20, 200, 'project objectives', 'Please write at least 20 words explaining the project objectives.'),
+            ],
+            'tags' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) {
+                    $items = array_filter(array_map('trim', explode(',', $value)));
+                    $count = count($items);
+                    if ($count < 3) $fail('Please add at least 3 relevant tags.');
+                    if ($count > 10) $fail('The tags cannot exceed 10 items.');
+                }
+            ],
+            'tech' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) {
+                    $items = array_filter(array_map('trim', explode(',', $value)));
+                    $count = count($items);
+                    if ($count < 2) $fail('Please add at least 2 technologies that will be used in the project.');
+                    if ($count > 12) $fail('The technologies cannot exceed 12 items.');
+                }
+            ],
+        ], [
+            'title.required' => 'The proposal title is required.',
+            'title.string' => 'The proposal title must be a string.',
+            'title.regex' => 'The proposal title must not consist only of symbols.',
+            'problem.required' => 'The problem statement is required.',
+            'problem.string' => 'The problem statement must be a string.',
+            'solution.required' => 'The proposed solution is required.',
+            'solution.string' => 'The proposed solution must be a string.',
+            'functions.required' => 'Please describe the main system functions in at least 20 words.',
+            'functions.string' => 'The system functions must be a string.',
+            'objectives.required' => 'Please write at least 20 words explaining the project objectives.',
+            'objectives.string' => 'The project objectives must be a string.',
+            'tags.required' => 'Please add at least 3 relevant tags.',
+            'tags.string' => 'The tags must be a string.',
+            'tech.required' => 'Please add at least 2 technologies that will be used in the project.',
+            'tech.string' => 'The technologies must be a string.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
         $proposal->update([
             'submission_status' => 'submitted',
             'review_status' => 'pending',
@@ -161,6 +222,13 @@ class StudentProposalController extends Controller
             ->performedOn($proposal)
             ->causedBy($request->user())
             ->log('proposal submitted');
+
+        // Dispatch AI similarity check — runs synchronously if QUEUE_CONNECTION=sync,
+        // or in the background when using a real queue driver.
+        $latestVersion = $proposal->latestVersion;
+        if ($latestVersion) {
+            CheckProposalSimilarity::dispatch($proposal->load('department'), $latestVersion);
+        }
 
         return response()->json(['message' => 'Proposal submitted for review.']);
     }
@@ -180,6 +248,37 @@ class StudentProposalController extends Controller
             ->log('draft archived');
 
         return response()->json(['message' => 'Proposal archived.']);
+    }
+
+    public function restore(Request $request, Proposal $proposal): JsonResponse
+    {
+        $student = $request->user()->student;
+        if (!$proposal->students()->where('project_members.student_id', $student->student_id)->exists()) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        // Only archived proposals can be restored
+        if ($proposal->submission_status !== 'archived') {
+            return response()->json(['message' => 'Only archived proposals can be restored.'], 422);
+        }
+
+        // Prevent restore if the student already has an active submitted proposal
+        $hasActive = $student->proposals()->where('submission_status', 'submitted')->exists();
+        if ($hasActive) {
+            return response()->json(['message' => 'You already have an active submitted proposal. Archive or withdraw it before restoring another.'], 422);
+        }
+
+        $proposal->update([
+            'submission_status' => 'draft',
+            'review_status'     => 'pending',
+        ]);
+
+        activity()
+            ->performedOn($proposal)
+            ->causedBy($request->user())
+            ->log('proposal restored to draft');
+
+        return response()->json(['message' => 'Proposal restored to draft.']);
     }
 
     public function destroy(Request $request, Proposal $proposal): JsonResponse
@@ -223,63 +322,234 @@ class StudentProposalController extends Controller
         ]);
     }
 
-    public function similarity(Proposal $proposal): JsonResponse
+    public function similarity(Request $request, Proposal $proposal): JsonResponse
     {
-        $departmentId = $proposal->department_id;
         $latestVersion = $proposal->latestVersion;
 
         if (!$latestVersion) {
-            return response()->json(['results' => [], 'message' => 'No versions found.']);
+            return response()->json([
+                'ai_status' => 'none',
+                'results'   => [],
+                'message'   => 'No versions found.',
+            ]);
         }
 
-        $existingResults = \App\Models\SimilarityResult::where('proposal_version_id', $latestVersion->version_id)->count();
+        $versionId = $latestVersion->version_id;
 
-        if ($existingResults === 0) {
-            $otherProposals = Proposal::where('department_id', $departmentId)
-                ->where('proposal_id', '!=', $proposal->proposal_id)
-                ->where('submission_status', 'submitted')
-                ->with('latestVersion')
+        // ── Determine overall AI status from stored results ────────────────
+        $allResults = SimilarityResult::where('proposal_version_id', $versionId)
+            ->orderByDesc('final_score')
+            ->get();
+ 
+        $statuses  = $allResults->pluck('ai_status')->unique()->values();
+        $aiStatus  = $statuses->contains('failed') ? 'failed'
+                   : ($statuses->contains('pending') ? 'pending'
+                   : ($statuses->contains('no_comparisons') ? 'no_comparisons'
+                   : ($allResults->isEmpty() ? 'none' : 'success')));
+
+        // If forced recheck OR if it failed OR if it was never checked:
+        // Do NOT re-dispatch for 'no_comparisons' — there is nothing to compare against.
+        $forceRecheck = $request->query('recheck') === 'true';
+        if ($forceRecheck || $aiStatus === 'failed' || $aiStatus === 'none') {
+            CheckProposalSimilarity::dispatch($proposal->load('department'), $latestVersion);
+
+            // Reload results from the database (in case of sync execution)
+            $allResults = SimilarityResult::where('proposal_version_id', $versionId)
+                ->orderByDesc('final_score')
                 ->get();
 
-            foreach ($otherProposals as $other) {
-                if ($other->latestVersion) {
-                    \App\Models\SimilarityResult::create([
-                        'proposal_version_id' => $latestVersion->version_id,
-                        'compared_version_id' => $other->latestVersion->version_id,
-                        'similarity_score' => rand(5, 45), // Mock score
-                    ]);
-                }
-            }
-            
-            activity()
-                ->performedOn($proposal)
-                ->causedBy(request()->user())
-                ->log('similarity analysis completed');
+            $statuses  = $allResults->pluck('ai_status')->unique()->values();
+            $aiStatus  = $statuses->contains('failed') ? 'failed'
+                       : ($statuses->contains('pending') ? 'pending'
+                       : ($statuses->contains('no_comparisons') ? 'no_comparisons'
+                       : 'success'));
         }
 
-        $results = \App\Models\SimilarityResult::where('proposal_version_id', $latestVersion->version_id)
-            ->with('comparedVersion.proposal.students')
-            ->orderByDesc('similarity_score')
-            ->get()
-            ->map(function($res) {
-                return [
-                    'id' => $res->comparedVersion->proposal_id,
-                    'title' => $res->comparedVersion->title,
-                    'author' => $res->comparedVersion->proposal->students->first()->full_name ?? 'Anonymous',
-                    'score' => $res->similarity_score . '%',
-                    'year' => $res->comparedVersion->created_at->format('Y'),
+        // Early return — no proposals existed to compare against
+        if ($aiStatus === 'no_comparisons') {
+            return response()->json([
+                'ai_status' => 'no_comparisons',
+                'summary'   => null,
+                'results'   => [],
+                'message'   => 'No previous proposals available for comparison.',
+            ]);
+        }
+
+        // If no DB records exist at all (e.g. async queue hasn't run it yet)
+        if ($allResults->isEmpty()) {
+            return response()->json([
+                'ai_status' => 'pending',
+                'results'   => [],
+                'message'   => 'Similarity analysis is running.',
+            ]);
+        }
+
+        // ── Build the best-match summary for the top card ──────────────────
+        $topResult = $allResults->where('ai_status', 'success')->first();
+
+        $summary = null;
+        if ($topResult) {
+            $finalPct = $topResult->final_score !== null
+                ? round($topResult->final_score * 100, 1)
+                : ($topResult->similarity_score ?? 0);
+
+            $comparedProposal = optional($topResult->comparedVersion)->proposal;
+            $isCurrentYearConfirmed = false;
+            if ($comparedProposal && $comparedProposal->proposal_id !== $proposal->proposal_id) {
+                $isCurrentYear = optional($comparedProposal->created_at)->year === now()->year;
+                $isAccepted = $comparedProposal->review_status === 'accepted';
+                $isCurrentYearConfirmed = $isCurrentYear && $isAccepted;
+            }
+
+            if ($isCurrentYearConfirmed) {
+                $summary = [
+                    'final_score'             => $finalPct,
+                    'semantic_similarity'     => null,
+                    'functions_similarity'    => null,
+                    'objectives_similarity'   => null,
+                    'tags_similarity'         => null,
+                    'technologies_similarity' => null,
+                    'verdict'                 => $topResult->verdict,
+                    'explanation'             => 'High similarity detected with an approved project from the current academic year. The project details are hidden for privacy reasons. Please consider adjusting your project scope or selecting a different direction.',
+                    'details_hidden'          => true,
                 ];
-            });
+            } else {
+                $summary = [
+                    'final_score'             => $finalPct,
+                    'semantic_similarity'     => $topResult->semantic_similarity     !== null ? round($topResult->semantic_similarity     * 100, 1) : null,
+                    'functions_similarity'    => $topResult->functions_similarity    !== null ? round($topResult->functions_similarity    * 100, 1) : null,
+                    'objectives_similarity'   => $topResult->objectives_similarity   !== null ? round($topResult->objectives_similarity   * 100, 1) : null,
+                    'tags_similarity'         => $topResult->tags_similarity         !== null ? round($topResult->tags_similarity         * 100, 1) : null,
+                    'technologies_similarity' => $topResult->technologies_similarity !== null ? round($topResult->technologies_similarity * 100, 1) : null,
+                    'verdict'                 => $topResult->verdict,
+                    'explanation'             => $topResult->explanation,
+                    'details_hidden'          => false,
+                ];
+            }
+        }
+
+        // ── Build the per-match list ───────────────────────────────────────
+        $results = $allResults
+            ->where('ai_status', 'success')
+            ->filter(fn($r) => !($r->compared_version_id === $r->proposal_version_id && ($r->final_score === null || $r->final_score == 0 || $r->verdict === 'No Matches' || $r->verdict === 'No Comparisons')))
+            ->map(function ($res) use ($proposal) {
+                $comparedProposal = optional($res->comparedVersion)->proposal;
+                $isCurrentYearConfirmed = false;
+                if ($comparedProposal && $comparedProposal->proposal_id !== $proposal->proposal_id) {
+                    $isCurrentYear = optional($comparedProposal->created_at)->year === now()->year;
+                    $isAccepted = $comparedProposal->review_status === 'accepted';
+                    $isCurrentYearConfirmed = $isCurrentYear && $isAccepted;
+                }
+
+                // Try to resolve compared project title from DB, fall back to raw response
+                $raw   = $res->ai_raw_response ?? [];
+                $title  = $isCurrentYearConfirmed ? 'Hidden for Privacy' : (optional($res->comparedVersion)->title ?? ($raw['title'] ?? 'Unknown Project'));
+                $domain = $isCurrentYearConfirmed ? 'Active Confirmed Proposal' : (optional(optional($res->comparedVersion)->proposal)->department->department_name ?? ($raw['domain'] ?? 'N/A'));
+
+                $finalPct = $res->final_score !== null
+                    ? round($res->final_score * 100, 1)
+                    : ($res->similarity_score ?? 0);
+
+                if ($isCurrentYearConfirmed) {
+                    return [
+                        'id'                      => null,
+                        'title'                   => $title,
+                        'domain'                  => $domain,
+                        'score'                   => $finalPct . '%',
+                        'final_score'             => $finalPct,
+                        'semantic_similarity'     => null,
+                        'functions_similarity'    => null,
+                        'objectives_similarity'   => null,
+                        'tags_similarity'         => null,
+                        'technologies_similarity' => null,
+                        'verdict'                 => $res->verdict,
+                        'explanation'             => 'High similarity detected with an approved project from the current academic year. The project details are hidden for privacy reasons. Please consider adjusting your project scope or selecting a different direction.',
+                        'year'                    => optional(optional($res->comparedVersion)->created_at)->format('Y') ?? now()->year,
+                        'details_hidden'          => true,
+                    ];
+                }
+
+                return [
+                    'id'                      => optional(optional($res->comparedVersion)->proposal)->proposal_id
+                                                 ?? ($raw['project_id'] ?? null),
+                    'title'                   => $title,
+                    'domain'                  => $domain,
+                    'score'                   => $finalPct . '%',
+                    'final_score'             => $finalPct,
+                    'semantic_similarity'     => $res->semantic_similarity     !== null ? round($res->semantic_similarity     * 100, 1) : null,
+                    'functions_similarity'    => $res->functions_similarity    !== null ? round($res->functions_similarity    * 100, 1) : null,
+                    'objectives_similarity'   => $res->objectives_similarity   !== null ? round($res->objectives_similarity   * 100, 1) : null,
+                    'tags_similarity'         => $res->tags_similarity         !== null ? round($res->tags_similarity         * 100, 1) : null,
+                    'technologies_similarity' => $res->technologies_similarity !== null ? round($res->technologies_similarity * 100, 1) : null,
+                    'verdict'                 => $res->verdict,
+                    'explanation'             => $res->explanation,
+                    'year'                    => optional(optional($res->comparedVersion)->created_at)->format('Y') ?? now()->year,
+                    'details_hidden'          => false,
+                ];
+            })->values();
+
+        // AI Recommendations
+        $recommendations = [];
+        if ($aiStatus === 'success') {
+            $recResults = app(\App\Services\AiSimilarityService::class)->getRecommendations(
+                version:        $latestVersion,
+                departmentName: $proposal->department->department_name ?? 'General',
+                excludeId:      (string) $proposal->proposal_id
+            );
+
+            foreach ($recResults as $rec) {
+                $sim = $rec['similarity'] ?? [];
+                $recommendations[] = [
+                    'title'       => $rec['title'] ?? 'Alternative Project',
+                    'domain'      => $rec['domain'] ?? 'N/A',
+                    'explanation' => $rec['explanation'] ?? '',
+                    'relevance'   => round(($sim['final_similarity'] ?? 0) * 100, 1) . '%',
+                ];
+            }
+        }
 
         return response()->json([
-            'results' => $results,
-            'message' => 'Similarity analysis retrieved successfully.'
+            'ai_status' => $aiStatus,
+            'summary'   => $summary,
+            'results'   => $results,
+            'recommendations' => $recommendations,
+            'message'   => 'Similarity analysis retrieved successfully.',
         ]);
+    }
+
+    private function validateWordCountHelper(int $min, int $max, string $fieldName, string $customMinMessage)
+    {
+        return function ($attribute, $value, $fail) use ($min, $max, $fieldName, $customMinMessage) {
+            if (empty($value)) return;
+            $trimmed = trim($value);
+            $words = empty($trimmed) ? 0 : count(preg_split('/\s+/', $trimmed));
+            if ($words < $min) {
+                $fail($customMinMessage);
+            }
+            if ($words > $max) {
+                $fail("The {$fieldName} cannot exceed {$max} words.");
+            }
+        };
     }
 
     private function transformProposal(Proposal $proposal): array
     {
         $v = $proposal->latestVersion;
+        $similarity = null;
+
+        if ($v) {
+            $topResult = SimilarityResult::where('proposal_version_id', $v->version_id)
+                ->where('ai_status', 'success')
+                ->orderByDesc('final_score')
+                ->first();
+
+            if ($topResult) {
+                $similarity = $topResult->final_score !== null
+                    ? round($topResult->final_score * 100, 1)
+                    : ($topResult->similarity_score ?? 0);
+            }
+        }
+
         return [
             'id' => $proposal->proposal_id,
             'title' => $v->title ?? 'No Title',
@@ -294,7 +564,10 @@ class StudentProposalController extends Controller
             'submission_status' => $proposal->submission_status,
             'date' => $proposal->updated_at->format('Y-m-d'),
             'version' => $v->version_number ?? 1,
-            'similarity' => null, // Placeholder as requested
+            'similarity' => $similarity,
+            // New flags for front‑end UI
+            'can_edit' => $proposal->review_status === 'revision_requested',
+            'approval_pdf_url' => $proposal->approval_pdf_path ? \Illuminate\Support\Facades\Storage::url($proposal->approval_pdf_path) : null,
         ];
     }
 }

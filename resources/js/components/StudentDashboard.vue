@@ -143,10 +143,13 @@
 
           <StudentSimilaritySection
             v-else-if="currentView === 'Similarity Report'"
-            :active-proposal="activeProposal"
+            :active-proposal="similarityProposal"
             :top-matches="topMatches"
+            :summary="similaritySummary"
+            :ai-status="similarityAiStatus"
+            :recommendations="similarityRecommendations"
             @navigate="currentView = $event"
-            @recheck="activeProposal.similarity = Math.floor(Math.random() * 40) + 10"
+            @recheck="fetchSimilarity(similarityProposal?.id, true)"
           />
 
           <StudentVersionHistorySection
@@ -159,6 +162,18 @@
             :domain-feedback="domainFeedback"
           />
 
+          <StudentRepoSection
+            v-else-if="currentView === 'Proposal Repository'"
+            :active-proposal="activeProposal"
+            @compare="openCompareView"
+          />
+
+          <StudentCompareSection
+            v-else-if="currentView === 'Compare View'"
+            :compared-id="compareProposalId"
+            @back="currentView = 'Proposal Repository'"
+          />
+
         </div>
       </main>
     </div>
@@ -168,8 +183,9 @@
       :is-open="showNewProposalForm"
       :form="newProposal"
       :is-editing="isEditingProposal"
+      :errors="proposalErrors"
       :student-department="studentData.department"
-      @close="showNewProposalForm = false"
+      @close="closeNewProposalForm"
       @save-draft="saveAsDraft"
       @confirm-proposal="saveAndConfirmProposal"
       @update="updateProposal(newProposal)"
@@ -181,7 +197,7 @@
       :proposal="selectedProposal"
       :type="selectedProposalType"
       @close="closeProposalDetails"
-      @check-similarity="null"
+      @check-similarity="checkDraftSimilarity(selectedProposal)"
       @archive="archiveProposal(selectedProposal)"
       @delete="deleteProposal(selectedProposal)"
       @confirm="confirmDraftProposal(selectedProposal)"
@@ -214,6 +230,8 @@ import StudentFeedbackSection from './student/StudentFeedbackSection.vue';
 import StudentNewProposalModal from './student/StudentNewProposalModal.vue';
 import StudentProposalModal from './student/StudentProposalModal.vue';
 import StudentInviteMemberModal from './student/StudentInviteMemberModal.vue';
+import StudentRepoSection from './student/StudentRepoSection.vue';
+import StudentCompareSection from './student/StudentCompareSection.vue';
 import { useToast } from "vue-toastification";
 
 const toast = useToast();
@@ -227,6 +245,7 @@ const navItems = [
   { name: 'Similarity Report', icon: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>' },
   { name: 'Version History', icon: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' },
   { name: 'Domain Feedback', icon: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>' },
+  { name: 'Proposal Repository', icon: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"/></svg>' },
 ];
 
 const currentView = ref('Overview');
@@ -261,15 +280,26 @@ const emptyProposal = {
 };
 
 const newProposal = ref({ ...emptyProposal });
+const proposalErrors = ref({});
 
 // Data Refs
 const draftIdeas = ref([]);
 const activeProposal = ref(null);
+const similarityProposal = ref(null);
 const archivedIdeas = ref([]);
 const teamMembers = ref([]);
 const topMatches = ref([]);
+const similaritySummary = ref(null);   // AI breakdown summary for top card
+const similarityAiStatus = ref('none'); // 'pending' | 'success' | 'failed' | 'none'
+const similarityRecommendations = ref([]);
 const versionHistory = ref([]);
 const domainFeedback = ref(null);
+const compareProposalId = ref(null);
+
+function openCompareView(id) {
+  compareProposalId.value = id;
+  currentView.value = 'Compare View';
+}
 
 // API calls
 async function fetchStudentData() {
@@ -317,41 +347,44 @@ async function fetchDecision(proposalId) {
   }
 }
 
-async function fetchSimilarity(proposalId) {
+async function fetchSimilarity(proposalId, recheck = false) {
   if (!proposalId) return;
-  const res = await fetch(`/student/proposals/${proposalId}/similarity`);
+  const url = `/student/proposals/${proposalId}/similarity` + (recheck ? '?recheck=true' : '');
+  const res = await fetch(url);
   if (res.ok) {
     const data = await res.json();
-    topMatches.value = data.results;
+    topMatches.value = data.results ?? [];
+    similaritySummary.value = data.summary ?? null;
+    similarityAiStatus.value = data.ai_status ?? 'none';
+    similarityRecommendations.value = data.recommendations ?? [];
   }
 }
 
 // Actions
 async function saveAsDraft() {
-  if (!newProposal.value.title) {
-    toast.error('Please enter at least a title.');
-    return;
-  }
+  proposalErrors.value = {};
   const res = await fetch('/student/proposals', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
     body: JSON.stringify(newProposal.value)
   });
   if (res.ok) {
-    toast.success('Draft saved.');
+    toast.success('Draft saved successfully.');
     showNewProposalForm.value = false;
     fetchProposals();
   } else {
     const data = await res.json();
+    if (data.errors) {
+      proposalErrors.value = data.errors;
+    }
     toast.error(data.message || 'Error saving draft.');
   }
 }
 
 async function saveAndConfirmProposal() {
-  if (!newProposal.value.title || !newProposal.value.domain) {
-    toast.error('Title and Domain are required.');
-    return;
-  }
+  proposalErrors.value = {};
+
+  // 1. First save as draft
   const res = await fetch('/student/proposals', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
@@ -359,6 +392,36 @@ async function saveAndConfirmProposal() {
   });
   if (res.ok) {
     const data = await res.json();
+    
+    // 2. Perform pre-submission similarity analysis
+    toast.info('Running pre-submission similarity analysis...');
+    let similarity = null;
+    const checkRes = await fetch(`/student/proposals/${data.proposal.id}/similarity`);
+    if (checkRes.ok) {
+      const checkData = await checkRes.json();
+      if (checkData.summary && checkData.summary.final_score !== undefined) {
+        similarity = checkData.summary.final_score;
+      }
+    }
+
+    // 3. Show high similarity warning if needed, otherwise normal confirmation
+    if (similarity !== null && similarity >= 60) {
+      if (!confirm("Warning: High similarity detected with an approved project. The project details are hidden for privacy reasons. Please consider adjusting your project scope or selecting a different direction.\n\nDo you still want to submit this proposal anyway?")) {
+        toast.info('Saved as draft. You can review the Similarity Report in your workspace.');
+        showNewProposalForm.value = false;
+        fetchProposals();
+        return;
+      }
+    } else {
+      if (!confirm("Are you sure you want to submit this proposal? Please review your information before confirming.")) {
+        toast.info('Saved as draft.');
+        showNewProposalForm.value = false;
+        fetchProposals();
+        return;
+      }
+    }
+
+    // 4. Submit
     const submitRes = await fetch(`/student/proposals/${data.proposal.id}/submit`, {
       method: 'PUT',
       headers: { 'X-CSRF-TOKEN': csrfToken }
@@ -368,11 +431,24 @@ async function saveAndConfirmProposal() {
       showNewProposalForm.value = false;
       fetchProposals();
       workspaceTab.value = 'Active Proposal';
+    } else {
+      const submitData = await submitRes.json();
+      if (submitData.errors) {
+        proposalErrors.value = submitData.errors;
+      }
+      toast.error(submitData.message || 'Error submitting proposal.');
     }
+  } else {
+    const data = await res.json();
+    if (data.errors) {
+      proposalErrors.value = data.errors;
+    }
+    toast.error(data.message || 'Error saving proposal.');
   }
 }
 
 async function updateProposal(proposal) {
+  proposalErrors.value = {};
   const res = await fetch(`/student/proposals/${proposal.id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
@@ -385,6 +461,9 @@ async function updateProposal(proposal) {
     fetchProposals();
   } else {
     const data = await res.json();
+    if (data.errors) {
+      proposalErrors.value = data.errors;
+    }
     toast.error(data.message || 'Error updating proposal.');
   }
 }
@@ -401,7 +480,44 @@ function closeProposalDetails() {
   selectedProposalType.value = '';
 }
 
+async function checkDraftSimilarity(proposal) {
+  if (!proposal) return;
+  closeProposalDetails();
+  similarityProposal.value = proposal;
+  currentView.value = 'Similarity Report';
+  
+  toast.info('Starting draft similarity analysis...');
+  await fetchSimilarity(proposal.id, true);
+  fetchProposals();
+}
+
 async function confirmDraftProposal(proposal) {
+  let similarity = proposal.similarity;
+
+  // Run similarity check first if it was never analyzed
+  if (similarity === null) {
+    toast.info('Running pre-submission similarity analysis...');
+    const checkRes = await fetch(`/student/proposals/${proposal.id}/similarity`);
+    if (checkRes.ok) {
+      const checkData = await checkRes.json();
+      if (checkData.summary && checkData.summary.final_score !== undefined) {
+        similarity = checkData.summary.final_score;
+      }
+    }
+  }
+
+  // If a high similarity score is detected, show the confirmation warning
+  if (similarity !== null && similarity >= 60) {
+    if (!confirm("Warning: High similarity detected with an approved project. The project details are hidden for privacy reasons. Please consider adjusting your project scope or selecting a different direction.\n\nDo you still want to submit this proposal anyway?")) {
+      return;
+    }
+  } else {
+    // Normal confirmation if no similarity warning
+    if (!confirm("Are you sure you want to submit this proposal? Please review your information before confirming.")) {
+      return;
+    }
+  }
+
   const res = await fetch(`/student/proposals/${proposal.id}/submit`, {
     method: 'PUT',
     headers: { 'X-CSRF-TOKEN': csrfToken }
@@ -430,13 +546,13 @@ async function archiveProposal(proposal) {
 }
 
 async function deleteProposal(proposal) {
-  if (!confirm('Are you sure you want to delete this draft?')) return;
+  if (!confirm('Are you sure you want to delete this proposal?')) return;
   const res = await fetch(`/student/proposals/${proposal.id}`, {
     method: 'DELETE',
     headers: { 'X-CSRF-TOKEN': csrfToken }
   });
   if (res.ok) {
-    toast.success('Draft deleted.');
+    toast.success('Proposal deleted.');
     closeProposalDetails();
     fetchProposals();
   } else {
@@ -446,13 +562,20 @@ async function deleteProposal(proposal) {
 }
 
 async function restoreProposal(proposal) {
-  // Restore by setting submission_status back to draft? 
-  // The backend doesn't have a specific restore endpoint yet, 
-  // but we can use update or a new archive(false) logic.
-  // For now, let's just use archive endpoint if it toggle, but here I'll just say it's same as archive with status=draft.
-  // Actually, I'll just use the archive endpoint and fix it in controller if needed, or create a new one.
-  // Let's stick to user request "archive a draft", "delete a draft".
-  // I'll skip restore for now or use the archive endpoint with a different status if I had it.
+  if (!confirm('Restore this archived proposal to Draft Ideas?')) return;
+  const res = await fetch(`/student/proposals/${proposal.id}/restore`, {
+    method: 'PUT',
+    headers: { 'X-CSRF-TOKEN': csrfToken }
+  });
+  if (res.ok) {
+    toast.success('Proposal restored to draft.');
+    closeProposalDetails();
+    fetchProposals();
+    workspaceTab.value = 'Draft Ideas';
+  } else {
+    const data = await res.json();
+    toast.error(data.message || 'Error restoring proposal.');
+  }
 }
 
 async function sendInvitation() {
@@ -479,15 +602,22 @@ async function sendInvitation() {
   }
 }
 
+function closeNewProposalForm() {
+  showNewProposalForm.value = false;
+  proposalErrors.value = {};
+}
+
 function openNewProposal() {
   isEditingProposal.value = false;
   newProposal.value = { ...emptyProposal };
+  proposalErrors.value = {};
   showNewProposalForm.value = true;
 }
 
 function openEditProposalFlow(proposal) {
   isEditingProposal.value = true;
   newProposal.value = { ...proposal };
+  proposalErrors.value = {};
   showProposalModal.value = false;
   showNewProposalForm.value = true;
 }
@@ -509,6 +639,10 @@ function viewReportFromModal() {
 
 // Watchers for sections that need specific data
 watch(currentView, (newView) => {
+  if (newView !== 'Similarity Report') {
+    similarityProposal.value = null;
+  }
+
   if (newView === 'Project Team' && activeProposal.value) {
     fetchTeam(activeProposal.value.id);
   }
@@ -518,8 +652,13 @@ watch(currentView, (newView) => {
   if (newView === 'Domain Feedback' && activeProposal.value) {
     fetchDecision(activeProposal.value.id);
   }
-  if (newView === 'Similarity Report' && activeProposal.value) {
-    fetchSimilarity(activeProposal.value.id);
+  if (newView === 'Similarity Report') {
+    if (!similarityProposal.value && activeProposal.value) {
+      similarityProposal.value = activeProposal.value;
+    }
+    if (similarityProposal.value) {
+      fetchSimilarity(similarityProposal.value.id);
+    }
   }
 });
 
