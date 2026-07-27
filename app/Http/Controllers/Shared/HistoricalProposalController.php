@@ -88,7 +88,7 @@ class HistoricalProposalController extends Controller
 
         DB::beginTransaction();
         try {
-            $proposal = Proposal::create([
+            $proposal = Proposal::forceCreate([
                 'department_id' => $departmentId,
                 'submission_status' => 'archived',
                 'review_status' => 'accepted', // We assume imported historical proposals are accepted
@@ -156,7 +156,7 @@ class HistoricalProposalController extends Controller
                 $technologies = isset($data[6]) ? trim($data[6]) : '';
                 $date = isset($data[7]) && trim($data[7]) !== '' ? trim($data[7]) : now()->subYear()->format('Y-m-d'); // Default to 1 year ago
                 
-                $departmentId = $user->role === 'department_head' 
+                $departmentId = in_array($user->role, ['department_head', 'department_member']) 
                     ? $user->department_id 
                     : (isset($data[8]) && trim($data[8]) !== '' ? trim($data[8]) : null);
 
@@ -165,7 +165,7 @@ class HistoricalProposalController extends Controller
                     continue; // Skip if no department ID for admin
                 }
 
-                $proposal = Proposal::create([
+                $proposal = Proposal::forceCreate([
                     'department_id' => $departmentId,
                     'submission_status' => 'archived',
                     'review_status' => 'accepted',
