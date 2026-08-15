@@ -13,20 +13,20 @@
       <div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500 mb-4">
         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       </div>
-      <h3 class="text-lg font-semibold text-slate-900">No activity yet</h3>
-      <p class="mt-1 max-w-sm text-sm text-slate-500">Actions taken by administrators and users will appear here automatically.</p>
+      <h3 class="text-lg font-semibold text-slate-900">{{ $t('admin.activity.none') }}</h3>
+      <p class="mt-1 max-w-sm text-sm text-slate-500">{{ $t('admin.activity.none_desc') }}</p>
     </div>
 
     <div v-else class="space-y-4">
       <!-- Data Table -->
       <div class="hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm md:block">
-        <table class="min-w-full text-left text-sm">
+        <table class="min-w-full text-start text-sm">
           <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
             <tr>
-              <th class="px-6 py-4 font-semibold">Time</th>
-              <th class="px-6 py-4 font-semibold">Actor</th>
-              <th class="px-6 py-4 font-semibold">Action</th>
-              <th class="px-6 py-4 font-semibold">Target</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('admin.activity.time') }}</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('admin.activity.actor') }}</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('admin.activity.action') }}</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('admin.activity.target') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
@@ -44,8 +44,7 @@
         <!-- Pagination -->
         <div v-if="totalPages > 1" class="flex items-center justify-between border-t border-slate-200 bg-white px-6 py-3">
           <div class="text-sm text-slate-500">
-            Page <span class="font-medium text-slate-900">{{ currentPage }}</span> of
-            <span class="font-medium text-slate-900">{{ totalPages }}</span>
+            {{ $t('admin.activity.page_of', { current: currentPage, total: totalPages }) }}
           </div>
           <div class="flex items-center gap-2">
             <button
@@ -53,14 +52,14 @@
               :disabled="currentPage === 1"
               @click="loadLogs(currentPage - 1)"
             >
-              Previous
+              {{ $t('common.previous') }}
             </button>
             <button
               class="rounded-md border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
               :disabled="currentPage === totalPages"
               @click="loadLogs(currentPage + 1)"
             >
-              Next
+              {{ $t('common.next') }}
             </button>
           </div>
         </div>
@@ -88,7 +87,7 @@
             :disabled="currentPage === 1"
             @click="loadLogs(currentPage - 1)"
           >
-            Previous
+            {{ $t('common.previous') }}
           </button>
           <span class="text-sm text-slate-500">{{ currentPage }} / {{ totalPages }}</span>
           <button
@@ -96,7 +95,7 @@
             :disabled="currentPage === totalPages"
             @click="loadLogs(currentPage + 1)"
           >
-            Next
+            {{ $t('common.next') }}
           </button>
         </div>
       </div>
@@ -107,8 +106,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
+import { useI18n } from 'vue-i18n'
 
 const toast = useToast()
+const { t } = useI18n()
 
 const activityLogs = ref([])
 const loading = ref(true)
@@ -126,7 +127,7 @@ const loadLogs = async (page = 1) => {
     })
 
     if (!response.ok) {
-      throw new Error('Failed to load activity logs.')
+      throw new Error(t('admin.activity.toast.load_failed'))
     }
 
     const data = await response.json()
@@ -137,7 +138,7 @@ const loadLogs = async (page = 1) => {
       totalPages.value = data.pagination.last_page
     }
   } catch (error) {
-    toast.error(error.message || 'Failed to load activity logs.')
+    toast.error(error.message || t('admin.activity.toast.load_failed'))
   } finally {
     loading.value = false
   }

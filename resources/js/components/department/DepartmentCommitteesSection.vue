@@ -1,13 +1,13 @@
 <template>
   <section class="space-y-5 sm:space-y-6">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Review Committees</h1>
-      <button 
+      <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">{{ $t('deptnav.committees') }}</h1>
+      <button
         @click="openCreateModal"
         class="inline-flex items-center justify-center rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
       >
-        <svg class="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        Add Committee
+        <svg class="me-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        {{ $t('dept.committees.add') }}
       </button>
     </div>
 
@@ -21,10 +21,10 @@
       <div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500 mb-4">
         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
       </div>
-      <h3 class="text-lg font-semibold text-slate-900">No review committees found</h3>
-      <p class="mt-1 max-w-sm text-sm text-slate-500">You haven't added any review committees yet.</p>
+      <h3 class="text-lg font-semibold text-slate-900">{{ $t('dept.committees.none_found') }}</h3>
+      <p class="mt-1 max-w-sm text-sm text-slate-500">{{ $t('dept.committees.none_desc') }}</p>
       <button @click="openCreateModal" class="mt-5 rounded-lg bg-white border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
-        Add new committee
+        {{ $t('dept.committees.add_new') }}
       </button>
     </div>
 
@@ -50,7 +50,7 @@
         
         <div class="mt-4 flex-grow">
           <p class="text-sm font-medium text-slate-500 mb-2">
-            Members ({{ committee.users ? committee.users.length : 0 }})
+            {{ $t('dept.committees.members_count', { count: committee.users ? committee.users.length : 0 }) }}
           </p>
           <div v-if="committee.users && committee.users.length > 0" class="flex -space-x-2 overflow-hidden">
             <div 
@@ -65,7 +65,7 @@
               +{{ committee.users.length - 5 }}
             </div>
           </div>
-          <p v-else class="text-sm text-slate-400 italic">No members assigned</p>
+          <p v-else class="text-sm text-slate-400 italic">{{ $t('dept.committees.no_members') }}</p>
         </div>
 
         <div class="mt-6 flex gap-2 pt-4 border-t border-slate-100">
@@ -73,13 +73,13 @@
             @click="openEditModal(committee)"
             class="flex-1 rounded-lg border border-slate-300 bg-white py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400"
           >
-            Edit
+            {{ $t('common.edit') }}
           </button>
-          <button 
+          <button
             @click="deleteCommittee(committee)"
             class="flex-1 rounded-lg border border-red-200 bg-red-50 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-300"
           >
-            Delete
+            {{ $t('common.delete') }}
           </button>
         </div>
       </article>
@@ -102,8 +102,8 @@
   <DeleteConfirmationModal
     :is-open="isDeleteModalOpen"
     :is-deleting="isDeleting"
-    title="Delete Committee"
-    :message="`Are you sure you want to delete the ${committeeToDelete?.name}? Members will lose their review access unless assigned to another committee.`"
+    :title="$t('dept.committees.delete_title')"
+    :message="$t('dept.committees.delete_message', { name: committeeToDelete?.name })"
     @close="closeDeleteModal"
     @confirm="confirmDelete"
   />
@@ -112,10 +112,12 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useToast } from 'vue-toastification'
+import { useI18n } from 'vue-i18n'
 import DepartmentCommitteeModal from './DepartmentCommitteeModal.vue'
 import DeleteConfirmationModal from '../common/DeleteConfirmationModal.vue'
 
 const toast = useToast()
+const { t, locale } = useI18n()
 
 const committees = ref([])
 const availableMembers = ref([])
@@ -145,7 +147,8 @@ const getCsrfToken = () => {
 const formatDate = (dateString) => {
   if (!dateString) return ''
   const date = new Date(dateString)
-  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date)
+  const loc = locale.value === 'ar' ? 'ar' : 'en-US'
+  return new Intl.DateTimeFormat(loc, { month: 'short', day: 'numeric', year: 'numeric' }).format(date)
 }
 
 const getInitials = (name) => {
@@ -181,7 +184,7 @@ const closeModal = () => {
 
 const parseErrors = (payload) => {
   if (!payload || !payload.errors) {
-    return { general: payload?.message || 'Unable to save committee.' }
+    return { general: payload?.message || t('dept.committees.toast.save_failed') }
   }
   return payload.errors
 }
@@ -196,14 +199,14 @@ const fetchCommittees = async () => {
     })
 
     if (!response.ok) {
-      throw new Error('Failed to load committees')
+      throw new Error(t('dept.committees.toast.load_failed'))
     }
 
     const data = await response.json()
     committees.value = data.committees ?? []
     availableMembers.value = data.available_members ?? []
   } catch (error) {
-    toast.error(error.message || 'Failed to load committees.')
+    toast.error(error.message || t('dept.committees.toast.load_failed'))
   } finally {
     loading.value = false
   }
@@ -241,10 +244,10 @@ const submitForm = async () => {
 
     await fetchCommittees()
     closeModal()
-    toast.success(isEditing.value ? 'Committee updated successfully.' : 'Committee created successfully.')
+    toast.success(isEditing.value ? t('dept.committees.toast.updated') : t('dept.committees.toast.created'))
   } catch (error) {
     if (Object.keys(formErrors.value).length === 0) {
-      toast.error('An unexpected error occurred.')
+      toast.error(t('dept.committees.toast.unexpected'))
     }
   } finally {
     submittingForm.value = false
@@ -275,14 +278,14 @@ const confirmDelete = async () => {
     })
 
     if (!response.ok) {
-      throw new Error('Unable to delete committee.')
+      throw new Error(t('dept.committees.toast.delete_failed'))
     }
 
     committees.value = committees.value.filter((item) => item.id !== committeeToDelete.value.id)
-    toast.success('Committee deleted successfully.')
+    toast.success(t('dept.committees.toast.deleted'))
     closeDeleteModal()
   } catch (error) {
-    toast.error(error.message || 'Unable to delete committee.')
+    toast.error(error.message || t('dept.committees.toast.delete_failed'))
   } finally {
     isDeleting.value = false
   }

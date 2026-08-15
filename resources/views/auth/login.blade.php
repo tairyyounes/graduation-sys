@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'ProposalGuard AI') }} - Login</title>
+    <title>{{ config('app.name', 'ProposalGuard AI') }} - {{ __('auth_ui.login') }}</title>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -20,27 +20,35 @@
                 </div>
                 <div>
                     <p class="text-base font-semibold">ProposalGuard AI</p>
-                    <p class="text-xs text-white/80">College of Computer Technology - Tripoli</p>
+                    <p class="text-xs text-white/80">{{ __('auth_ui.college') }}</p>
                 </div>
             </div>
 
             <div class="max-w-md">
-                <h1 class="text-5xl font-bold leading-tight">Detect proposal similarity</h1>
+                <h1 class="text-5xl font-bold leading-tight">{{ __('auth_ui.hero') }}</h1>
                 <p class="mt-5 text-2xl leading-relaxed text-white/85">
-                    An academic platform that helps students submit proposals and helps departments make confident
-                    accept, reject, or revise decisions - backed by semantic AI.
+                    {{ __('auth_ui.hero_desc') }}
                 </p>
             </div>
 
-            <p class="text-base text-white/80">© 2026 — College of Computer Technology — Tripoli</p>
+            <p class="text-base text-white/80">{{ __('auth_ui.copyright') }}</p>
         </aside>
 
         <main class="flex min-h-screen items-center justify-center p-4 sm:p-6 lg:p-10">
-            <div class="absolute right-4 top-4 text-sm text-slate-700 sm:right-8 sm:top-8">العربية</div>
+            <button
+                type="button"
+                onclick="var m=document.cookie.match(/app_locale=([^;]+)/);var next=(m&&m[1]==='ar')?'en':'ar';document.cookie='app_locale='+next+';path=/;max-age=31536000;SameSite=Lax';try{localStorage.setItem('app_locale',next);}catch(e){}location.reload();"
+                class="absolute end-4 top-4 text-sm font-medium text-slate-700 hover:text-slate-900 sm:end-8 sm:top-8 flex items-center gap-1.5"
+            >
+                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                </svg>
+                <span>{{ app()->getLocale() === 'ar' ? 'English' : 'العربية' }}</span>
+            </button>
 
             <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-lg sm:p-8">
-                <h2 class="text-3xl font-semibold text-slate-900">Welcome back</h2>
-                <p class="mt-1 text-sm text-slate-500">Sign in to continue</p>
+                <h2 class="text-3xl font-semibold text-slate-900">{{ __('auth_ui.welcome_back') }}</h2>
+                <p class="mt-1 text-sm text-slate-500">{{ __('auth_ui.sign_in_continue') }}</p>
 
                 <x-auth-session-status class="mt-4" :status="session('status')" />
 
@@ -48,7 +56,7 @@
                     @csrf
 
                     <div>
-                        <label for="email" class="mb-1.5 block text-sm font-medium text-slate-700">Email</label>
+                        <label for="email" class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('auth_ui.email') }}</label>
                         <input
                             id="email"
                             type="email"
@@ -58,13 +66,13 @@
                             autofocus
                             autocomplete="username"
                             class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-300"
-                            placeholder="you@ctc.ly"
+                            placeholder="{{ __('auth_ui.email_placeholder') }}"
                         />
                         <x-input-error :messages="$errors->get('email')" class="mt-2" />
                     </div>
 
                     <div>
-                        <label for="password" class="mb-1.5 block text-sm font-medium text-slate-700">Password</label>
+                        <label for="password" class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('auth_ui.password') }}</label>
                         <input
                             id="password"
                             type="password"
@@ -80,12 +88,12 @@
                     <div class="flex items-center justify-between pt-1">
                         <label for="remember_me" class="inline-flex items-center gap-2 text-sm text-slate-600">
                             <input id="remember_me" type="checkbox" class="rounded border-slate-300 text-slate-700 focus:ring-slate-400" name="remember">
-                            <span>Remember me</span>
+                            <span>{{ __('auth_ui.remember') }}</span>
                         </label>
 
                         @if (Route::has('password.request'))
                             <a class="text-sm font-medium text-slate-600 transition hover:text-slate-900" href="{{ route('password.request') }}">
-                                Forgot?
+                                {{ __('auth_ui.forgot') }}
                             </a>
                         @endif
                     </div>
@@ -94,7 +102,7 @@
                         type="submit"
                         class="w-full rounded-lg bg-[#123e69] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#0e3153] focus:outline-none focus:ring-2 focus:ring-slate-400"
                     >
-                        Log in
+                        {{ __('auth_ui.login') }}
                     </button>
                 </form>
             </div>

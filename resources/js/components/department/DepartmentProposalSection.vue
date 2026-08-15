@@ -1,8 +1,8 @@
 <template>
   <section class="space-y-5">
     <router-link :to="{ name: 'DepartmentQueue' }" class="inline-flex items-center text-sm font-medium text-slate-500 hover:text-teal-600 transition">
-      <svg class="mr-1 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-      Back to queue
+      <svg class="me-1 h-4 w-4 rtl:-scale-x-100" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      {{ $t('dept.proposal.back') }}
     </router-link>
     <div>
       <div class="mb-2 flex items-center gap-2 text-xs">
@@ -16,14 +16,14 @@
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-12">
       <article class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:col-span-4">
         <div class="flex items-center justify-between mb-1">
-          <p class="text-sm text-slate-500">Overall similarity</p>
+          <p class="text-sm text-slate-500">{{ $t('dept.proposal.overall_similarity') }}</p>
           <!-- AI status indicator -->
           <span v-if="aiStatus === 'pending'" class="flex items-center gap-1 text-xs text-amber-600 font-medium">
             <svg class="h-3.5 w-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-            Pending
+            {{ $t('status.pending') }}
           </span>
-          <span v-else-if="aiStatus === 'failed'" class="text-xs text-red-500 font-medium">Error</span>
-          <span v-else-if="aiStatus === 'success'" class="text-xs text-teal-600 font-medium">✓ AI</span>
+          <span v-else-if="aiStatus === 'failed'" class="text-xs text-red-500 font-medium">{{ $t('dept.proposal.error') }}</span>
+          <span v-else-if="aiStatus === 'success'" class="text-xs text-teal-600 font-medium">✓ {{ $t('dept.proposal.ai') }}</span>
         </div>
         <p class="mt-2 text-5xl font-semibold"
           :class="overallScoreNum < 30 ? 'text-teal-700' : overallScoreNum < 60 ? 'text-amber-600' : 'text-red-600'">
@@ -51,14 +51,14 @@
         </div>
       </article>
       <article class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:col-span-8">
-        <h2 class="text-lg font-semibold text-slate-900">Description</h2>
+        <h2 class="text-lg font-semibold text-slate-900">{{ $t('dept.proposal.description') }}</h2>
         <div class="mt-2 space-y-4">
           <div>
-            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Problem</h3>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">{{ $t('dept.proposal.problem') }}</h3>
             <p class="text-sm leading-6 text-slate-600">{{ selectedProposal.problem }}</p>
           </div>
           <div>
-            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Solution</h3>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">{{ $t('dept.proposal.solution') }}</h3>
             <p class="text-sm leading-6 text-slate-600">{{ selectedProposal.solution }}</p>
           </div>
         </div>
@@ -73,14 +73,14 @@
     <article class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <!-- AI Explanation -->
       <div v-if="aiSummary?.explanation" class="mb-4 rounded-lg border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-        <span class="font-semibold text-slate-800">AI Note: </span>{{ aiSummary.explanation }}
+        <span class="font-semibold text-slate-800">{{ $t('dept.proposal.ai_note') }} </span>{{ aiSummary.explanation }}
       </div>
-      <h2 class="text-lg font-semibold text-slate-900">Closest matches</h2>
+      <h2 class="text-lg font-semibold text-slate-900">{{ $t('dept.proposal.closest_matches') }}</h2>
       <div class="mt-3 space-y-3">
         <div v-for="match in closestMatches" :key="match.title" class="flex flex-col gap-2 border-t border-slate-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p class="text-sm font-medium text-slate-900">{{ match.title }}</p>
-            <p class="text-xs text-slate-500">{{ match.domain ?? 'N/A' }} · {{ match.year }}</p>
+            <p class="text-xs text-slate-500">{{ match.domain ?? $t('common.not_available') }} · {{ match.year }}</p>
           </div>
           <div class="flex items-center gap-2">
             <span :class="verdictBadgeClass(match.verdict)" class="rounded-full px-2.5 py-1 text-xs font-semibold border">{{ match.score }}</span>
@@ -90,20 +90,20 @@
               :to="{ name: 'DepartmentCompare', params: { id: match.id } }"
               class="rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
             >
-              Compare
+              {{ $t('dept.proposal.compare') }}
             </router-link>
           </div>
         </div>
         <div v-if="closestMatches.length === 0" class="py-4 text-center text-sm text-slate-400">
-          <template v-if="aiStatus === 'pending'">⏳ AI analysis is running…</template>
-          <template v-else-if="aiStatus === 'failed'">❌ AI analysis failed.</template>
-          <template v-else>No similarity analysis has been generated yet.</template>
+          <template v-if="aiStatus === 'pending'">⏳ {{ $t('dept.proposal.ai_running') }}</template>
+          <template v-else-if="aiStatus === 'failed'">❌ {{ $t('dept.proposal.ai_failed') }}</template>
+          <template v-else>{{ $t('dept.proposal.no_analysis') }}</template>
         </div>
       </div>
     </article>
 
     <!-- ── AI Recommendations ──────────────────────────────────────── -->
-    <div v-if="recommendations && recommendations.length > 0" class="rounded-xl border border-teal-200 bg-teal-50/20 p-6 shadow-sm text-left">
+    <div v-if="recommendations && recommendations.length > 0" class="rounded-xl border border-teal-200 bg-teal-50/20 p-6 shadow-sm text-start">
       <div class="flex items-start gap-4 mb-4">
         <div class="text-teal-600 shrink-0">
           <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -111,20 +111,20 @@
           </svg>
         </div>
         <div>
-          <h4 class="text-sm font-bold text-teal-900 mb-1">AI Project Recommendations</h4>
-          <p class="text-xs text-teal-700">The AI suggests these alternative directions in the same domain that are unique:</p>
+          <h4 class="text-sm font-bold text-teal-900 mb-1">{{ $t('dept.proposal.recommendations_title') }}</h4>
+          <p class="text-xs text-teal-700">{{ $t('dept.proposal.recommendations_desc') }}</p>
         </div>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div v-for="rec in recommendations" :key="rec.title" class="bg-white p-4 rounded-xl border border-teal-100 shadow-sm flex flex-col justify-between">
           <div>
             <h5 class="text-sm font-semibold text-slate-900 leading-snug">{{ rec.title }}</h5>
-            <p class="text-[10px] font-bold text-slate-400 mt-1">Domain: {{ rec.domain }}</p>
+            <p class="text-[10px] font-bold text-slate-400 mt-1">{{ $t('fields.domain') }}: {{ rec.domain }}</p>
             <p class="text-xs text-slate-600 mt-2 leading-normal line-clamp-3">{{ rec.explanation }}</p>
           </div>
           <div class="mt-3 pt-3 border-t border-slate-50 flex justify-between items-center text-xs">
-            <span class="text-slate-500 font-medium">Relevance: {{ rec.relevance }}</span>
-            <span class="text-teal-600 font-semibold">Unique Option</span>
+            <span class="text-slate-500 font-medium">{{ $t('dept.proposal.relevance') }}: {{ rec.relevance }}</span>
+            <span class="text-teal-600 font-semibold">{{ $t('dept.proposal.unique_option') }}</span>
           </div>
         </div>
       </div>
@@ -132,16 +132,16 @@
 
     <article v-if="selectedProposal.status === 'pending' || selectedProposal.status === 'revision_requested'" class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div class="flex justify-between items-center mb-3">
-        <h2 class="text-lg font-semibold text-slate-900">Reviewer note</h2>
+        <h2 class="text-lg font-semibold text-slate-900">{{ $t('dept.proposal.reviewer_note') }}</h2>
         <span class="text-xs font-medium text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
-          Revisions used: {{ selectedProposal.revision_count }} / {{ selectedProposal.max_revisions }}
+          {{ $t('dept.proposal.revisions_used', { used: selectedProposal.revision_count, max: selectedProposal.max_revisions }) }}
         </span>
       </div>
       <textarea
         v-model="reviewerNote"
         rows="4"
         class="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition"
-        placeholder="Optional note for the student..."
+        :placeholder="$t('dept.proposal.note_ph')"
       ></textarea>
       <div class="mt-3 flex flex-wrap justify-end gap-2">
         <button 
@@ -150,29 +150,29 @@
           :disabled="isSubmitting"
           class="rounded-lg border border-teal-300 bg-teal-50 px-4 py-2 text-sm font-medium text-teal-700 hover:bg-teal-100 disabled:opacity-50"
         >
-          Grant Extra Edit
+          {{ $t('dept.proposal.grant_extra') }}
         </button>
-        <button 
-          @click="submitReview('revision_requested')" 
+        <button
+          @click="submitReview('revision_requested')"
           :disabled="isSubmitting || selectedProposal.revision_count >= selectedProposal.max_revisions"
           class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
-          :title="selectedProposal.revision_count >= selectedProposal.max_revisions ? 'Maximum revisions reached' : ''"
+          :title="selectedProposal.revision_count >= selectedProposal.max_revisions ? $t('dept.proposal.max_revisions_title') : ''"
         >
-          Request revision
+          {{ $t('dept.proposal.request_revision') }}
         </button>
-        <button 
-          @click="submitReview('rejected')" 
+        <button
+          @click="submitReview('rejected')"
           :disabled="isSubmitting"
           class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50"
         >
-          Reject
+          {{ $t('dept.proposal.reject') }}
         </button>
-        <button 
-          @click="submitReview('accepted')" 
+        <button
+          @click="submitReview('accepted')"
           :disabled="isSubmitting"
           class="rounded-lg bg-blue-900 px-4 py-2 text-sm font-medium text-white hover:bg-blue-950 disabled:opacity-50"
         >
-          Accept
+          {{ $t('dept.proposal.accept') }}
         </button>
       </div>
     </article>
@@ -184,10 +184,12 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { useToast } from 'vue-toastification'
+import { useI18n } from 'vue-i18n'
 
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
+const { t } = useI18n()
 
 const authUser = window.authUser || {}
 const isDepartmentHead = authUser.role === 'department_head'
@@ -230,7 +232,7 @@ const fetchProposal = async () => {
     recommendations.value = simRes.data.recommendations ?? []
   } catch (error) {
     console.error('Error fetching proposal details:', error)
-    toast.error('Failed to load proposal details.')
+    toast.error(t('dept.proposal.toast.load_failed'))
   }
 }
 
@@ -243,11 +245,11 @@ const overallScoreNum = computed(() => {
 })
 
 const breakdownDimensions = computed(() => [
-  { key: 'semantic',     label: 'Semantic',      value: aiSummary.value?.semantic_similarity     ?? null },
-  { key: 'functions',   label: 'Functions',     value: aiSummary.value?.functions_similarity    ?? null },
-  { key: 'objectives',  label: 'Objectives',    value: aiSummary.value?.objectives_similarity   ?? null },
-  { key: 'tags',        label: 'Tags',          value: aiSummary.value?.tags_similarity         ?? null },
-  { key: 'tech',        label: 'Technologies',  value: aiSummary.value?.technologies_similarity ?? null },
+  { key: 'semantic',     label: t('similarity.semantic'),   value: aiSummary.value?.semantic_similarity     ?? null },
+  { key: 'functions',   label: t('similarity.functions'),  value: aiSummary.value?.functions_similarity    ?? null },
+  { key: 'objectives',  label: t('similarity.objectives'), value: aiSummary.value?.objectives_similarity   ?? null },
+  { key: 'tags',        label: t('similarity.tags'),       value: aiSummary.value?.tags_similarity         ?? null },
+  { key: 'tech',        label: t('fields.technologies'),   value: aiSummary.value?.technologies_similarity ?? null },
 ])
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -273,11 +275,11 @@ const submitReview = async (decision) => {
       decision: decision,
       note: reviewerNote.value
     })
-    toast.success(`Proposal ${decision.replace('_', ' ')} successfully.`)
+    toast.success(t('dept.proposal.toast.review_done', { status: t(`status.${decision}`) }))
     router.push({ name: 'DepartmentQueue' })
   } catch (error) {
     console.error('Error submitting review:', error)
-    toast.error('Failed to submit review.')
+    toast.error(t('dept.proposal.toast.review_failed'))
   } finally {
     isSubmitting.value = false
   }
@@ -289,18 +291,19 @@ const grantExtraRevision = async () => {
   try {
     const res = await axios.post(`/department/proposals/${route.params.id}/grant-revision`)
     selectedProposal.value.max_revisions = res.data.max_revisions
-    toast.success('Extra revision granted successfully.')
+    toast.success(t('dept.proposal.toast.revision_granted'))
   } catch (error) {
     console.error('Error granting extra revision:', error)
-    toast.error('Failed to grant extra revision.')
+    toast.error(t('dept.proposal.toast.revision_failed'))
   } finally {
     isSubmitting.value = false
   }
 }
 
 const formatStatus = (status) => {
-  if (status === 'revision_requested') return 'Revision Needed'
-  return status.charAt(0).toUpperCase() + status.slice(1)
+  const key = `status.${status}`
+  const translated = t(key)
+  return translated === key ? status.charAt(0).toUpperCase() + status.slice(1) : translated
 }
 
 const statusClass = (status) => {

@@ -170,7 +170,14 @@ class DepartmentProposalController extends Controller
         // If it failed or has never been checked, dispatch job
         // Do NOT re-dispatch for 'no_comparisons' — there is nothing to compare against.
         if ($aiStatus === 'failed' || $aiStatus === 'none') {
-            CheckProposalSimilarity::dispatch($proposal->load('department'), $latestVersion);
+            try {
+                CheckProposalSimilarity::dispatch($proposal->load('department'), $latestVersion);
+            } catch (\Throwable $e) {
+                // On a sync queue a failing AI call would bubble up as a 500 and
+                // break the department view. Swallow it so the endpoint still
+                // returns a graceful status the UI can render.
+                \Illuminate\Support\Facades\Log::warning('Department similarity dispatch failed: ' . $e->getMessage());
+            }
 
             // Reload results from the database
             $allResults = SimilarityResult::where('proposal_version_id', $versionId)
@@ -181,7 +188,7 @@ class DepartmentProposalController extends Controller
             $aiStatus = $statuses->contains('failed') ? 'failed'
                       : ($statuses->contains('pending') ? 'pending'
                       : ($statuses->contains('no_comparisons') ? 'no_comparisons'
-                      : 'success'));
+                      : ($allResults->isEmpty() ? 'none' : 'success')));
         }
 
         // Early return — no proposals existed to compare against

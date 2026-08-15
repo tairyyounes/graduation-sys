@@ -23,7 +23,7 @@ class UserManagementController extends Controller
     {
         $users = User::query()
             ->leftJoin('departments', 'users.department_id', '=', 'departments.department_id')
-            ->leftJoin('students', 'users.email', '=', 'students.official_email')
+            ->leftJoin('students', fn($join) => $join->on('users.email', '=', 'students.official_email')->whereNull('students.deleted_at'))
             ->select([
                 'users.id',
                 'users.full_name',
@@ -65,24 +65,54 @@ class UserManagementController extends Controller
 
         DB::beginTransaction();
         try {
-            $user = new User();
-            $user->full_name = $validated['full_name'];
-            $user->email = $validated['email'];
-            $user->role = $validated['role'];
-            $user->department_id = $validated['department_id'];
-            $user->is_active = $validated['is_active'];
-            $user->password = Hash::make($validated['password']);
-            $user->save();
+            $user = User::withTrashed()->where('email', $validated['email'])->first();
+            if ($user) {
+                $user->restore();
+                $user->full_name = $validated['full_name'];
+                $user->role = $validated['role'];
+                $user->department_id = $validated['department_id'];
+                $user->is_active = $validated['is_active'];
+                $user->password = Hash::make($validated['password']);
+                $user->email_verified_at = now();
+                $user->save();
+            } else {
+                $user = new User();
+                $user->full_name = $validated['full_name'];
+                $user->email = $validated['email'];
+                $user->role = $validated['role'];
+                $user->department_id = $validated['department_id'];
+                $user->is_active = $validated['is_active'];
+                $user->password = Hash::make($validated['password']);
+                $user->email_verified_at = now();
+                $user->save();
+            }
 
             if ($validated['role'] === 'student') {
-                DB::table('students')->insert([
-                    'student_number' => $validated['student_number'],
-                    'full_name' => $validated['full_name'],
-                    'official_email' => $validated['email'],
-                    'department_id' => $validated['department_id'],
-                    'semester' => 8, // Default requirement
-                    'is_active' => $validated['is_active'],
-                ]);
+                $student = \App\Models\Student::withTrashed()
+                    ->where('official_email', $validated['email'])
+                    ->orWhere('student_number', $validated['student_number'])
+                    ->first();
+
+                if ($student) {
+                    $student->restore();
+                    $student->update([
+                        'student_number' => $validated['student_number'],
+                        'full_name'      => $validated['full_name'],
+                        'official_email' => $validated['email'],
+                        'department_id'  => $validated['department_id'],
+                        'semester'       => $validated['semester'] ?? 8,
+                        'is_active'      => $validated['is_active'],
+                    ]);
+                } else {
+                    \App\Models\Student::create([
+                        'student_number' => $validated['student_number'],
+                        'full_name'      => $validated['full_name'],
+                        'official_email' => $validated['email'],
+                        'department_id'  => $validated['department_id'],
+                        'semester'       => $validated['semester'] ?? 8,
+                        'is_active'      => $validated['is_active'],
+                    ]);
+                }
             }
 
             DB::commit();

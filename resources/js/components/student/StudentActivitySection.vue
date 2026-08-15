@@ -5,18 +5,18 @@
         <svg class="h-5 w-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        Activity Timeline
+        {{ $t('student.activity.title') }}
       </h3>
 
       <div class="relative">
         <!-- Vertical Line -->
-        <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-slate-100 lg:left-6"></div>
+        <div class="absolute start-4 top-0 bottom-0 w-0.5 bg-slate-100 lg:start-6"></div>
 
         <div class="space-y-8">
           <div v-for="(group, date) in groupedActivities" :key="date" class="relative">
             <!-- Date Header -->
             <div class="sticky top-0 z-10 mb-4 flex items-center">
-              <div class="ml-10 rounded-full bg-slate-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-500 border border-slate-200 lg:ml-14">
+              <div class="ms-10 rounded-full bg-slate-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-500 border border-slate-200 lg:ms-14">
                 {{ date }}
               </div>
             </div>
@@ -32,7 +32,7 @@
                 </div>
 
                 <!-- Content -->
-                <div class="ml-4 min-w-0 flex-1 pt-1 lg:ml-6 lg:pt-3">
+                <div class="ms-4 min-w-0 flex-1 pt-1 lg:ms-6 lg:pt-3">
                   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
                     <p class="text-sm font-bold text-slate-900 lg:text-base">
                       {{ activity.action }}
@@ -55,7 +55,7 @@
                       {{ activity.statusLabel }}
                     </span>
                     <span v-if="activity.target" class="text-[11px] font-medium text-slate-400">
-                      Ref: {{ activity.target }}
+                      {{ $t('student.activity.ref') }}: {{ activity.target }}
                     </span>
                   </div>
                 </div>
@@ -68,7 +68,7 @@
       <!-- Load More Placeholder -->
       <div class="mt-10 text-center">
         <button class="text-sm font-semibold text-slate-500 hover:text-teal-600 transition-colors">
-          View Older Activity
+          {{ $t('student.activity.view_older') }}
         </button>
       </div>
     </div>

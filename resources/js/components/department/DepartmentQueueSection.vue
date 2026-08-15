@@ -1,15 +1,15 @@
 <template>
   <section class="space-y-5">
     <div class="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm md:block">
-      <table class="min-w-full text-left text-sm">
+      <table class="min-w-full text-start text-sm">
         <thead class="bg-slate-50 text-slate-500">
           <tr>
-            <th class="px-4 py-3 font-medium">Title</th>
-            <th class="px-4 py-3 font-medium">Author</th>
-            <th class="px-4 py-3 font-medium">Department</th>
-            <th class="px-4 py-3 font-medium">Similarity</th>
-            <th class="px-4 py-3 font-medium">Status</th>
-            <th class="px-4 py-3 font-medium">Actions</th>
+            <th class="px-4 py-3 font-medium">{{ $t('fields.title') }}</th>
+            <th class="px-4 py-3 font-medium">{{ $t('fields.author') }}</th>
+            <th class="px-4 py-3 font-medium">{{ $t('fields.department') }}</th>
+            <th class="px-4 py-3 font-medium">{{ $t('fields.similarity') }}</th>
+            <th class="px-4 py-3 font-medium">{{ $t('fields.status') }}</th>
+            <th class="px-4 py-3 font-medium">{{ $t('fields.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -21,7 +21,7 @@
             <td class="px-4 py-3"><span :class="statusClass(row.status)" class="rounded-full px-2.5 py-1 text-xs font-semibold">{{ formatStatus(row.status) }}</span></td>
             <td class="px-4 py-3">
               <router-link :to="{ name: 'DepartmentProposal', params: { id: row.id } }" class="rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition">
-                View
+                {{ $t('common.view') }}
               </router-link>
             </td>
           </tr>
@@ -33,7 +33,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import axios from 'axios'
+
+const { t } = useI18n()
 
 const queueRows = ref([])
 
@@ -55,7 +58,8 @@ const statusClass = (status) => {
 }
 
 const formatStatus = (status) => {
-  if (status === 'revision_requested') return 'Revision Needed'
-  return status.charAt(0).toUpperCase() + status.slice(1)
+  const key = `status.${status}`
+  const translated = t(key)
+  return translated === key ? status.charAt(0).toUpperCase() + status.slice(1) : translated
 }
 </script>

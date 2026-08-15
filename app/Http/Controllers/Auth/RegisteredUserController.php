@@ -32,14 +32,28 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'email' => [
+                'required',
+                'string',
+                'lowercase',
+                'email',
+                'max:255',
+                'unique:'.User::class,
+                'exists:students,official_email',
+            ],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+        ], [
+            'email.exists' => 'This email is not registered as an eligible student. Please contact your department.',
         ]);
+
+        $student = \App\Models\Student::where('official_email', $request->email)->firstOrFail();
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => 'student',
+            'department_id' => $student->department_id,
         ]);
 
         event(new Registered($user));

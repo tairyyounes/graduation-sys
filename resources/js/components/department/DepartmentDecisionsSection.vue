@@ -1,14 +1,14 @@
 <template>
   <section class="space-y-5">
     <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-      <table class="min-w-full text-left text-sm">
+      <table class="min-w-full text-start text-sm">
         <thead class="bg-slate-50 text-slate-500">
           <tr>
-            <th class="px-4 py-3 font-medium">Title</th>
-            <th class="px-4 py-3 font-medium">Author</th>
-            <th class="px-4 py-3 font-medium">Department</th>
-            <th class="px-4 py-3 font-medium">Status</th>
-            <th class="px-4 py-3 font-medium">Updated</th>
+            <th class="px-4 py-3 font-medium">{{ $t('fields.title') }}</th>
+            <th class="px-4 py-3 font-medium">{{ $t('fields.author') }}</th>
+            <th class="px-4 py-3 font-medium">{{ $t('fields.department') }}</th>
+            <th class="px-4 py-3 font-medium">{{ $t('fields.status') }}</th>
+            <th class="px-4 py-3 font-medium">{{ $t('dept.updated') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -27,7 +27,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import axios from 'axios'
+
+const { t } = useI18n()
 
 const decisionsRows = ref([])
 
@@ -50,7 +53,8 @@ const statusClass = (status) => {
 }
 
 const formatStatus = (status) => {
-  if (status === 'revision_requested') return 'Revision Needed'
-  return status.charAt(0).toUpperCase() + status.slice(1)
+  const key = `status.${status}`
+  const translated = t(key)
+  return translated === key ? status.charAt(0).toUpperCase() + status.slice(1) : translated
 }
 </script>

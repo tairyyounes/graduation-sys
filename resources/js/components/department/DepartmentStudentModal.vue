@@ -7,7 +7,7 @@
     <div class="w-full max-w-xl rounded-2xl bg-white p-5 shadow-xl sm:p-6">
       <div class="mb-5 flex items-center justify-between">
         <h2 class="text-lg font-semibold text-slate-900 sm:text-xl">
-          {{ isEditing ? 'Edit student' : 'Add student' }}
+          {{ isEditing ? $t('dept.student_modal.edit') : $t('dept.students.add_student') }}
         </h2>
         <button
           class="rounded-md p-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400"
@@ -21,7 +21,7 @@
 
       <form class="space-y-4" @submit.prevent="$emit('submit')">
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700">Student Number</label>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('dept.students.student_number') }}</label>
           <input
             v-model="form.student_number"
             type="text"
@@ -33,7 +33,7 @@
         </div>
 
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700">Full Name</label>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('dept.students.full_name') }}</label>
           <input
             v-model="form.full_name"
             type="text"
@@ -45,7 +45,7 @@
         </div>
 
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700">Official Email</label>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('dept.student_modal.official_email') }}</label>
           <input
             v-model="form.email"
             type="email"
@@ -58,7 +58,7 @@
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-slate-700">Semester</label>
+            <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('dept.students.semester') }}</label>
             <input
               v-model="form.semester"
               type="number"
@@ -72,14 +72,14 @@
             <p v-if="errors.semester" class="mt-1 text-xs text-red-600">{{ errors.semester[0] }}</p>
           </div>
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-slate-700">Status</label>
+            <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('fields.status') }}</label>
             <select
               v-model="form.is_active"
               class="w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm outline-none transition focus:ring-2"
               :class="errors.is_active ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-500/20'"
             >
-              <option :value="true">Active</option>
-              <option :value="false">Disabled</option>
+              <option :value="true">{{ $t('status.active') }}</option>
+              <option :value="false">{{ $t('dept.students.disabled') }}</option>
             </select>
             <p v-if="errors.is_active" class="mt-1 text-xs text-red-600">{{ errors.is_active[0] }}</p>
           </div>
@@ -93,7 +93,7 @@
             class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400"
             @click="$emit('close')"
           >
-            Cancel
+            {{ $t('common.cancel') }}
           </button>
           <button
             v-if="!isEditing"
@@ -101,14 +101,14 @@
             class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400"
             @click="$emit('clear')"
           >
-            Clear
+            {{ $t('dept.student_modal.clear') }}
           </button>
           <button
             type="submit"
             class="rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50"
             :disabled="submitting"
           >
-            {{ submitting ? 'Saving...' : isEditing ? 'Save changes' : 'Add student' }}
+            {{ submitting ? $t('dept.students.saving') : isEditing ? $t('dept.student_modal.save_changes') : $t('dept.students.add_student') }}
           </button>
         </div>
       </form>

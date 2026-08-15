@@ -224,10 +224,15 @@ class StudentProposalController extends Controller
             ->log('proposal submitted');
 
         // Dispatch AI similarity check — runs synchronously if QUEUE_CONNECTION=sync,
-        // or in the background when using a real queue driver.
+        // or in the background when using a real queue driver. This is a secondary
+        // step: if the AI service is down it must not fail the submission itself.
         $latestVersion = $proposal->latestVersion;
         if ($latestVersion) {
-            CheckProposalSimilarity::dispatch($proposal->load('department'), $latestVersion);
+            try {
+                CheckProposalSimilarity::dispatch($proposal->load('department'), $latestVersion);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Similarity check on submit failed: ' . $e->getMessage());
+            }
         }
 
         return response()->json(['message' => 'Proposal submitted for review.']);
@@ -351,7 +356,14 @@ class StudentProposalController extends Controller
         // Do NOT re-dispatch for 'no_comparisons' — there is nothing to compare against.
         $forceRecheck = $request->query('recheck') === 'true';
         if ($forceRecheck || $aiStatus === 'failed' || $aiStatus === 'none') {
-            CheckProposalSimilarity::dispatch($proposal->load('department'), $latestVersion);
+            try {
+                CheckProposalSimilarity::dispatch($proposal->load('department'), $latestVersion);
+            } catch (\Throwable $e) {
+                // On a sync queue a failing AI call would bubble up as a 500 and
+                // leave the page blank. Swallow it so the endpoint still returns a
+                // graceful status the UI can render (e.g. "analysis unavailable").
+                \Illuminate\Support\Facades\Log::warning('Similarity dispatch failed: ' . $e->getMessage());
+            }
 
             // Reload results from the database (in case of sync execution)
             $allResults = SimilarityResult::where('proposal_version_id', $versionId)
@@ -362,7 +374,7 @@ class StudentProposalController extends Controller
             $aiStatus  = $statuses->contains('failed') ? 'failed'
                        : ($statuses->contains('pending') ? 'pending'
                        : ($statuses->contains('no_comparisons') ? 'no_comparisons'
-                       : 'success'));
+                       : ($allResults->isEmpty() ? 'none' : 'success')));
         }
 
         // Early return — no proposals existed to compare against
@@ -410,7 +422,7 @@ class StudentProposalController extends Controller
                     'tags_similarity'         => null,
                     'technologies_similarity' => null,
                     'verdict'                 => $topResult->verdict,
-                    'explanation'             => 'High similarity detected with an approved project from the current academic year. The project details are hidden for privacy reasons. Please consider adjusting your project scope or selecting a different direction.',
+                    'explanation'             => 'Potentially significant similarity detected with an approved project from the current academic year. The project details are hidden for privacy reasons. Please consider adjusting your project scope or selecting a different direction.',
                     'details_hidden'          => true,
                 ];
             } else {
@@ -463,7 +475,7 @@ class StudentProposalController extends Controller
                         'tags_similarity'         => null,
                         'technologies_similarity' => null,
                         'verdict'                 => $res->verdict,
-                        'explanation'             => 'High similarity detected with an approved project from the current academic year. The project details are hidden for privacy reasons. Please consider adjusting your project scope or selecting a different direction.',
+                        'explanation'             => 'Potentially significant similarity detected with an approved project from the current academic year. The project details are hidden for privacy reasons. Please consider adjusting your project scope or selecting a different direction.',
                         'year'                    => optional(optional($res->comparedVersion)->created_at)->format('Y') ?? now()->year,
                         'details_hidden'          => true,
                     ];
@@ -513,6 +525,7 @@ class StudentProposalController extends Controller
             'summary'   => $summary,
             'results'   => $results,
             'recommendations' => $recommendations,
+            'analyzed_at' => optional($topResult)->updated_at,
             'message'   => 'Similarity analysis retrieved successfully.',
         ]);
     }

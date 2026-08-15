@@ -3,7 +3,7 @@
     <div class="w-full max-w-lg rounded-2xl bg-white p-5 shadow-xl sm:p-6">
       <div class="mb-5 flex items-center justify-between">
         <h2 class="text-lg font-semibold text-slate-900 sm:text-xl">
-          {{ isEditing ? 'Edit review committee' : 'Add review committee' }}
+          {{ isEditing ? $t('dept.committee_modal.edit') : $t('dept.committee_modal.add') }}
         </h2>
         <button class="rounded-md p-1 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-400" @click="$emit('close')">
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -14,24 +14,24 @@
 
       <form class="space-y-5" @submit.prevent="$emit('submit')">
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700">Committee name</label>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('dept.committee_modal.name') }}</label>
           <input
             v-model="form.name"
             type="text"
             class="w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm outline-none transition focus:ring-2"
             :class="errors.name ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-500/20'"
-            placeholder="e.g. 2026 Fall Review Committee"
+            :placeholder="$t('dept.committee_modal.name_ph')"
             required
           />
           <p v-if="errors.name" class="mt-1 text-xs text-red-600">{{ errors.name[0] }}</p>
         </div>
 
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700">Assign Members</label>
-          
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('dept.committee_modal.assign') }}</label>
+
           <div class="max-h-60 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 p-2">
             <div v-if="availableMembers.length === 0" class="p-3 text-center text-sm text-slate-500">
-              No department members available to assign.
+              {{ $t('dept.committee_modal.no_available') }}
             </div>
             
             <div v-for="member in availableMembers" :key="member.id" class="flex items-center p-2 rounded-md hover:bg-slate-100 transition">
@@ -42,7 +42,7 @@
                 v-model="form.members"
                 class="h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
               />
-              <label :for="`member-${member.id}`" class="ml-3 flex flex-col cursor-pointer flex-grow">
+              <label :for="`member-${member.id}`" class="ms-3 flex flex-col cursor-pointer flex-grow">
                 <span class="text-sm font-medium text-slate-900">{{ member.full_name }}</span>
                 <span class="text-xs text-slate-500">{{ member.email }}</span>
               </label>
@@ -54,9 +54,9 @@
         <p v-if="errors.general" class="text-sm text-red-600">{{ errors.general }}</p>
 
         <div class="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
-          <button type="button" class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400" @click="$emit('close')">Cancel</button>
+          <button type="button" class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400" @click="$emit('close')">{{ $t('common.cancel') }}</button>
           <button type="submit" class="rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50" :disabled="submitting">
-            {{ submitting ? 'Saving...' : isEditing ? 'Save changes' : 'Create committee' }}
+            {{ submitting ? $t('common.saving') : isEditing ? $t('dept.student_modal.save_changes') : $t('dept.committee_modal.create') }}
           </button>
         </div>
       </form>

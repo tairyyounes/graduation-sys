@@ -2,7 +2,7 @@
   <section class="space-y-6">
     <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
       <div class="px-6 py-5 border-b border-slate-100">
-        <h3 class="text-base font-medium text-slate-900">Review Decisions</h3>
+        <h3 class="text-base font-medium text-slate-900">{{ $t('student.feedback.title') }}</h3>
       </div>
       <ul class="divide-y divide-slate-200">
         <li v-for="(feedback, index) in domainFeedback" :key="index" class="p-6">
