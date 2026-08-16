@@ -46,7 +46,7 @@ class AiSimilarityService
 
         try {
             $response = Http::timeout(60)
-                ->post("{$baseUrl}/search", $payload);
+                ->post("{$baseUrl}/search_proposals", $payload);
         } catch (ConnectionException $e) {
             throw new \RuntimeException(
                 "AI API is unreachable at {$baseUrl}: " . $e->getMessage(),

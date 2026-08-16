@@ -16,7 +16,7 @@ beforeEach(function () {
 
 it('dispatches the CheckProposalSimilarity job and registers results', function () {
     Http::fake([
-        '*/search' => Http::response([
+        '*' => Http::response([
             'query_title' => 'Smart Clinic System',
             'department' => 'Programming',
             'threshold' => 0.5,
@@ -26,8 +26,9 @@ it('dispatches the CheckProposalSimilarity job and registers results', function 
                     'project_id' => '100',
                     'title' => 'Another Smart Clinic',
                     'domain' => 'Programming',
+                    'score' => 0.78,
                     'similarity' => [
-                        'semantic_similarity' => 0.85,
+                        'problem_similarity' => 0.85,
                         'functions_similarity' => 0.60,
                         'objectives_similarity' => 0.70,
                         'tags_similarity' => 0.80,
@@ -84,12 +85,12 @@ it('dispatches the CheckProposalSimilarity job and registers results', function 
     expect($result->ai_status)->toBe('success');
     expect($result->verdict)->toBe('Very High Similarity');
     expect((float)$result->final_score)->toBe(0.78);
-    expect((float)$result->semantic_similarity)->toBe(0.85);
+    expect((float)$result->problem_similarity)->toBe(0.85);
 });
 
 it('gracefully handles API failures by creating a failed status sentinel row', function () {
     Http::fake([
-        '*/search' => Http::response('Internal Server Error', 500),
+        '*' => Http::response('Internal Server Error', 500),
     ]);
 
     $proposal = Proposal::create([

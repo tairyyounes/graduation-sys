@@ -108,7 +108,7 @@ it('anonymizes current-year confirmed proposals for students but shows full deta
         'ai_status' => 'success',
         'similarity_score' => 85,
         'final_score' => 0.85,
-        'semantic_similarity' => 0.90,
+        'problem_similarity' => 0.90,
         'verdict' => 'High Similarity',
         'explanation' => 'Both projects have high overlap.',
     ]);
@@ -119,7 +119,7 @@ it('anonymizes current-year confirmed proposals for students but shows full deta
         'ai_status' => 'success',
         'similarity_score' => 75,
         'final_score' => 0.75,
-        'semantic_similarity' => 0.80,
+        'problem_similarity' => 0.80,
         'verdict' => 'Moderate Similarity',
         'explanation' => 'Some overlap with past projects.',
     ]);
@@ -141,7 +141,7 @@ it('anonymizes current-year confirmed proposals for students but shows full deta
     expect($maskedResult['title'])->toBe('Hidden for Privacy');
     expect($maskedResult['domain'])->toBe('Active Confirmed Proposal');
     expect($maskedResult['id'])->toBeNull();
-    expect($maskedResult['semantic_similarity'])->toBeNull();
+    expect($maskedResult['problem_similarity'])->toBeNull();
     expect($maskedResult['explanation'])->toContain('details are hidden for privacy');
 
     // Find the past-year normal result
@@ -149,7 +149,7 @@ it('anonymizes current-year confirmed proposals for students but shows full deta
     expect($normalResult)->not->toBeNull();
     expect($normalResult['title'])->toBe('Old Public Project Title');
     expect($normalResult['id'])->toBe($pastProposal->proposal_id);
-    expect($normalResult['semantic_similarity'])->toBe(80);
+    expect($normalResult['problem_similarity'])->toBe(80);
 
     // Test as DEPARTMENT MEMBER: Should have full visibility for both
     actingAs($this->deptUser);
@@ -164,5 +164,5 @@ it('anonymizes current-year confirmed proposals for students but shows full deta
     $conflictingMatch = collect($deptMatches)->firstWhere('id', $otherProposal->proposal_id);
     expect($conflictingMatch)->not->toBeNull();
     expect($conflictingMatch['title'])->toBe('Secret Current Year Accepted Project');
-    expect($conflictingMatch['semantic_similarity'])->toBe(90);
+    expect($conflictingMatch['problem_similarity'])->toBe(90);
 });

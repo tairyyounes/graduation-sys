@@ -13,8 +13,11 @@ return [
     */
 
     'similarity' => [
-        'hidden'  => 'Potentially significant similarity detected with an approved project from the current academic year. The project details are hidden for privacy reasons. Please consider adjusting your project scope or selecting a different direction.',
-        'running' => 'Similarity analysis is running.',
+        'hidden'           => 'Potentially significant similarity detected with an approved project from the current academic year. The project details are hidden for privacy reasons. Please consider adjusting your project scope or selecting a different direction.',
+        'running'          => 'Similarity analysis is running.',
+        'hidden_title'     => 'Hidden for Privacy',
+        'hidden_domain'    => 'Active Confirmed Proposal',
+        'unknown_project'  => 'Unknown Project',
     ],
 
 ];

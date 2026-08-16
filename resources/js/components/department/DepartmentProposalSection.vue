@@ -245,11 +245,12 @@ const overallScoreNum = computed(() => {
 })
 
 const breakdownDimensions = computed(() => [
-  { key: 'semantic',     label: t('similarity.semantic'),   value: aiSummary.value?.semantic_similarity     ?? null },
-  { key: 'functions',   label: t('similarity.functions'),  value: aiSummary.value?.functions_similarity    ?? null },
-  { key: 'objectives',  label: t('similarity.objectives'), value: aiSummary.value?.objectives_similarity   ?? null },
-  { key: 'tags',        label: t('similarity.tags'),       value: aiSummary.value?.tags_similarity         ?? null },
-  { key: 'tech',        label: t('fields.technologies'),   value: aiSummary.value?.technologies_similarity ?? null },
+  { key: 'problem',     label: t('similarity.problem'),     value: aiSummary.value?.problem_similarity      ?? null },
+  { key: 'solution',    label: t('similarity.solution'),    value: aiSummary.value?.solution_similarity     ?? null },
+  { key: 'objectives',  label: t('similarity.objectives'),  value: aiSummary.value?.objectives_similarity   ?? null },
+  { key: 'functions',   label: t('similarity.functions'),   value: aiSummary.value?.functions_similarity    ?? null },
+  { key: 'tags',        label: t('similarity.tags'),        value: aiSummary.value?.tags_similarity         ?? null },
+  { key: 'tech',        label: t('fields.technologies'),    value: aiSummary.value?.technologies_similarity ?? null },
 ])
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
