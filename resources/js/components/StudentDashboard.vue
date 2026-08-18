@@ -11,8 +11,8 @@
 
       <!-- Sidebar -->
       <aside
-        class="fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-slate-200 bg-white transition-transform duration-300 ease-out lg:static lg:w-64 lg:translate-x-0"
-        :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+        class="fixed inset-y-0 left-0 rtl:right-0 rtl:left-auto z-40 flex w-72 flex-col border-r rtl:border-l rtl:border-r-0 border-slate-200 bg-white transition-transform duration-300 ease-out lg:static lg:w-64 lg:translate-x-0"
+        :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'"
       >
         <!-- Brand Header -->
         <div class="border-b border-slate-100 px-5 py-6">
@@ -23,27 +23,27 @@
               </svg>
             </div>
             <div>
-              <p class="text-lg font-bold tracking-tight text-slate-900">ProposalGuard AI</p>
-              <p class="mt-1 text-xs leading-4 text-slate-500">Student Dashboard</p>
+              <p class="text-lg font-bold tracking-tight text-slate-900">{{ $t('proposals.proposalguard_ai') }}</p>
+              <p class="mt-1 text-xs leading-4 text-slate-500">{{ $t('students.dashboard') }}</p>
             </div>
           </div>
         </div>
 
         <!-- Navigation Menu -->
         <nav class="flex-1 px-4 py-6 overflow-y-auto">
-          <p class="mb-4 px-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Menu</p>
+          <p class="mb-4 px-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{{ $t('common.menu') }}</p>
           <ul class="space-y-1.5">
             <li v-for="item in navItems" :key="item.name">
               <a
                 href="#"
                 @click.prevent="currentView = item.name; sidebarOpen = false"
-                class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+                class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left rtl:text-right text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
                 :class="currentView === item.name
                   ? 'bg-teal-50 text-teal-800 shadow-sm ring-1 ring-teal-500/10'
                   : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
               >
                 <span :class="[currentView === item.name ? 'text-teal-600' : 'text-slate-400 group-hover:text-slate-600']" v-html="item.icon"></span>
-                <span>{{ item.name }}</span>
+                <span>{{ $t(item.name) }}</span>
               </a>
             </li>
           </ul>
@@ -56,12 +56,13 @@
               {{ studentData.name ? studentData.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'ST' }}
             </div>
             <div class="overflow-hidden">
-              <p class="truncate text-sm font-semibold text-slate-900">{{ studentData.name || 'Loading...' }}</p>
-              <p class="truncate text-xs text-slate-500">{{ studentData.department || 'Student Account' }}</p>
+              <p class="truncate text-sm font-semibold text-slate-900">{{ studentData.name || $t('common.loading') }}</p>
+              <p class="truncate text-xs text-slate-500">{{ studentData.department || $t('students.account') }}</p>
             </div>
           </div>
           <div class="mt-4">
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between gap-2">
+              <LanguageSwitcher />
               <form method="POST" action="/logout">
                 <input type="hidden" name="_token" :value="csrfToken">
                 <button
@@ -92,23 +93,23 @@
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
-            Menu
+            {{ $t('common.menu') }}
           </button>
 
-          <div class="hidden lg:block text-2xl font-bold text-slate-900 tracking-tight">{{ currentView }}</div>
+          <div class="hidden lg:block text-2xl font-bold text-slate-900 tracking-tight">{{ $t(currentView) }}</div>
 
           <a
             href="/"
-            class="ml-auto inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
+            class="ml-auto rtl:mr-auto rtl:ml-0 inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
           >
-            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <svg class="h-4 w-4 rtl:-scale-x-100" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Back to Home
+            {{ $t('common.back_to_home') }}
           </a>
         </div>
 
-        <div class="lg:hidden text-2xl font-bold text-slate-900 tracking-tight mb-6">{{ currentView }}</div>
+        <div class="lg:hidden text-2xl font-bold text-slate-900 tracking-tight mb-6">{{ $t(currentView) }}</div>
 
         <!-- Dashboard Views -->
         <div class="transition-all">
@@ -221,6 +222,7 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue';
+import LanguageSwitcher from './common/LanguageSwitcher.vue';
 import StudentOverviewSection from './student/StudentOverviewSection.vue';
 import StudentWorkspaceSection from './student/StudentWorkspaceSection.vue';
 import StudentTeamSection from './student/StudentTeamSection.vue';

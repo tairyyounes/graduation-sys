@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <h2 class="text-xl font-bold text-slate-900 tracking-tight">Previous Proposals</h2>
+        <h2 class="text-xl font-bold text-slate-900 tracking-tight">{{ $t('proposals.previouss') }}</h2>
         <p class="mt-1 text-sm text-slate-500">Explore accepted proposals from past semesters to guide your own work.</p>
       </div>
       
@@ -30,11 +30,11 @@
         <table class="min-w-full divide-y divide-slate-200">
           <thead class="bg-slate-50">
             <tr>
-              <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Project Title</th>
-              <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Domain</th>
-              <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Department</th>
-              <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Submitted On</th>
-              <th scope="col" class="px-6 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Action</th>
+              <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('common.project_title') }}</th>
+              <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('common.domain') }}</th>
+              <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('departments.department') }}</th>
+              <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('common.submitted_on') }}</th>
+              <th scope="col" class="px-6 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('common.action') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-200 bg-white">
@@ -84,11 +84,11 @@
                 <td colspan="5" class="px-6 py-6">
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                     <div>
-                      <h4 class="font-semibold text-slate-900 mb-1">Problem Statement</h4>
+                      <h4 class="font-semibold text-slate-900 mb-1">{{ $t('messages.problem_statement') }}</h4>
                       <p class="text-slate-600 whitespace-pre-wrap">{{ proposal.problem || 'Not provided' }}</p>
                     </div>
                     <div>
-                      <h4 class="font-semibold text-slate-900 mb-1">Proposed Solution</h4>
+                      <h4 class="font-semibold text-slate-900 mb-1">{{ $t('messages.proposed_solution') }}</h4>
                       <p class="text-slate-600 whitespace-pre-wrap">{{ proposal.solution || 'Not provided' }}</p>
                     </div>
                     <!-- Optionally add more fields if needed -->

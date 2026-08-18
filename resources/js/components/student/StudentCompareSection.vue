@@ -28,7 +28,7 @@
     </div>
 
     <div v-else-if="error" class="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
-      <p class="text-base font-semibold text-rose-600 mb-2">Comparison Failed</p>
+      <p class="text-base font-semibold text-rose-600 mb-2">{{ $t('messages.comparison_failed') }}</p>
       <p class="text-sm text-slate-500">{{ error }}</p>
       <button @click="$emit('back')" class="mt-4 rounded-lg bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 transition">
         Return
@@ -44,7 +44,7 @@
               <span class="text-2xl font-black text-teal-700">{{ similarity ? similarity.score : '0%' }}</span>
             </div>
             <div>
-              <h3 class="text-lg font-bold text-slate-900">AI Similarity Breakdown</h3>
+              <h3 class="text-lg font-bold text-slate-900">{{ $t('messages.ai_similarity_breakdown') }}</h3>
               <p class="text-sm text-slate-500">AI analysis comparing your proposal structure against the archived match.</p>
             </div>
           </div>
@@ -52,23 +52,23 @@
           <div v-if="similarity" class="flex-1 max-w-md">
             <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
               <div class="p-2 bg-slate-50 rounded-xl border border-slate-100">
-                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Semantic</p>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ $t('common.semantic') }}</p>
                 <p class="text-xs font-bold text-slate-700 mt-0.5">{{ similarity.semantic || 'N/A' }}</p>
               </div>
               <div class="p-2 bg-slate-50 rounded-xl border border-slate-100">
-                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Functions</p>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ $t('common.functions') }}</p>
                 <p class="text-xs font-bold text-slate-700 mt-0.5">{{ similarity.functions || 'N/A' }}</p>
               </div>
               <div class="p-2 bg-slate-50 rounded-xl border border-slate-100">
-                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Objectives</p>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ $t('common.objectives') }}</p>
                 <p class="text-xs font-bold text-slate-700 mt-0.5">{{ similarity.objectives || 'N/A' }}</p>
               </div>
               <div class="p-2 bg-slate-50 rounded-xl border border-slate-100">
-                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tags</p>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ $t('common.tags') }}</p>
                 <p class="text-xs font-bold text-slate-700 mt-0.5">{{ similarity.tags || 'N/A' }}</p>
               </div>
               <div class="p-2 bg-slate-50 rounded-xl border border-slate-100">
-                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tech</p>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{{ $t('common.tech') }}</p>
                 <p class="text-xs font-bold text-slate-700 mt-0.5">{{ similarity.tech || 'N/A' }}</p>
               </div>
             </div>
@@ -108,26 +108,26 @@
           
           <div class="flex-1 p-5 space-y-6">
             <div>
-              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Problem Statement</h3>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{{ $t('messages.problem_statement') }}</h3>
               <p class="text-sm leading-relaxed text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-100">{{ currentProposal.problem }}</p>
             </div>
             <div>
-              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Proposed Solution</h3>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{{ $t('messages.proposed_solution') }}</h3>
               <p class="text-sm leading-relaxed text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-100">{{ currentProposal.solution }}</p>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Objectives</h3>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{{ $t('common.objectives') }}</h3>
                 <p class="text-sm leading-relaxed text-slate-600 whitespace-pre-wrap">{{ currentProposal.objectives }}</p>
               </div>
               <div>
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Core Functions</h3>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{{ $t('common.core_functions') }}</h3>
                 <p class="text-sm leading-relaxed text-slate-600 whitespace-pre-wrap">{{ currentProposal.functions }}</p>
               </div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
               <div>
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Tags</h3>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{{ $t('common.tags') }}</h3>
                 <div class="flex flex-wrap gap-1">
                   <span v-for="tag in getTags(currentProposal.tags)" :key="tag" class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
                     {{ tag }}
@@ -135,7 +135,7 @@
                 </div>
               </div>
               <div>
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Technologies</h3>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{{ $t('common.technologies') }}</h3>
                 <div class="flex flex-wrap gap-1">
                   <span v-for="tech in getTags(currentProposal.tech)" :key="tech" class="inline-flex items-center rounded-md bg-blue-50 text-blue-700 px-2 py-0.5 text-xs font-medium border border-blue-100">
                     {{ tech }}
@@ -158,26 +158,26 @@
           
           <div class="flex-1 p-5 space-y-6">
             <div>
-              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Problem Statement</h3>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{{ $t('messages.problem_statement') }}</h3>
               <p class="text-sm leading-relaxed text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-100">{{ comparedProposal.problem }}</p>
             </div>
             <div>
-              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Proposed Solution</h3>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{{ $t('messages.proposed_solution') }}</h3>
               <p class="text-sm leading-relaxed text-slate-700 bg-slate-50 p-4 rounded-xl border border-slate-100">{{ comparedProposal.solution }}</p>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Objectives</h3>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{{ $t('common.objectives') }}</h3>
                 <p class="text-sm leading-relaxed text-slate-600 whitespace-pre-wrap">{{ comparedProposal.objectives }}</p>
               </div>
               <div>
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Core Functions</h3>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{{ $t('common.core_functions') }}</h3>
                 <p class="text-sm leading-relaxed text-slate-600 whitespace-pre-wrap">{{ comparedProposal.functions }}</p>
               </div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
               <div>
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Tags</h3>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{{ $t('common.tags') }}</h3>
                 <div class="flex flex-wrap gap-1">
                   <span v-for="tag in getTags(comparedProposal.tags)" :key="tag" class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
                     {{ tag }}
@@ -185,7 +185,7 @@
                 </div>
               </div>
               <div>
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Technologies</h3>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">{{ $t('common.technologies') }}</h3>
                 <div class="flex flex-wrap gap-1">
                   <span v-for="tech in getTags(comparedProposal.tech)" :key="tech" class="inline-flex items-center rounded-md bg-blue-50 text-blue-700 px-2 py-0.5 text-xs font-medium border border-blue-100">
                     {{ tech }}

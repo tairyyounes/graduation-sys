@@ -26,7 +26,7 @@
 
     <div v-else class="space-y-5">
       <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <h2 class="text-lg font-semibold text-slate-900">CSV Bulk Import</h2>
+        <h2 class="text-lg font-semibold text-slate-900">{{ $t('messages.csv_bulk_import') }}</h2>
         <p class="mt-1 text-sm text-slate-500">Upload a CSV file to preview and import multiple students at once.</p>
 
         <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -51,7 +51,7 @@
       <article v-if="stagedStudents.length > 0" class="rounded-2xl border border-teal-200 bg-teal-50/30 p-5 shadow-sm">
         <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 class="text-lg font-semibold text-teal-900">Staged for Import</h2>
+            <h2 class="text-lg font-semibold text-teal-900">{{ $t('messages.staged_for_import') }}</h2>
             <p class="text-sm text-teal-700 mt-1">Review the parsed students. Existing students are highlighted in red and will be ignored. You can edit names and emails before confirming.</p>
           </div>
         </div>
@@ -60,18 +60,18 @@
           <table class="min-w-full text-left text-sm">
             <thead class="bg-teal-50 text-teal-700 border-b border-teal-100">
               <tr>
-                <th class="px-4 py-3 font-semibold">Status</th>
-                <th class="px-4 py-3 font-semibold">Student number</th>
-                <th class="px-4 py-3 font-semibold">Full name</th>
-                <th class="px-4 py-3 font-semibold">Email</th>
-                <th class="px-4 py-3 font-semibold text-center">Action</th>
+                <th class="px-4 py-3 font-semibold">{{ $t('common.status') }}</th>
+                <th class="px-4 py-3 font-semibold">{{ $t('students.number_1') }}</th>
+                <th class="px-4 py-3 font-semibold">{{ $t('common.full_name') }}</th>
+                <th class="px-4 py-3 font-semibold">{{ $t('auth.email') }}</th>
+                <th class="px-4 py-3 font-semibold text-center">{{ $t('common.action') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-teal-50">
               <tr v-for="(student, index) in stagedStudents" :key="index" :class="student.exists ? 'bg-red-50/50' : 'hover:bg-slate-50'">
                 <td class="px-4 py-3">
-                  <span v-if="student.exists" class="inline-flex items-center rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/10">Already Exists</span>
-                  <span v-else class="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Ready</span>
+                  <span v-if="student.exists" class="inline-flex items-center rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/10">{{ $t('common.already_exists') }}</span>
+                  <span v-else class="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">{{ $t('common.ready') }}</span>
                 </td>
                 <td class="px-4 py-3">
                   <input v-if="!student.exists" v-model="student.student_number" type="text" class="w-28 rounded border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500" />
@@ -108,7 +108,7 @@
 
       <article class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 class="text-lg font-semibold text-slate-900">Current students</h2>
+          <h2 class="text-lg font-semibold text-slate-900">{{ $t('students.currents') }}</h2>
           
           <!-- Search Bar -->
           <div class="relative w-full sm:w-72">
@@ -130,7 +130,7 @@
           <div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500 mb-3">
             <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
           </div>
-          <h3 class="text-sm font-semibold text-slate-900">No students found</h3>
+          <h3 class="text-sm font-semibold text-slate-900">{{ $t('students.nos_found') }}</h3>
           <p class="mt-1 max-w-sm text-xs text-slate-500">Import a CSV or add students manually to populate this list.</p>
         </div>
 
@@ -138,12 +138,12 @@
           <table class="min-w-full text-left text-sm">
             <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
               <tr>
-                <th class="px-5 py-3 font-semibold">Student number</th>
-                <th class="px-5 py-3 font-semibold">Full name</th>
-                <th class="px-5 py-3 font-semibold">Email</th>
-                <th class="px-5 py-3 font-semibold">Semester</th>
-                <th class="px-5 py-3 font-semibold">Status</th>
-                <th class="px-5 py-3 font-semibold text-right">Actions</th>
+                <th class="px-5 py-3 font-semibold">{{ $t('students.number_1') }}</th>
+                <th class="px-5 py-3 font-semibold">{{ $t('common.full_name') }}</th>
+                <th class="px-5 py-3 font-semibold">{{ $t('auth.email') }}</th>
+                <th class="px-5 py-3 font-semibold">{{ $t('common.semester') }}</th>
+                <th class="px-5 py-3 font-semibold">{{ $t('common.status') }}</th>
+                <th class="px-5 py-3 font-semibold text-right">{{ $t('common.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">

@@ -2,21 +2,21 @@
   <section class="space-y-6">
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
-        <p class="text-sm font-medium text-slate-500">Active Proposal</p>
+        <p class="text-sm font-medium text-slate-500">{{ $t('proposals.active') }}</p>
         <template v-if="activeProposal">
           <p class="mt-2 text-xl font-bold text-slate-900 truncate">{{ activeProposal.title }}</p>
           <p class="mt-1 text-sm text-slate-600 line-clamp-1">{{ activeProposal.problem }}</p>
         </template>
         <template v-else>
-          <p class="mt-2 text-xl font-bold text-slate-400">No Active Proposal</p>
+          <p class="mt-2 text-xl font-bold text-slate-400">{{ $t('proposals.no_active') }}</p>
         </template>
       </div>
       <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
-        <p class="text-sm font-medium text-slate-500">Status</p>
+        <p class="text-sm font-medium text-slate-500">{{ $t('common.status') }}</p>
         <p class="mt-2 text-xl font-bold text-slate-900">{{ activeProposal ? activeProposal.status : 'None' }}</p>
       </div>
       <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
-        <p class="text-sm font-medium text-slate-500">Similarity Score</p>
+        <p class="text-sm font-medium text-slate-500">{{ $t('messages.similarity_score') }}</p>
         <div class="mt-2 flex items-baseline gap-2">
           <p class="text-xl font-bold text-slate-900">{{ activeProposal && activeProposal.similarity !== null ? activeProposal.similarity + '%' : 'N/A' }}</p>
           <span
@@ -33,7 +33,7 @@
         </div>
       </div>
       <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
-        <p class="text-sm font-medium text-slate-500">Team Size</p>
+        <p class="text-sm font-medium text-slate-500">{{ $t('common.team_size') }}</p>
         <p class="mt-2 text-xl font-bold text-slate-900">{{ Math.max(1, teamSize) }} / 3</p>
       </div>
     </div>

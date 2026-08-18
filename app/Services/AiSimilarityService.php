@@ -26,7 +26,7 @@ class AiSimilarityService
         ?string $excludeId = null,
         int $topK = 5
     ): array {
-        $baseUrl = rtrim(config('services.dense_api.url', env('DENSE_API_URL', 'http://127.0.0.1:8000')), '/');
+        $baseUrl = rtrim(config('services.dense_api.url', env('DENSE_API_URL', 'http://127.0.0.1:8002')), '/');
 
         $payload = [
             'title'            => $version->title ?? '',
@@ -75,7 +75,7 @@ class AiSimilarityService
         string $departmentName,
         ?string $excludeId = null
     ): array {
-        $baseUrl = rtrim(config('services.dense_api.url', env('DENSE_API_URL', 'http://127.0.0.1:8000')), '/');
+        $baseUrl = rtrim(config('services.dense_api.url', env('DENSE_API_URL', 'http://127.0.0.1:8002')), '/');
 
         $payload = [
             'title'            => $version->title ?? '',

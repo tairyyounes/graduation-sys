@@ -6,7 +6,7 @@
       <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 w-full max-w-3xl flex flex-col max-h-[90vh]">
         <!-- Header -->
         <div class="border-b border-slate-100 px-6 py-5 bg-slate-50/50 flex justify-between items-center shrink-0">
-          <h3 class="text-xl font-bold text-slate-900">Draft New Proposal</h3>
+          <h3 class="text-xl font-bold text-slate-900">{{ $t('proposals.draft_new') }}</h3>
           <button @click="$emit('close')" class="text-slate-400 hover:text-slate-600 transition-colors">
             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
           </button>
@@ -15,7 +15,7 @@
         <!-- Form Body -->
         <div class="px-6 py-6 overflow-y-auto flex-1 space-y-5">
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">Proposal Title</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('proposals.title') }}</label>
             <input v-model="form.title" type="text" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border" placeholder="Enter a descriptive title" required>
           </div>
 
@@ -31,22 +31,22 @@
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">Problem Statement</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('messages.problem_statement') }}</label>
             <textarea v-model="form.problem" rows="3" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border" placeholder="What specific problem are you solving?" required></textarea>
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">Proposed Solution</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('messages.proposed_solution') }}</label>
             <textarea v-model="form.solution" rows="3" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border" placeholder="How does your project solve this problem?" required></textarea>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Objectives</label>
+              <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('common.objectives') }}</label>
               <textarea v-model="form.objectives" rows="2" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border" placeholder="Main goals..." required></textarea>
             </div>
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Core Functions</label>
+              <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('common.core_functions') }}</label>
               <textarea v-model="form.functions" rows="2" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border" placeholder="Key features..." required></textarea>
             </div>
           </div>
@@ -57,7 +57,7 @@
               <input v-model="form.tags" type="text" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border" placeholder="e.g. AI, Web App, Healthcare" required>
             </div>
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1">Technology Used</label>
+              <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('messages.technology_used') }}</label>
               <input v-model="form.tech" type="text" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm px-4 py-2 border" placeholder="e.g. Vue, Laravel, Python" required>
             </div>
           </div>

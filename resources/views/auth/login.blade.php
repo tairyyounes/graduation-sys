@@ -19,13 +19,13 @@
                     </svg>
                 </div>
                 <div>
-                    <p class="text-base font-semibold">ProposalGuard AI</p>
+                    <p class="text-base font-semibold">{{ __('proposals.proposalguard_ai') }}</p>
                     <p class="text-xs text-white/80">College of Computer Technology - Tripoli</p>
                 </div>
             </div>
 
             <div class="max-w-md">
-                <h1 class="text-5xl font-bold leading-tight">Detect proposal similarity</h1>
+                <h1 class="text-5xl font-bold leading-tight">{{ __('proposals.detect_similarity') }}</h1>
                 <p class="mt-5 text-2xl leading-relaxed text-white/85">
                     An academic platform that helps students submit proposals and helps departments make confident
                     accept, reject, or revise decisions - backed by semantic AI.
@@ -39,8 +39,8 @@
             <div class="absolute right-4 top-4 text-sm text-slate-700 sm:right-8 sm:top-8">العربية</div>
 
             <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-lg sm:p-8">
-                <h2 class="text-3xl font-semibold text-slate-900">Welcome back</h2>
-                <p class="mt-1 text-sm text-slate-500">Sign in to continue</p>
+                <h2 class="text-3xl font-semibold text-slate-900">{{ __('common.welcome_back') }}</h2>
+                <p class="mt-1 text-sm text-slate-500">{{ __('auth.sign_in_to_continue') }}</p>
 
                 <x-auth-session-status class="mt-4" :status="session('status')" />
 
@@ -48,7 +48,7 @@
                     @csrf
 
                     <div>
-                        <label for="email" class="mb-1.5 block text-sm font-medium text-slate-700">Email</label>
+                        <label for="email" class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('auth.email') }}</label>
                         <input
                             id="email"
                             type="email"
@@ -64,7 +64,7 @@
                     </div>
 
                     <div>
-                        <label for="password" class="mb-1.5 block text-sm font-medium text-slate-700">Password</label>
+                        <label for="password" class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('auth.password') }}</label>
                         <input
                             id="password"
                             type="password"
@@ -80,7 +80,7 @@
                     <div class="flex items-center justify-between pt-1">
                         <label for="remember_me" class="inline-flex items-center gap-2 text-sm text-slate-600">
                             <input id="remember_me" type="checkbox" class="rounded border-slate-300 text-slate-700 focus:ring-slate-400" name="remember">
-                            <span>Remember me</span>
+                            <span>{{ __('common.remember_me') }}</span>
                         </label>
 
                         @if (Route::has('password.request'))

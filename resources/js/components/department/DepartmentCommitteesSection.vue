@@ -1,7 +1,7 @@
 <template>
   <section class="space-y-5 sm:space-y-6">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Review Committees</h1>
+      <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">{{ $t('decisions.review_committees') }}</h1>
       <button 
         @click="openCreateModal"
         class="inline-flex items-center justify-center rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
@@ -21,7 +21,7 @@
       <div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500 mb-4">
         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
       </div>
-      <h3 class="text-lg font-semibold text-slate-900">No review committees found</h3>
+      <h3 class="text-lg font-semibold text-slate-900">{{ $t('decisions.no_review_committees_found') }}</h3>
       <p class="mt-1 max-w-sm text-sm text-slate-500">You haven't added any review committees yet.</p>
       <button @click="openCreateModal" class="mt-5 rounded-lg bg-white border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
         Add new committee
@@ -65,7 +65,7 @@
               +{{ committee.users.length - 5 }}
             </div>
           </div>
-          <p v-else class="text-sm text-slate-400 italic">No members assigned</p>
+          <p v-else class="text-sm text-slate-400 italic">{{ $t('messages.no_members_assigned') }}</p>
         </div>
 
         <div class="mt-6 flex gap-2 pt-4 border-t border-slate-100">

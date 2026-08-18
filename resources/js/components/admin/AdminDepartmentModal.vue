@@ -21,7 +21,7 @@
 
       <form class="space-y-4" @submit.prevent="$emit('submit')">
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700">Department Name</label>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('departments.name') }}</label>
           <input
             v-model="form.department_name"
             type="text"

@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
         
+        $middleware->web(append: [
+            \App\Http\Middleware\SetLocale::class,
+        ]);
+        
         $middleware->redirectUsersTo(function (\Illuminate\Http\Request $request) {
             if (auth()->check()) {
                 $role = auth()->user()->role;

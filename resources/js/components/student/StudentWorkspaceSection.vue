@@ -34,7 +34,7 @@
         <div class="mx-auto w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
           <svg class="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         </div>
-        <p class="text-base font-medium text-slate-900">No drafts yet</p>
+        <p class="text-base font-medium text-slate-900">{{ $t('common.no_drafts_yet') }}</p>
         <p class="mt-1 text-sm text-slate-500">Create your first proposal draft to begin.</p>
       </div>
 
@@ -54,29 +54,29 @@
       <div v-if="activeProposal" class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div class="p-6 sm:p-8">
           <div class="flex justify-between items-start mb-6">
-            <span class="inline-flex items-center rounded-md bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-700 ring-1 ring-inset ring-teal-700/10">Active Proposal</span>
+            <span class="inline-flex items-center rounded-md bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-700 ring-1 ring-inset ring-teal-700/10">{{ $t('proposals.active') }}</span>
             <span class="inline-flex items-center rounded-md bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20">{{ activeProposal.status }}</span>
           </div>
 
           <h3 class="text-2xl font-bold text-slate-900 mb-4">{{ activeProposal.title }}</h3>
           <div class="prose prose-sm prose-slate max-w-none mb-6">
-            <h4 class="text-slate-900 font-semibold mb-2">Problem Statement</h4>
+            <h4 class="text-slate-900 font-semibold mb-2">{{ $t('messages.problem_statement') }}</h4>
             <p class="text-slate-600 leading-relaxed mb-4">{{ activeProposal.problem }}</p>
-            <h4 class="text-slate-900 font-semibold mb-2">Proposed Solution</h4>
+            <h4 class="text-slate-900 font-semibold mb-2">{{ $t('messages.proposed_solution') }}</h4>
             <p class="text-slate-600 leading-relaxed">{{ activeProposal.solution }}</p>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50 rounded-lg p-5 border border-slate-100 mb-6">
             <div>
-              <p class="text-xs font-medium text-slate-500">Domain</p>
+              <p class="text-xs font-medium text-slate-500">{{ $t('common.domain') }}</p>
               <p class="mt-1 text-sm font-medium text-slate-900">{{ activeProposal.domain }}</p>
             </div>
             <div class="sm:col-span-2">
-              <p class="text-xs font-medium text-slate-500">Tags</p>
+              <p class="text-xs font-medium text-slate-500">{{ $t('common.tags') }}</p>
               <p class="mt-1 text-sm text-slate-900">{{ activeProposal.tags }}</p>
             </div>
             <div>
-              <p class="text-xs font-medium text-slate-500">Similarity</p>
+              <p class="text-xs font-medium text-slate-500">{{ $t('common.similarity') }}</p>
               <p class="mt-1 text-sm font-bold" :class="[activeProposal.similarity < 30 ? 'text-teal-600' : activeProposal.similarity < 60 ? 'text-amber-600' : 'text-red-600']">
                 {{ activeProposal.similarity !== null ? activeProposal.similarity + '%' : 'Not Checked' }}
               </p>
@@ -84,8 +84,8 @@
           </div>
 
           <div class="flex gap-3">
-            <button @click="$emit('navigate', 'Similarity Report')" class="inline-flex items-center justify-center rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 transition">View Full Report</button>
-            <button @click="$emit('open-proposal-details', activeProposal, 'active')" class="inline-flex items-center justify-center rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 transition">View All Details</button>
+            <button @click="$emit('navigate', 'Similarity Report')" class="inline-flex items-center justify-center rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 transition">{{ $t('messages.view_full_report') }}</button>
+            <button @click="$emit('open-proposal-details', activeProposal, 'active')" class="inline-flex items-center justify-center rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 transition">{{ $t('messages.view_all_details') }}</button>
           </div>
         </div>
       </div>
@@ -94,7 +94,7 @@
         <div class="mx-auto w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
           <svg class="w-8 h-8 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         </div>
-        <h3 class="text-lg font-medium text-slate-900">No Active Proposal</h3>
+        <h3 class="text-lg font-medium text-slate-900">{{ $t('proposals.no_active') }}</h3>
         <p class="mt-2 text-sm text-slate-500 max-w-md mx-auto">You have not confirmed a proposal yet. Go to your Draft Ideas, select a draft, and confirm it to submit to the domain.</p>
         <button @click="$emit('update:workspaceTab', 'Draft Ideas')" class="mt-6 inline-flex items-center justify-center rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 transition">
           View Drafts
@@ -108,7 +108,7 @@
         <div class="mx-auto w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
           <svg class="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
         </div>
-        <p class="text-base font-medium text-slate-900">No archived ideas</p>
+        <p class="text-base font-medium text-slate-900">{{ $t('messages.no_archived_ideas') }}</p>
         <p class="mt-1 text-sm text-slate-500">Ideas you archive will appear here.</p>
       </div>
 

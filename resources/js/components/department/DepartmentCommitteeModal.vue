@@ -14,7 +14,7 @@
 
       <form class="space-y-5" @submit.prevent="$emit('submit')">
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700">Committee name</label>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('decisions.committee_name') }}</label>
           <input
             v-model="form.name"
             type="text"
@@ -27,7 +27,7 @@
         </div>
 
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700">Assign Members</label>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('common.assign_members') }}</label>
           
           <div class="max-h-60 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 p-2">
             <div v-if="availableMembers.length === 0" class="p-3 text-center text-sm text-slate-500">
@@ -54,7 +54,7 @@
         <p v-if="errors.general" class="text-sm text-red-600">{{ errors.general }}</p>
 
         <div class="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
-          <button type="button" class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400" @click="$emit('close')">Cancel</button>
+          <button type="button" class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400" @click="$emit('close')">{{ $t('common.cancel') }}</button>
           <button type="submit" class="rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50" :disabled="submitting">
             {{ submitting ? 'Saving...' : isEditing ? 'Save changes' : 'Create committee' }}
           </button>

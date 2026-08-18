@@ -2,7 +2,7 @@
   <section class="space-y-6">
     <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
       <div class="p-6 sm:p-8 border-b border-slate-100 bg-slate-50/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h3 class="text-lg font-semibold text-slate-900">Team Members</h3>
+        <h3 class="text-lg font-semibold text-slate-900">{{ $t('common.team_members') }}</h3>
         <button
           v-if="teamMembers.length < 3"
           @click="$emit('open-invite')"
@@ -21,9 +21,9 @@
         <table class="min-w-full divide-y divide-slate-200">
           <thead class="bg-slate-50">
             <tr>
-              <th class="py-4 pl-6 pr-3 text-left text-sm font-semibold text-slate-900">Name</th>
-              <th class="px-3 py-4 text-left text-sm font-semibold text-slate-900">Registration Number</th>
-              <th class="px-3 py-4 text-left text-sm font-semibold text-slate-900">Role</th>
+              <th class="py-4 pl-6 pr-3 text-left text-sm font-semibold text-slate-900">{{ $t('common.name') }}</th>
+              <th class="px-3 py-4 text-left text-sm font-semibold text-slate-900">{{ $t('messages.registration_number') }}</th>
+              <th class="px-3 py-4 text-left text-sm font-semibold text-slate-900">{{ $t('common.role') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 bg-white">

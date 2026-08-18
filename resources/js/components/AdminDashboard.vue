@@ -3,25 +3,6 @@
     :nav-items="navItems"
     nav-title="Admin dashboard"
     :user="{ initials: 'SA', name: 'System Admin', email: 'admin@ctc.ly' }"
-  >
-    <template #footerActions>
-      <div class="flex items-center justify-between">
-        <button
-          type="button"
-          class="rounded-md px-2 py-1 text-sm text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400"
-        >
-          العربية
-        </button>
-        <button
-          type="button"
-          class="rounded-md p-1.5 text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400"
-        >
-          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1m0-10V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2v-1" />
-          </svg>
-        </button>
-      </div>
-    </template>
   </AppDashboardLayout>
 </template>
 

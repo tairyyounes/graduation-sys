@@ -13,7 +13,7 @@
       <div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500 mb-4">
         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       </div>
-      <h3 class="text-lg font-semibold text-slate-900">No activity yet</h3>
+      <h3 class="text-lg font-semibold text-slate-900">{{ $t('messages.no_activity_yet') }}</h3>
       <p class="mt-1 max-w-sm text-sm text-slate-500">Actions taken by administrators and users will appear here automatically.</p>
     </div>
 
@@ -23,10 +23,10 @@
         <table class="min-w-full text-left text-sm">
           <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
             <tr>
-              <th class="px-6 py-4 font-semibold">Time</th>
-              <th class="px-6 py-4 font-semibold">Actor</th>
-              <th class="px-6 py-4 font-semibold">Action</th>
-              <th class="px-6 py-4 font-semibold">Target</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('common.time') }}</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('common.actor') }}</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('common.action') }}</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('common.target') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">

@@ -4,11 +4,11 @@
       <table class="min-w-full text-left text-sm">
         <thead class="bg-slate-50 text-slate-500">
           <tr>
-            <th class="px-4 py-3 font-medium">Title</th>
-            <th class="px-4 py-3 font-medium">Author</th>
-            <th class="px-4 py-3 font-medium">Department</th>
-            <th class="px-4 py-3 font-medium">Status</th>
-            <th class="px-4 py-3 font-medium">Updated</th>
+            <th class="px-4 py-3 font-medium">{{ $t('common.title') }}</th>
+            <th class="px-4 py-3 font-medium">{{ $t('common.author') }}</th>
+            <th class="px-4 py-3 font-medium">{{ $t('departments.department') }}</th>
+            <th class="px-4 py-3 font-medium">{{ $t('common.status') }}</th>
+            <th class="px-4 py-3 font-medium">{{ $t('common.updated') }}</th>
           </tr>
         </thead>
         <tbody>

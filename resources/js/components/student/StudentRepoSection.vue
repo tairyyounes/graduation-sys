@@ -5,7 +5,7 @@
     <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
       <div class="flex items-start justify-between gap-4 mb-5">
         <div>
-          <h2 class="text-xl font-bold text-slate-900 mb-1">Proposal Repository</h2>
+          <h2 class="text-xl font-bold text-slate-900 mb-1">{{ $t('proposals.repository') }}</h2>
           <p class="text-sm text-slate-500">
             Browse previous proposals from your department to explore ideas and avoid duplication.
           </p>
@@ -43,7 +43,7 @@
             class="w-full rounded-xl border border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm py-2.5 px-3"
             @change="fetchProposals"
           >
-            <option value="">All Years</option>
+            <option value="">{{ $t('common.all_years') }}</option>
             <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
           </select>
         </div>
@@ -66,7 +66,7 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
         </svg>
       </div>
-      <p class="text-base font-semibold text-slate-900">No proposals found</p>
+      <p class="text-base font-semibold text-slate-900">{{ $t('proposals.nos_found') }}</p>
       <p class="mt-1 text-sm text-slate-500">
         {{ filters.search || filters.year ? 'Try adjusting your search or year filter.' : 'No previous proposals in your department yet.' }}
       </p>
@@ -154,24 +154,24 @@
                 <!-- Main content -->
                 <div class="lg:col-span-2 space-y-6">
                   <div>
-                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Problem Statement</h4>
+                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ $t('messages.problem_statement') }}</h4>
                     <p class="text-slate-700 leading-relaxed text-sm bg-slate-50 p-4 rounded-xl border border-slate-100">
                       {{ selectedProposal.problem || 'Not specified.' }}
                     </p>
                   </div>
                   <div>
-                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Proposed Solution</h4>
+                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ $t('messages.proposed_solution') }}</h4>
                     <p class="text-slate-700 leading-relaxed text-sm bg-slate-50 p-4 rounded-xl border border-slate-100">
                       {{ selectedProposal.solution || 'Not specified.' }}
                     </p>
                   </div>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                      <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Objectives</h4>
+                      <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ $t('common.objectives') }}</h4>
                       <p class="text-slate-600 text-sm whitespace-pre-wrap leading-relaxed">{{ selectedProposal.objectives || 'Not specified.' }}</p>
                     </div>
                     <div>
-                      <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Core Functions</h4>
+                      <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ $t('common.core_functions') }}</h4>
                       <p class="text-slate-600 text-sm whitespace-pre-wrap leading-relaxed">{{ selectedProposal.functions || 'Not specified.' }}</p>
                     </div>
                   </div>
@@ -189,11 +189,11 @@
                       >
                         {{ tag.trim() }}
                       </span>
-                      <span v-if="!getTags(selectedProposal.tags).length" class="text-sm text-slate-400">None</span>
+                      <span v-if="!getTags(selectedProposal.tags).length" class="text-sm text-slate-400">{{ $t('common.none') }}</span>
                     </div>
                   </div>
                   <div>
-                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Technologies</h4>
+                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ $t('common.technologies') }}</h4>
                     <div class="flex flex-wrap gap-1.5">
                       <span
                         v-for="tech in getTags(selectedProposal.tech)"
@@ -202,11 +202,11 @@
                       >
                         {{ tech.trim() }}
                       </span>
-                      <span v-if="!getTags(selectedProposal.tech).length" class="text-sm text-slate-400">None</span>
+                      <span v-if="!getTags(selectedProposal.tech).length" class="text-sm text-slate-400">{{ $t('common.none') }}</span>
                     </div>
                   </div>
                   <div>
-                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Submission Date</h4>
+                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">{{ $t('messages.submission_date') }}</h4>
                     <p class="text-sm text-slate-700 font-medium">{{ selectedProposal.date || 'N/A' }}</p>
                   </div>
                 </div>

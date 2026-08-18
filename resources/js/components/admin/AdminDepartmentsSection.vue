@@ -1,7 +1,7 @@
 <template>
   <section class="space-y-5 sm:space-y-6">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Departments</h1>
+      <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">{{ $t('departments.departments') }}</h1>
       <button 
         @click="openCreateModal"
         class="inline-flex items-center justify-center rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500"
@@ -20,7 +20,7 @@
       <div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500 mb-4">
         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
       </div>
-      <h3 class="text-lg font-semibold text-slate-900">No departments found</h3>
+      <h3 class="text-lg font-semibold text-slate-900">{{ $t('departments.nos_found') }}</h3>
       <p class="mt-1 max-w-sm text-sm text-slate-500">You haven't added any departments to the system yet.</p>
       <button @click="openCreateModal" class="mt-5 rounded-lg bg-white border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
         Add new department

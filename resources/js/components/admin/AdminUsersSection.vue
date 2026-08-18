@@ -22,7 +22,7 @@
       <div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500 mb-4">
         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
       </div>
-      <h3 class="text-lg font-semibold text-slate-900">No users found</h3>
+      <h3 class="text-lg font-semibold text-slate-900">{{ $t('common.no_users_found') }}</h3>
       <p class="mt-1 max-w-sm text-sm text-slate-500">Get started by creating a new user to grant them access to the platform.</p>
       <button @click="openCreateModal" class="mt-5 rounded-lg bg-white border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
         Add new user
@@ -52,12 +52,12 @@
         <table class="min-w-full text-left text-sm">
           <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
             <tr>
-              <th class="px-6 py-4 font-semibold">Full name</th>
-              <th class="px-6 py-4 font-semibold">Email</th>
-              <th class="px-6 py-4 font-semibold">Role</th>
-              <th class="px-6 py-4 font-semibold">Department</th>
-              <th class="px-6 py-4 font-semibold">Status</th>
-              <th class="px-6 py-4 font-semibold text-right">Actions</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('common.full_name') }}</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('auth.email') }}</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('common.role') }}</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('departments.department') }}</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('common.status') }}</th>
+              <th class="px-6 py-4 font-semibold text-right">{{ $t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
@@ -138,8 +138,8 @@
             <span class="text-slate-500">{{ user.department }}</span>
           </div>
           <div class="mt-5 flex gap-3">
-            <button class="flex-1 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50" @click="openEditModal(user)">Edit</button>
-            <button class="flex-1 rounded-xl border border-red-200 bg-red-50 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-100" @click="deleteUser(user)">Delete</button>
+            <button class="flex-1 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50" @click="openEditModal(user)">{{ $t('common.edit') }}</button>
+            <button class="flex-1 rounded-xl border border-red-200 bg-red-50 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-100" @click="deleteUser(user)">{{ $t('common.delete') }}</button>
           </div>
         </article>
 

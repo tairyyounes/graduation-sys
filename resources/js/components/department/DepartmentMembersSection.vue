@@ -1,7 +1,7 @@
 <template>
   <section class="space-y-5 sm:space-y-6">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Department Members</h1>
+      <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">{{ $t('departments.members') }}</h1>
       <button
         class="inline-flex items-center justify-center rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
         @click="openCreateModal"
@@ -23,7 +23,7 @@
       <div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500 mb-4">
         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
       </div>
-      <h3 class="text-lg font-semibold text-slate-900">No members found</h3>
+      <h3 class="text-lg font-semibold text-slate-900">{{ $t('messages.no_members_found') }}</h3>
       <p class="mt-1 max-w-sm text-sm text-slate-500">Get started by adding a new department member.</p>
       <button @click="openCreateModal" class="mt-5 rounded-lg bg-white border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
         Add new member
@@ -53,10 +53,10 @@
         <table class="min-w-full text-left text-sm">
           <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
             <tr>
-              <th class="px-6 py-4 font-semibold">Full name</th>
-              <th class="px-6 py-4 font-semibold">Email</th>
-              <th class="px-6 py-4 font-semibold">Status</th>
-              <th class="px-6 py-4 font-semibold text-right">Actions</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('common.full_name') }}</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('auth.email') }}</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('common.status') }}</th>
+              <th class="px-6 py-4 font-semibold text-right">{{ $t('common.actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
@@ -131,7 +131,7 @@
 
       <form class="space-y-4" @submit.prevent="submitForm">
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700">Full name</label>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('common.full_name') }}</label>
           <input
             v-model="form.full_name"
             type="text"
@@ -143,7 +143,7 @@
         </div>
 
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700">Email</label>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('auth.email') }}</label>
           <input
             v-model="form.email"
             type="email"
@@ -155,15 +155,15 @@
         </div>
 
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700">Status</label>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('common.status') }}</label>
           <select
             v-model="form.is_active"
             class="w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm outline-none transition focus:ring-2"
             :class="formErrors.is_active ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-500/20'"
           >
 
-            <option :value="false">Disabled</option>
-            <option :value="true">Active</option>
+            <option :value="false">{{ $t('common.disabled') }}</option>
+            <option :value="true">{{ $t('common.active') }}</option>
             
           </select>
           <p v-if="formErrors.is_active" class="mt-1 text-xs text-red-600">{{ formErrors.is_active[0] }}</p>
@@ -187,8 +187,8 @@
         <p v-if="formErrors.general" class="text-sm text-red-600">{{ formErrors.general }}</p>
 
         <div class="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
-          <button type="button" class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400" @click="closeModal">Cancel</button>
-          <button v-if="!isEditing" type="button" class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400" @click="clearForm">Clear</button>
+          <button type="button" class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400" @click="closeModal">{{ $t('common.cancel') }}</button>
+          <button v-if="!isEditing" type="button" class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400" @click="clearForm">{{ $t('common.clear') }}</button>
           <button type="submit" class="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 disabled:opacity-50" :disabled="submitting">
             {{ submitting ? 'Saving...' : isEditing ? 'Save changes' : 'Create member' }}
           </button>

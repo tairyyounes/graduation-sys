@@ -81,7 +81,6 @@ class AddingUserRequest extends FormRequest
 
             // Semester
             'semester' => [
-                \Illuminate\Validation\Rule::requiredIf(fn() => $this->role === 'student'),
                 'nullable',
                 'integer'
             ],

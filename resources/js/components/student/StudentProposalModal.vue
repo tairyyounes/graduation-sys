@@ -8,9 +8,9 @@
         <div class="border-b border-slate-100 px-6 py-5 bg-slate-50/50 flex justify-between items-start shrink-0">
           <div>
             <div class="flex items-center gap-3 mb-1">
-              <span v-if="type === 'active'" class="inline-flex items-center rounded-md bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-700 ring-1 ring-inset ring-teal-700/10">Active Proposal</span>
-              <span v-if="type === 'draft'" class="inline-flex items-center rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-500/20">Draft Idea</span>
-              <span v-if="type === 'archived'" class="inline-flex items-center rounded-md bg-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-500/20">Archived</span>
+              <span v-if="type === 'active'" class="inline-flex items-center rounded-md bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-700 ring-1 ring-inset ring-teal-700/10">{{ $t('proposals.active') }}</span>
+              <span v-if="type === 'draft'" class="inline-flex items-center rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-500/20">{{ $t('common.draft_idea') }}</span>
+              <span v-if="type === 'archived'" class="inline-flex items-center rounded-md bg-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-500/20">{{ $t('common.archived') }}</span>
               <span v-if="proposal.status" class="inline-flex items-center rounded-md bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20">{{ proposal.status }}</span>
             </div>
             <h3 class="text-2xl font-bold text-slate-900">{{ proposal.title }}</h3>
@@ -25,20 +25,20 @@
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2 space-y-6">
               <div>
-                <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-2">Problem Statement</h4>
+                <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-2">{{ $t('messages.problem_statement') }}</h4>
                 <p class="text-slate-600 leading-relaxed text-sm bg-slate-50 p-4 rounded-lg border border-slate-100">{{ proposal.problem || 'Not specified.' }}</p>
               </div>
               <div>
-                <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-2">Proposed Solution</h4>
+                <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-2">{{ $t('messages.proposed_solution') }}</h4>
                 <p class="text-slate-600 leading-relaxed text-sm bg-slate-50 p-4 rounded-lg border border-slate-100">{{ proposal.solution || 'Not specified.' }}</p>
               </div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-2">Objectives</h4>
+                  <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-2">{{ $t('common.objectives') }}</h4>
                   <p class="text-slate-600 text-sm whitespace-pre-wrap">{{ proposal.objectives || 'Not specified.' }}</p>
                 </div>
                 <div>
-                  <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-2">Core Functions</h4>
+                  <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-2">{{ $t('common.core_functions') }}</h4>
                   <p class="text-slate-600 text-sm whitespace-pre-wrap">{{ proposal.functions || 'Not specified.' }}</p>
                 </div>
               </div>
@@ -46,19 +46,19 @@
 
             <div class="space-y-6 lg:border-l lg:border-slate-100 lg:pl-8">
               <div>
-                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Similarity Score</h4>
+                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">{{ $t('messages.similarity_score') }}</h4>
                 <div class="flex items-center mt-2">
                   <template v-if="proposal.similarity !== null">
                     <span class="text-3xl font-black" :class="proposal.similarity < 30 ? 'text-teal-600' : proposal.similarity < 60 ? 'text-amber-500' : 'text-red-500'">{{ proposal.similarity }}%</span>
-                    <span class="ml-3 text-sm text-slate-500 font-medium">Match</span>
+                    <span class="ml-3 text-sm text-slate-500 font-medium">{{ $t('common.match') }}</span>
                   </template>
                   <template v-else>
-                    <span class="text-lg font-medium text-slate-500">Not Checked</span>
+                    <span class="text-lg font-medium text-slate-500">{{ $t('common.not_checked') }}</span>
                   </template>
                 </div>
               </div>
               <div>
-                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Domain</h4>
+                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">{{ $t('common.domain') }}</h4>
                 <p class="text-sm font-medium text-slate-900">{{ proposal.domain || 'Not assigned' }}</p>
               </div>
               <div>
@@ -70,7 +70,7 @@
                 </div>
               </div>
               <div>
-                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Technology Used</h4>
+                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ $t('messages.technology_used') }}</h4>
                 <div class="flex flex-wrap gap-2">
                   <span v-for="tech in (proposal.tech ? proposal.tech.split(',') : [])" :key="tech" class="inline-flex items-center rounded-md bg-blue-50 text-blue-700 px-2 py-1 text-xs font-medium border border-blue-100">
                     {{ tech.trim() }}
@@ -78,7 +78,7 @@
                 </div>
               </div>
               <div>
-                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Created Date</h4>
+                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">{{ $t('common.created_date') }}</h4>
                 <p class="text-sm text-slate-600">{{ proposal.date || 'Today' }}</p>
               </div>
             </div>

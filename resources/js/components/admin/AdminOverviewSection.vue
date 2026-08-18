@@ -15,7 +15,7 @@
 
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-5">
       <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 lg:col-span-8">
-        <h2 class="text-lg font-semibold text-slate-900 sm:text-xl">Submissions over time</h2>
+        <h2 class="text-lg font-semibold text-slate-900 sm:text-xl">{{ $t('messages.submissions_over_time') }}</h2>
         <div class="mt-4 grid h-56 grid-cols-6 items-end gap-2 sm:h-72 sm:gap-3">
           <div v-for="bar in submissionsBars" :key="bar.month" class="flex flex-col items-center gap-2">
             <div class="w-full rounded-lg bg-teal-600 transition-all duration-300" :style="{ height: `${bar.height}%` }"></div>
@@ -25,14 +25,14 @@
       </div>
 
       <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 lg:col-span-4">
-        <h2 class="text-lg font-semibold text-slate-900 sm:text-xl">Decision breakdown</h2>
+        <h2 class="text-lg font-semibold text-slate-900 sm:text-xl">{{ $t('decisions.decision_breakdown') }}</h2>
         <div class="mt-6 flex justify-center sm:mt-8">
           <div class="h-40 w-40 rounded-full border-[22px] border-teal-500 border-t-sky-500 border-l-red-500 sm:h-48 sm:w-48 sm:border-[26px]"></div>
         </div>
         <div class="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm text-slate-600 sm:text-base">
-          <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-teal-500"></span>Accepted</span>
-          <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-red-500"></span>Rejected</span>
-          <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-sky-500"></span>Revise</span>
+          <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-teal-500"></span>{{ $t('common.accepted') }}</span>
+          <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-red-500"></span>{{ $t('common.rejected') }}</span>
+          <span class="flex items-center gap-2"><span class="h-2.5 w-2.5 rounded-full bg-sky-500"></span>{{ $t('common.revise') }}</span>
         </div>
       </div>
     </div>

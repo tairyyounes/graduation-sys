@@ -11,7 +11,7 @@
     </div>
 
     <div>
-      <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">Compare Proposals</h1>
+      <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">{{ $t('proposals.compares') }}</h1>
       <p class="mt-1 text-sm text-slate-500">Detailed side-by-side view to identify matching content.</p>
     </div>
 
@@ -32,7 +32,7 @@
           </p>
           
           <div class="mt-6 border-t border-slate-100 pt-5">
-             <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">Keywords</h3>
+             <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">{{ $t('common.keywords') }}</h3>
              <div class="flex flex-wrap gap-2">
                 <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">#library</span>
                 <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">#NFC</span>
@@ -58,7 +58,7 @@
           </p>
 
           <div class="mt-6 border-t border-slate-100 pt-5">
-             <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">Keywords</h3>
+             <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">{{ $t('common.keywords') }}</h3>
              <div class="flex flex-wrap gap-2">
                 <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">#machine_learning</span>
                 <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">#IDS</span>

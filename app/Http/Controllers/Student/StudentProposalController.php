@@ -8,8 +8,6 @@ use App\Models\Proposal;
 use App\Models\ProposalVersion;
 use App\Models\Decision;
 use App\Models\SimilarityResult;
-use App\Http\Requests\StoreProposalRequest;
-use App\Http\Requests\UpdateProposalRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -34,7 +32,7 @@ class StudentProposalController extends Controller
         ]);
     }
 
-    public function store(StoreProposalRequest $request): JsonResponse
+    public function store(Request $request): JsonResponse
     {
         $student = $request->user()->student;
 
@@ -75,7 +73,7 @@ class StudentProposalController extends Controller
         });
     }
 
-    public function update(UpdateProposalRequest $request, Proposal $proposal): JsonResponse
+    public function update(Request $request, Proposal $proposal): JsonResponse
     {
         // Security: Student can only access their own proposals
         $student = $request->user()->student;
@@ -174,7 +172,7 @@ class StudentProposalController extends Controller
                 function ($attribute, $value, $fail) {
                     $items = array_filter(array_map('trim', explode(',', $value)));
                     $count = count($items);
-                    if ($count < 3) $fail('Please add at least 3 relevant tags.');
+                    if ($count < 1) $fail('Please add at least 1 relevant tag.');
                     if ($count > 10) $fail('The tags cannot exceed 10 items.');
                 }
             ],
@@ -200,7 +198,7 @@ class StudentProposalController extends Controller
             'functions.string' => 'The system functions must be a string.',
             'objectives.required' => 'Please write at least 20 words explaining the project objectives.',
             'objectives.string' => 'The project objectives must be a string.',
-            'tags.required' => 'Please add at least 3 relevant tags.',
+            'tags.required' => 'Please add at least 1 relevant tag.',
             'tags.string' => 'The tags must be a string.',
             'tech.required' => 'Please add at least 2 technologies that will be used in the project.',
             'tech.string' => 'The technologies must be a string.',

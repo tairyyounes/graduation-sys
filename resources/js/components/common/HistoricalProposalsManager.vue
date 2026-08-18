@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <h2 class="text-xl font-bold text-slate-900 tracking-tight">Manage Historical Proposals</h2>
+        <h2 class="text-xl font-bold text-slate-900 tracking-tight">{{ $t('proposals.manage_historicals') }}</h2>
         <p class="mt-1 text-sm text-slate-500">Add or import previous accepted proposals to serve as examples for students.</p>
       </div>
       <div class="flex gap-3">
@@ -39,11 +39,11 @@
             <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
               <div class="sm:flex sm:items-start">
                 <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-                  <h3 class="text-lg font-bold leading-6 text-slate-900" id="modal-title">Add Historical Proposal</h3>
+                  <h3 class="text-lg font-bold leading-6 text-slate-900" id="modal-title">{{ $t('proposals.add_historical') }}</h3>
                   <div class="mt-4 space-y-4">
                     
                     <div v-if="isAdmin">
-                      <label class="block text-sm font-medium text-slate-700 mb-1">Department ID</label>
+                      <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('departments.id') }}</label>
                       <input v-model="form.department_id" type="number" class="block w-full rounded-lg border-slate-300 text-sm focus:border-teal-500 focus:ring-teal-500" placeholder="e.g. 1">
                     </div>
 
@@ -54,7 +54,7 @@
 
                     <div class="grid grid-cols-2 gap-4">
                       <div>
-                        <label class="block text-sm font-medium text-slate-700 mb-1">Domain</label>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('common.domain') }}</label>
                         <input v-model="form.domain" type="text" class="block w-full rounded-lg border-slate-300 text-sm focus:border-teal-500 focus:ring-teal-500" placeholder="e.g. AI, Web">
                       </div>
                       <div>
@@ -64,12 +64,12 @@
                     </div>
 
                     <div>
-                      <label class="block text-sm font-medium text-slate-700 mb-1">Problem Statement</label>
+                      <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('messages.problem_statement') }}</label>
                       <textarea v-model="form.problem" rows="3" class="block w-full rounded-lg border-slate-300 text-sm focus:border-teal-500 focus:ring-teal-500"></textarea>
                     </div>
 
                     <div>
-                      <label class="block text-sm font-medium text-slate-700 mb-1">Proposed Solution</label>
+                      <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('messages.proposed_solution') }}</label>
                       <textarea v-model="form.solution" rows="3" class="block w-full rounded-lg border-slate-300 text-sm focus:border-teal-500 focus:ring-teal-500"></textarea>
                     </div>
 
@@ -99,7 +99,7 @@
             <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
               <div class="sm:flex sm:items-start">
                 <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
-                  <h3 class="text-lg font-bold leading-6 text-slate-900" id="modal-title">Import via CSV</h3>
+                  <h3 class="text-lg font-bold leading-6 text-slate-900" id="modal-title">{{ $t('common.import_via_csv') }}</h3>
                   <div class="mt-4">
                     <p class="text-sm text-slate-500 mb-4">
                       Expected columns (no header): <br>

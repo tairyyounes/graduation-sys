@@ -1,7 +1,7 @@
 <template>
   <section class="space-y-6">
     <div class="rounded-xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
-      <h3 class="text-lg font-medium text-slate-900 mb-6">Proposal Timeline</h3>
+      <h3 class="text-lg font-medium text-slate-900 mb-6">{{ $t('proposals.timeline') }}</h3>
       <ul class="-mb-8">
         <li v-for="(ver, index) in versionHistory" :key="ver.version">
           <div class="relative pb-8">

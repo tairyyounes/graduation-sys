@@ -13,7 +13,7 @@
       
       <div v-if="!loading && department">
         <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">{{ department.name }}</h1>
-        <p class="mt-1 text-sm text-slate-500">Department Overview</p>
+        <p class="mt-1 text-sm text-slate-500">{{ $t('departments.overview') }}</p>
       </div>
       <div v-else-if="loading" class="h-8 w-64 rounded bg-slate-200 animate-pulse"></div>
     </div>
@@ -37,7 +37,7 @@
       <div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500 mb-4">
         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
       </div>
-      <h3 class="text-lg font-semibold text-slate-900">Department not found</h3>
+      <h3 class="text-lg font-semibold text-slate-900">{{ $t('departments.not_found') }}</h3>
       <p class="mt-1 max-w-sm text-sm text-slate-500">The department you are looking for does not exist or was deleted.</p>
       <router-link :to="{ name: 'AdminDepartments' }" class="mt-5 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800">
         Go back
@@ -49,15 +49,15 @@
       <!-- Stats Overview -->
       <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p class="text-sm font-medium text-slate-500">Department Members</p>
+          <p class="text-sm font-medium text-slate-500">{{ $t('departments.members') }}</p>
           <p class="mt-2 text-3xl font-semibold text-slate-900">{{ department.members_count }}</p>
         </div>
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p class="text-sm font-medium text-slate-500">Enrolled Students</p>
+          <p class="text-sm font-medium text-slate-500">{{ $t('students.enrolleds') }}</p>
           <p class="mt-2 text-3xl font-semibold text-slate-900">{{ students.length }}</p>
         </div>
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <p class="text-sm font-medium text-slate-500">Active Proposals</p>
+          <p class="text-sm font-medium text-slate-500">{{ $t('proposals.actives') }}</p>
           <p class="mt-2 text-3xl font-semibold text-slate-900">{{ department.proposals_count }}</p>
         </div>
       </div>
@@ -106,9 +106,9 @@
         <table class="min-w-full text-left text-sm">
           <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
             <tr>
-              <th class="px-6 py-4 font-semibold">Name</th>
-              <th class="px-6 py-4 font-semibold">Email</th>
-              <th class="px-6 py-4 font-semibold">Status</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('common.name') }}</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('auth.email') }}</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('common.status') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
@@ -136,9 +136,9 @@
           <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
             <tr>
               <th class="px-6 py-4 font-semibold">Student No.</th>
-              <th class="px-6 py-4 font-semibold">Name</th>
-              <th class="px-6 py-4 font-semibold">Email</th>
-              <th class="px-6 py-4 font-semibold">Semester</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('common.name') }}</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('auth.email') }}</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('common.semester') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
@@ -162,7 +162,7 @@
         <div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500 mb-4">
           <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         </div>
-        <h3 class="text-lg font-semibold text-slate-900">Coming Soon</h3>
+        <h3 class="text-lg font-semibold text-slate-900">{{ $t('common.coming_soon') }}</h3>
         <p class="mt-1 max-w-sm text-sm text-slate-500">The proposals tracking system is currently under development.</p>
       </div>
 

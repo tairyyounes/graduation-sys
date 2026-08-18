@@ -21,7 +21,7 @@
 
       <form class="space-y-4" @submit.prevent="$emit('submit')">
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700">Student Number</label>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('students.number') }}</label>
           <input
             v-model="form.student_number"
             type="text"
@@ -33,7 +33,7 @@
         </div>
 
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700">Full Name</label>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('common.full_name_1') }}</label>
           <input
             v-model="form.full_name"
             type="text"
@@ -45,7 +45,7 @@
         </div>
 
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700">Official Email</label>
+          <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('auth.official_email') }}</label>
           <input
             v-model="form.email"
             type="email"
@@ -58,7 +58,7 @@
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-slate-700">Semester</label>
+            <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('common.semester') }}</label>
             <input
               v-model="form.semester"
               type="number"
@@ -72,14 +72,14 @@
             <p v-if="errors.semester" class="mt-1 text-xs text-red-600">{{ errors.semester[0] }}</p>
           </div>
           <div>
-            <label class="mb-1.5 block text-sm font-medium text-slate-700">Status</label>
+            <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('common.status') }}</label>
             <select
               v-model="form.is_active"
               class="w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm outline-none transition focus:ring-2"
               :class="errors.is_active ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-500/20'"
             >
-              <option :value="true">Active</option>
-              <option :value="false">Disabled</option>
+              <option :value="true">{{ $t('common.active') }}</option>
+              <option :value="false">{{ $t('common.disabled') }}</option>
             </select>
             <p v-if="errors.is_active" class="mt-1 text-xs text-red-600">{{ errors.is_active[0] }}</p>
           </div>

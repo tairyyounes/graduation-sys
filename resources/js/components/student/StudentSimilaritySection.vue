@@ -1,14 +1,14 @@
 <template>
   <section class="space-y-6">
     <div class="mb-8">
-      <h2 class="text-2xl font-bold text-slate-900">Similarity Report</h2>
+      <h2 class="text-2xl font-bold text-slate-900">{{ $t('messages.similarity_report') }}</h2>
       <p class="mt-1 text-slate-500 text-sm">AI-based semantic comparison for the active proposal.</p>
     </div>
 
     <!-- No active proposal -->
     <div v-if="!activeProposal" class="rounded-xl border border-slate-200 bg-white p-12 shadow-sm text-center">
       <p class="text-slate-500">You must confirm a proposal to view its similarity report.</p>
-      <button @click="$emit('navigate', 'Project Workspace')" class="mt-4 text-teal-600 font-medium hover:text-teal-700">Go to Workspace</button>
+      <button @click="$emit('navigate', 'Project Workspace')" class="mt-4 text-teal-600 font-medium hover:text-teal-700">{{ $t('messages.go_to_workspace') }}</button>
     </div>
 
     <template v-else>
@@ -44,7 +44,7 @@
           </svg>
         </div>
         <div>
-          <h4 class="text-sm font-bold text-red-900 mb-1">Warning</h4>
+          <h4 class="text-sm font-bold text-red-900 mb-1">{{ $t('common.warning') }}</h4>
           <p class="text-sm text-red-700 font-medium">
             High similarity detected with an approved project from the current academic year. The project details are hidden for privacy reasons. Please consider adjusting your project scope or selecting a different direction.
           </p>
@@ -89,7 +89,7 @@
         <!-- Main Similarity Score Card -->
         <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col items-center justify-center text-center relative overflow-hidden">
           <div class="relative z-10">
-            <p class="text-sm font-semibold text-slate-500 mb-2">Overall Similarity</p>
+            <p class="text-sm font-semibold text-slate-500 mb-2">{{ $t('messages.overall_similarity_1') }}</p>
             <div v-if="overallScore !== null"
               class="text-5xl font-black mb-2"
               :class="overallScore < 30 ? 'text-teal-600' : overallScore < 60 ? 'text-amber-500' : 'text-red-500'">
@@ -116,14 +116,14 @@
             </svg>
           </div>
           <div>
-            <h4 class="text-sm font-bold text-slate-900 mb-1">AI Explanation</h4>
+            <h4 class="text-sm font-bold text-slate-900 mb-1">{{ $t('common.ai_explanation') }}</h4>
             <p class="text-sm text-slate-700">{{ summary.explanation }}</p>
           </div>
         </div>
       </div>
 
       <!-- ── Similarity Breakdown (real AI dimensions) ─────────────── -->
-      <h3 class="text-lg font-semibold text-slate-900 mb-4 mt-8">Similarity Breakdown</h3>
+      <h3 class="text-lg font-semibold text-slate-900 mb-4 mt-8">{{ $t('messages.similarity_breakdown') }}</h3>
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
 
         <div v-for="dim in breakdownDimensions" :key="dim.key" class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
@@ -152,7 +152,7 @@
       <!-- ── Top Similar Projects ───────────────────────────────────── -->
       <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-          <h3 class="text-base font-semibold text-slate-900">Top Similar Projects in Database</h3>
+          <h3 class="text-base font-semibold text-slate-900">{{ $t('messages.top_similar_projects_in_databa') }}</h3>
           <button @click="$emit('recheck')" class="text-xs font-medium text-teal-600 hover:text-teal-800 bg-teal-50 px-3 py-1.5 rounded-md transition-colors">
             Recheck Similarity
           </button>
@@ -161,15 +161,15 @@
           <table class="min-w-full divide-y divide-slate-200">
             <thead class="bg-white">
               <tr>
-                <th class="py-3.5 pl-6 pr-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Rank</th>
-                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Project Title</th>
-                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Domain</th>
-                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Final Score</th>
-                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Verdict</th>
-                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Semantic</th>
-                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Functions</th>
-                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider hidden xl:table-cell">Objectives</th>
-                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider hidden xl:table-cell">Tags</th>
+                <th class="py-3.5 pl-6 pr-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('common.rank') }}</th>
+                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('common.project_title') }}</th>
+                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('common.domain') }}</th>
+                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('common.final_score') }}</th>
+                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('common.verdict') }}</th>
+                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">{{ $t('common.semantic') }}</th>
+                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">{{ $t('common.functions') }}</th>
+                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider hidden xl:table-cell">{{ $t('common.objectives') }}</th>
+                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider hidden xl:table-cell">{{ $t('common.tags') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 bg-white">
@@ -230,7 +230,7 @@
             </svg>
           </div>
           <div>
-            <h4 class="text-sm font-bold text-teal-900 mb-1">AI Project Recommendations</h4>
+            <h4 class="text-sm font-bold text-teal-900 mb-1">{{ $t('messages.ai_project_recommendations') }}</h4>
             <p class="text-xs text-teal-700">The AI suggests these alternative directions in the same domain that are unique:</p>
           </div>
         </div>
@@ -243,7 +243,7 @@
             </div>
             <div class="mt-3 pt-3 border-t border-slate-50 flex justify-between items-center text-xs">
               <span class="text-slate-500 font-medium">Relevance: {{ rec.relevance }}</span>
-              <span class="text-teal-600 font-semibold">Unique Option</span>
+              <span class="text-teal-600 font-semibold">{{ $t('common.unique_option') }}</span>
             </div>
           </div>
         </div>

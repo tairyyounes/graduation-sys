@@ -11,8 +11,8 @@
 
     <article class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div class="mb-3 flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-slate-900">Review queue</h2>
-        <router-link :to="{ name: 'DepartmentQueue' }" class="text-sm font-medium text-slate-700 hover:text-teal-600 transition">View all</router-link>
+        <h2 class="text-lg font-semibold text-slate-900">{{ $t('decisions.review_queue') }}</h2>
+        <router-link :to="{ name: 'DepartmentQueue' }" class="text-sm font-medium text-slate-700 hover:text-teal-600 transition">{{ $t('common.view_all') }}</router-link>
       </div>
       <div class="space-y-3">
         <div v-for="proposal in queueRows.slice(0, 2)" :key="proposal.title" class="flex flex-col gap-2 border-t border-slate-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
