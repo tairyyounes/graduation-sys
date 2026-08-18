@@ -16,9 +16,10 @@ class UserFactory extends Factory
         return [
             'full_name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'role' => 'student',
-            'department_id' => 1,
+            'department_id' => fn () => \App\Models\Department::first()?->department_id ?? \App\Models\Department::create(['department_name' => 'Default Department'])->department_id,
             'is_active' => true,
         ];
     }
@@ -26,7 +27,7 @@ class UserFactory extends Factory
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => [
-            // 'email_verified_at' => null,
+            'email_verified_at' => null,
         ]);
     }
 }

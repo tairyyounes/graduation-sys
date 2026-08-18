@@ -43,6 +43,7 @@ class StudentImportController extends Controller
                 'is_active',
             ])
             ->where('department_id', $departmentId)
+            ->whereNull('deleted_at')
             ->orderBy('student_id', 'desc')
             ->limit(200) // Prevent fetching thousands of records at once
             ->get();
@@ -61,11 +62,19 @@ class StudentImportController extends Controller
      */
     public function store(\App\Http\Requests\AddingUserRequest $request): JsonResponse
     {
-        $departmentId = $request->user()->department_id;
+        $callerRole = $request->user()->role;
+
+        // Department heads use their own department; admins must supply department_id in the payload.
+        if ($callerRole === 'department_head') {
+            $departmentId = $request->user()->department_id;
+        } else {
+            // admin path — department_id comes from the form payload (already validated as exists:departments)
+            $departmentId = $request->input('department_id');
+        }
 
         if (!$departmentId) {
             return response()->json([
-                'message' => 'Your account is not linked to a department.',
+                'message' => 'A department must be specified for students.',
             ], 422);
         }
 
@@ -75,27 +84,51 @@ class StudentImportController extends Controller
         // Ensure we handle email correctly for the students table
         $studentData = [
             'student_number' => $validated['student_number'],
-            'full_name' => $validated['full_name'],
+            'full_name'      => $validated['full_name'],
             'official_email' => $validated['email'],
-            'semester' => $validated['semester'],
-            'department_id' => $departmentId,
-            'is_active' => $validated['is_active'] ?? true,
+            'semester'       => $validated['semester'] ?? 8,
+            'department_id'  => $departmentId,
+            'is_active'      => $validated['is_active'] ?? true,
         ];
 
         DB::beginTransaction();
         try {
-            DB::table('students')->insert($studentData);
+            $student = \App\Models\Student::withTrashed()
+                ->where('official_email', $validated['email'])
+                ->orWhere('student_number', $validated['student_number'])
+                ->first();
 
-            DB::table('users')->insertOrIgnore([
-                'full_name' => $validated['full_name'],
-                'email' => $validated['email'],
-                'password' => Hash::make($validated['password']),
-                'role' => 'student',
-                'department_id' => $departmentId,
-                'is_active' => $validated['is_active'] ?? true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            if ($student) {
+                $student->restore();
+                $student->update($studentData);
+            } else {
+                \App\Models\Student::create($studentData);
+            }
+
+            $user = \App\Models\User::withTrashed()
+                ->where('email', $validated['email'])
+                ->first();
+
+            if ($user) {
+                $user->restore();
+                $user->update([
+                    'full_name'   => $validated['full_name'],
+                    'password'    => Hash::make($validated['password']),
+                    'role'        => 'student',
+                    'department_id' => $departmentId,
+                    'is_active'   => $validated['is_active'] ?? true,
+                ]);
+            } else {
+                \App\Models\User::create([
+                    'full_name'   => $validated['full_name'],
+                    'email'       => $validated['email'],
+                    'password'    => Hash::make($validated['password']),
+                    'role'        => 'student',
+                    'department_id' => $departmentId,
+                    'is_active'   => $validated['is_active'] ?? true,
+                    'email_verified_at' => now(),
+                ]);
+            }
 
             activity()
                 ->causedBy($request->user())
@@ -219,9 +252,9 @@ class StudentImportController extends Controller
             return response()->json(['message' => 'No valid rows found in CSV.'], 422);
         }
 
-        // Check for existing users/students in bulk
-        $existingEmails = DB::table('users')->whereIn('email', $emailsToCheck)->pluck('email')->toArray();
-        $existingNumbers = DB::table('students')->whereIn('student_number', $studentNumbersToCheck)->pluck('student_number')->toArray();
+        // Check for existing users/students in bulk (excluding soft-deleted)
+        $existingEmails = DB::table('users')->whereNull('deleted_at')->whereIn('email', $emailsToCheck)->pluck('email')->toArray();
+        $existingNumbers = DB::table('students')->whereNull('deleted_at')->whereIn('student_number', $studentNumbersToCheck)->pluck('student_number')->toArray();
 
         foreach ($rows as &$row) {
             if (in_array($row['email'], $existingEmails) || in_array($row['student_number'], $existingNumbers)) {
@@ -320,12 +353,57 @@ class StudentImportController extends Controller
 
         DB::beginTransaction();
         try {
-            DB::table('students')->insertOrIgnore($studentRows);
-            DB::table('users')->insertOrIgnore($userRows);
+            foreach ($validStudents as $student) {
+                $studentData = [
+                    'student_number' => $student['student_number'],
+                    'full_name' => $student['full_name'],
+                    'official_email' => $student['email'],
+                    'department_id' => $departmentId,
+                    'semester' => $student['semester'],
+                    'is_active' => $student['is_active'],
+                ];
+
+                $existStudent = \App\Models\Student::withTrashed()
+                    ->where('official_email', $student['email'])
+                    ->orWhere('student_number', $student['student_number'])
+                    ->first();
+
+                if ($existStudent) {
+                    $existStudent->restore();
+                    $existStudent->update($studentData);
+                } else {
+                    \App\Models\Student::create($studentData);
+                }
+
+                $existUser = \App\Models\User::withTrashed()
+                    ->where('email', $student['email'])
+                    ->first();
+
+                if ($existUser) {
+                    $existUser->restore();
+                    $existUser->update([
+                        'full_name' => $student['full_name'],
+                        'password' => Hash::make($student['password']),
+                        'role' => 'student',
+                        'department_id' => $departmentId,
+                        'is_active' => $student['is_active'],
+                    ]);
+                } else {
+                    \App\Models\User::create([
+                        'full_name' => $student['full_name'],
+                        'email' => $student['email'],
+                        'password' => Hash::make($student['password']),
+                        'role' => 'student',
+                        'department_id' => $departmentId,
+                        'is_active' => $student['is_active'],
+                        'email_verified_at' => now(),
+                    ]);
+                }
+            }
 
             activity()
                 ->causedBy($request->user())
-                ->log('Confirmed import of ' . count($studentRows) . ' students via CSV');
+                ->log('Confirmed import of ' . count($validStudents) . ' students via CSV');
             
             DB::commit();
         } catch (\Exception $e) {

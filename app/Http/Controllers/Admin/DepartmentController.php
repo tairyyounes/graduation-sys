@@ -27,6 +27,7 @@ class DepartmentController extends Controller
                 'students_count' => DB::table('students')
                     ->selectRaw('count(*)')
                     ->whereColumn('department_id', 'departments.department_id')
+                    ->whereNull('deleted_at')
             ])
             ->orderBy('departments.department_name')
             ->get();
@@ -139,6 +140,7 @@ class DepartmentController extends Controller
             
         $students = DB::table('students')
             ->where('department_id', $id)
+            ->whereNull('deleted_at')
             ->select('student_id as id', 'student_number', 'full_name as name', 'official_email as email', 'semester', 'is_active')
             ->orderBy('full_name')
             ->get()

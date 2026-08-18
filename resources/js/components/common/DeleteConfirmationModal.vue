@@ -22,7 +22,7 @@
             class="flex-1 rounded-xl border border-slate-300 bg-white py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400"
             @click="$emit('close')"
           >
-            Cancel
+            {{ $t('common.cancel') }}
           </button>
           <button
             type="button"
@@ -30,7 +30,7 @@
             :disabled="isDeleting"
             @click="$emit('confirm')"
           >
-            {{ isDeleting ? 'Deleting...' : 'Delete' }}
+            {{ isDeleting ? $t('common.deleting') : $t('common.delete') }}
           </button>
         </div>
       </div>

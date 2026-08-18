@@ -18,11 +18,17 @@ class SimilarityResult extends Model
         'similarity_score',
 
         // Per-dimension breakdown scores from the AI engine
-        'semantic_similarity',
-        'functions_similarity',
+        'problem_similarity',
+        'solution_similarity',
         'objectives_similarity',
+        'functions_similarity',
         'tags_similarity',
         'technologies_similarity',
+
+        // Legacy: whole-proposal embedding score from the pre-breakdown
+        // architecture. Kept for backward compatibility with old raw
+        // responses; not populated or displayed by the current pipeline.
+        'semantic_similarity',
 
         // Final weighted reranked score from the AI
         'final_score',
@@ -38,6 +44,8 @@ class SimilarityResult extends Model
     protected $casts = [
         'ai_raw_response'         => 'array',
         'similarity_score'        => 'float',
+        'problem_similarity'      => 'float',
+        'solution_similarity'     => 'float',
         'semantic_similarity'     => 'float',
         'functions_similarity'    => 'float',
         'objectives_similarity'   => 'float',

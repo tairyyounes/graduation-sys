@@ -8,8 +8,8 @@
       ></div>
 
       <aside
-        class="fixed inset-y-0 left-0 rtl:right-0 rtl:left-auto z-40 flex w-72 flex-col border-r rtl:border-l rtl:border-r-0 border-slate-200 bg-white transition-transform duration-300 ease-out lg:static lg:w-64 lg:translate-x-0"
-        :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'"
+        class="fixed inset-y-0 start-0 z-40 flex w-72 flex-col border-e border-slate-200 bg-white transition-transform duration-300 ease-out lg:static lg:w-64 lg:translate-x-0"
+        :class="sidebarOpen ? 'translate-x-0' : 'max-lg:-translate-x-full max-lg:rtl:translate-x-full'"
       >
         <div class="border-b border-slate-100 px-5 py-6">
           <div class="flex items-start gap-3">
@@ -62,7 +62,7 @@
                   <button
                     type="submit"
                     class="rounded-md p-1.5 text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400"
-                    title="Logout"
+                    :title="$t('common.logout')"
                   >
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1m0-10V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2v-1" />
@@ -86,18 +86,21 @@
             </svg>
             {{ $t('common.menu') }}
           </button>
-          
-          <div class="hidden lg:block text-2xl font-bold text-slate-900 tracking-tight">{{ $t(currentTitle) }}</div>
 
-          <a
-            href="/"
-            class="ml-auto rtl:mr-auto rtl:ml-0 inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
-          >
-            <svg class="h-4 w-4 rtl:-scale-x-100" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            {{ $t('common.back_to_home') }}
-          </a>
+          <div class="hidden lg:block text-2xl font-bold text-slate-900 tracking-tight">{{ currentTitle }}</div>
+
+          <div class="ms-auto flex items-center gap-4">
+            <LangToggle />
+            <a
+              href="/"
+              class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
+            >
+              <svg class="h-4 w-4 rtl:-scale-x-100" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              {{ $t('common.back_to_home') }}
+            </a>
+          </div>
         </div>
 
         <div class="lg:hidden text-2xl font-bold text-slate-900 tracking-tight mb-6">{{ $t(currentTitle) }}</div>
@@ -128,7 +131,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import LanguageSwitcher from '../common/LanguageSwitcher.vue'
+import LangToggle from '../common/LangToggle.vue'
 
 const props = defineProps({
   navItems: {

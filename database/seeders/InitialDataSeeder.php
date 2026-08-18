@@ -10,22 +10,23 @@ class InitialDataSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('departments')->insert([
-            ['department_name' => 'Programming'],
-            ['department_name' => 'Networks'],
-            ['department_name' => 'Control'],
-        ]);
+        foreach (['Programming', 'Networks', 'Control'] as $dept) {
+            DB::table('departments')->updateOrInsert(
+                ['department_name' => $dept],
+                ['department_name' => $dept]
+            );
+        }
 
-        DB::table('users')->insert([
+        DB::table('users')->insertOrIgnore([
             'full_name' => 'System Admin',
             'email' => 'admin@test.com',
             'password' => Hash::make('password'),
             'role' => 'admin',
             'department_id' => null,
             'is_active' => true,
+            'email_verified_at' => now(), // Admin is system-created, auto-verified
             'created_at' => now(),
             'updated_at' => now(),
-        ],
-        );
+        ]);
     }
 }

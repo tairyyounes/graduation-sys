@@ -222,10 +222,15 @@ class StudentProposalController extends Controller
             ->log('proposal submitted');
 
         // Dispatch AI similarity check — runs synchronously if QUEUE_CONNECTION=sync,
-        // or in the background when using a real queue driver.
+        // or in the background when using a real queue driver. This is a secondary
+        // step: if the AI service is down it must not fail the submission itself.
         $latestVersion = $proposal->latestVersion;
         if ($latestVersion) {
-            CheckProposalSimilarity::dispatch($proposal->load('department'), $latestVersion);
+            try {
+                CheckProposalSimilarity::dispatch($proposal->load('department'), $latestVersion);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Similarity check on submit failed: ' . $e->getMessage());
+            }
         }
 
         return response()->json(['message' => 'Proposal submitted for review.']);
@@ -349,7 +354,14 @@ class StudentProposalController extends Controller
         // Do NOT re-dispatch for 'no_comparisons' — there is nothing to compare against.
         $forceRecheck = $request->query('recheck') === 'true';
         if ($forceRecheck || $aiStatus === 'failed' || $aiStatus === 'none') {
-            CheckProposalSimilarity::dispatch($proposal->load('department'), $latestVersion);
+            try {
+                CheckProposalSimilarity::dispatch($proposal->load('department'), $latestVersion);
+            } catch (\Throwable $e) {
+                // On a sync queue a failing AI call would bubble up as a 500 and
+                // leave the page blank. Swallow it so the endpoint still returns a
+                // graceful status the UI can render (e.g. "analysis unavailable").
+                \Illuminate\Support\Facades\Log::warning('Similarity dispatch failed: ' . $e->getMessage());
+            }
 
             // Reload results from the database (in case of sync execution)
             $allResults = SimilarityResult::where('proposal_version_id', $versionId)
@@ -360,7 +372,7 @@ class StudentProposalController extends Controller
             $aiStatus  = $statuses->contains('failed') ? 'failed'
                        : ($statuses->contains('pending') ? 'pending'
                        : ($statuses->contains('no_comparisons') ? 'no_comparisons'
-                       : 'success'));
+                       : ($allResults->isEmpty() ? 'none' : 'success')));
         }
 
         // Early return — no proposals existed to compare against
@@ -402,21 +414,23 @@ class StudentProposalController extends Controller
             if ($isCurrentYearConfirmed) {
                 $summary = [
                     'final_score'             => $finalPct,
-                    'semantic_similarity'     => null,
-                    'functions_similarity'    => null,
+                    'problem_similarity'      => null,
+                    'solution_similarity'     => null,
                     'objectives_similarity'   => null,
+                    'functions_similarity'    => null,
                     'tags_similarity'         => null,
                     'technologies_similarity' => null,
                     'verdict'                 => $topResult->verdict,
-                    'explanation'             => 'High similarity detected with an approved project from the current academic year. The project details are hidden for privacy reasons. Please consider adjusting your project scope or selecting a different direction.',
+                    'explanation'             => __('messages.similarity.hidden'),
                     'details_hidden'          => true,
                 ];
             } else {
                 $summary = [
                     'final_score'             => $finalPct,
-                    'semantic_similarity'     => $topResult->semantic_similarity     !== null ? round($topResult->semantic_similarity     * 100, 1) : null,
-                    'functions_similarity'    => $topResult->functions_similarity    !== null ? round($topResult->functions_similarity    * 100, 1) : null,
+                    'problem_similarity'      => $topResult->problem_similarity      !== null ? round($topResult->problem_similarity      * 100, 1) : null,
+                    'solution_similarity'     => $topResult->solution_similarity     !== null ? round($topResult->solution_similarity     * 100, 1) : null,
                     'objectives_similarity'   => $topResult->objectives_similarity   !== null ? round($topResult->objectives_similarity   * 100, 1) : null,
+                    'functions_similarity'    => $topResult->functions_similarity    !== null ? round($topResult->functions_similarity    * 100, 1) : null,
                     'tags_similarity'         => $topResult->tags_similarity         !== null ? round($topResult->tags_similarity         * 100, 1) : null,
                     'technologies_similarity' => $topResult->technologies_similarity !== null ? round($topResult->technologies_similarity * 100, 1) : null,
                     'verdict'                 => $topResult->verdict,
@@ -441,8 +455,8 @@ class StudentProposalController extends Controller
 
                 // Try to resolve compared project title from DB, fall back to raw response
                 $raw   = $res->ai_raw_response ?? [];
-                $title  = $isCurrentYearConfirmed ? 'Hidden for Privacy' : (optional($res->comparedVersion)->title ?? ($raw['title'] ?? 'Unknown Project'));
-                $domain = $isCurrentYearConfirmed ? 'Active Confirmed Proposal' : (optional(optional($res->comparedVersion)->proposal)->department->department_name ?? ($raw['domain'] ?? 'N/A'));
+                $title  = $isCurrentYearConfirmed ? __('messages.similarity.hidden_title') : (optional($res->comparedVersion)->title ?? ($raw['title'] ?? __('messages.similarity.unknown_project')));
+                $domain = $isCurrentYearConfirmed ? __('messages.similarity.hidden_domain') : (optional(optional($res->comparedVersion)->proposal)->department->department_name ?? ($raw['domain'] ?? 'N/A'));
 
                 $finalPct = $res->final_score !== null
                     ? round($res->final_score * 100, 1)
@@ -455,13 +469,14 @@ class StudentProposalController extends Controller
                         'domain'                  => $domain,
                         'score'                   => $finalPct . '%',
                         'final_score'             => $finalPct,
-                        'semantic_similarity'     => null,
-                        'functions_similarity'    => null,
+                        'problem_similarity'      => null,
+                        'solution_similarity'     => null,
                         'objectives_similarity'   => null,
+                        'functions_similarity'    => null,
                         'tags_similarity'         => null,
                         'technologies_similarity' => null,
                         'verdict'                 => $res->verdict,
-                        'explanation'             => 'High similarity detected with an approved project from the current academic year. The project details are hidden for privacy reasons. Please consider adjusting your project scope or selecting a different direction.',
+                        'explanation'             => __('messages.similarity.hidden'),
                         'year'                    => optional(optional($res->comparedVersion)->created_at)->format('Y') ?? now()->year,
                         'details_hidden'          => true,
                     ];
@@ -474,9 +489,10 @@ class StudentProposalController extends Controller
                     'domain'                  => $domain,
                     'score'                   => $finalPct . '%',
                     'final_score'             => $finalPct,
-                    'semantic_similarity'     => $res->semantic_similarity     !== null ? round($res->semantic_similarity     * 100, 1) : null,
-                    'functions_similarity'    => $res->functions_similarity    !== null ? round($res->functions_similarity    * 100, 1) : null,
+                    'problem_similarity'      => $res->problem_similarity      !== null ? round($res->problem_similarity      * 100, 1) : null,
+                    'solution_similarity'     => $res->solution_similarity     !== null ? round($res->solution_similarity     * 100, 1) : null,
                     'objectives_similarity'   => $res->objectives_similarity   !== null ? round($res->objectives_similarity   * 100, 1) : null,
+                    'functions_similarity'    => $res->functions_similarity    !== null ? round($res->functions_similarity    * 100, 1) : null,
                     'tags_similarity'         => $res->tags_similarity         !== null ? round($res->tags_similarity         * 100, 1) : null,
                     'technologies_similarity' => $res->technologies_similarity !== null ? round($res->technologies_similarity * 100, 1) : null,
                     'verdict'                 => $res->verdict,
@@ -511,6 +527,7 @@ class StudentProposalController extends Controller
             'summary'   => $summary,
             'results'   => $results,
             'recommendations' => $recommendations,
+            'analyzed_at' => optional($topResult)->updated_at,
             'message'   => 'Similarity analysis retrieved successfully.',
         ]);
     }

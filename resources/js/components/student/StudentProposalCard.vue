@@ -18,20 +18,20 @@
         {{ proposal.title }}
       </h3>
 
-      <span v-if="type === 'archived'" class="ml-3 inline-flex items-center rounded-full bg-slate-200 px-2.5 py-0.5 text-xs font-medium text-slate-700">
-        Archived
+      <span v-if="type === 'archived'" class="ms-3 inline-flex items-center rounded-full bg-slate-200 px-2.5 py-0.5 text-xs font-medium text-slate-700">
+        {{ $t('student.card.archived') }}
       </span>
       <template v-else>
         <span v-if="proposal.similarity !== null" :class="[
           proposal.similarity < 30 ? 'bg-teal-50 text-teal-800 border-teal-200'
           : proposal.similarity < 60 ? 'bg-amber-50 text-amber-800 border-amber-200'
           : 'bg-red-50 text-red-800 border-red-200',
-          'ml-3 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border'
+          'ms-3 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border'
         ]">
-          {{ proposal.similarity }}% Match
+          {{ $t('student.card.match', { percent: proposal.similarity }) }}
         </span>
-        <span v-else class="ml-3 inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600 border border-slate-200">
-          Unchecked
+        <span v-else class="ms-3 inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600 border border-slate-200">
+          {{ $t('student.card.unchecked') }}
         </span>
       </template>
     </div>
@@ -46,15 +46,17 @@
       </p>
       <div class="mt-auto">
         <template v-if="type === 'archived'">
-          <span class="text-xs text-slate-400 font-medium">Domain: {{ proposal.domain }}</span>
+          <span class="text-xs text-slate-400 font-medium">{{ $t('fields.domain') }}: {{ proposal.domain }}</span>
         </template>
         <div v-else class="flex flex-wrap gap-2">
-          <span v-for="tag in proposal.tags.split(',').slice(0, 3)" :key="tag" class="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-600">
-            {{ tag.trim() }}
-          </span>
-          <span v-if="proposal.tags.split(',').length > 3" class="inline-flex items-center rounded-md bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-400">
-            +{{ proposal.tags.split(',').length - 3 }}
-          </span>
+          <template v-if="proposal.tags">
+            <span v-for="tag in proposal.tags.split(',').slice(0, 3)" :key="tag" class="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-[11px] font-medium text-slate-600">
+              {{ tag.trim() }}
+            </span>
+            <span v-if="proposal.tags.split(',').length > 3" class="inline-flex items-center rounded-md bg-slate-50 px-2 py-1 text-[11px] font-medium text-slate-400">
+              +{{ proposal.tags.split(',').length - 3 }}
+            </span>
+          </template>
         </div>
       </div>
     </div>

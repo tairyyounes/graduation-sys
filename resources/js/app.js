@@ -4,7 +4,7 @@ import App from './App.vue'
 import StudentDashboard from './components/StudentDashboard.vue'
 import Toast from "vue-toastification";
 import "vue-toastification/dist/index.css";
-import i18n from './i18n';
+import { i18n } from './i18n'
 
 const appRoot = document.getElementById('app')
 

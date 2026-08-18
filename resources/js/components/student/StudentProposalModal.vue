@@ -3,14 +3,14 @@
     <div class="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
       <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" @click="$emit('close')"></div>
 
-      <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 w-full max-w-4xl flex flex-col max-h-[90vh]">
+      <div class="relative transform overflow-hidden rounded-2xl bg-white text-start shadow-xl transition-all sm:my-8 w-full max-w-4xl flex flex-col max-h-[90vh]">
         <!-- Header -->
         <div class="border-b border-slate-100 px-6 py-5 bg-slate-50/50 flex justify-between items-start shrink-0">
           <div>
             <div class="flex items-center gap-3 mb-1">
-              <span v-if="type === 'active'" class="inline-flex items-center rounded-md bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-700 ring-1 ring-inset ring-teal-700/10">{{ $t('proposals.active') }}</span>
-              <span v-if="type === 'draft'" class="inline-flex items-center rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-500/20">{{ $t('common.draft_idea') }}</span>
-              <span v-if="type === 'archived'" class="inline-flex items-center rounded-md bg-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-500/20">{{ $t('common.archived') }}</span>
+              <span v-if="type === 'active'" class="inline-flex items-center rounded-md bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-700 ring-1 ring-inset ring-teal-700/10">{{ $t('student.overview.active_proposal') }}</span>
+              <span v-if="type === 'draft'" class="inline-flex items-center rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-500/20">{{ $t('student.modal.draft_idea') }}</span>
+              <span v-if="type === 'archived'" class="inline-flex items-center rounded-md bg-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-500/20">{{ $t('student.card.archived') }}</span>
               <span v-if="proposal.status" class="inline-flex items-center rounded-md bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20">{{ proposal.status }}</span>
             </div>
             <h3 class="text-2xl font-bold text-slate-900">{{ proposal.title }}</h3>
@@ -25,44 +25,44 @@
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-2 space-y-6">
               <div>
-                <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-2">{{ $t('messages.problem_statement') }}</h4>
-                <p class="text-slate-600 leading-relaxed text-sm bg-slate-50 p-4 rounded-lg border border-slate-100">{{ proposal.problem || 'Not specified.' }}</p>
+                <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-2">{{ $t('fields.problem_statement') }}</h4>
+                <p class="text-slate-600 leading-relaxed text-sm bg-slate-50 p-4 rounded-lg border border-slate-100">{{ proposal.problem || $t('common.not_specified') }}</p>
               </div>
               <div>
-                <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-2">{{ $t('messages.proposed_solution') }}</h4>
-                <p class="text-slate-600 leading-relaxed text-sm bg-slate-50 p-4 rounded-lg border border-slate-100">{{ proposal.solution || 'Not specified.' }}</p>
+                <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-2">{{ $t('fields.proposed_solution') }}</h4>
+                <p class="text-slate-600 leading-relaxed text-sm bg-slate-50 p-4 rounded-lg border border-slate-100">{{ proposal.solution || $t('common.not_specified') }}</p>
               </div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-2">{{ $t('common.objectives') }}</h4>
-                  <p class="text-slate-600 text-sm whitespace-pre-wrap">{{ proposal.objectives || 'Not specified.' }}</p>
+                  <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-2">{{ $t('fields.objectives') }}</h4>
+                  <p class="text-slate-600 text-sm whitespace-pre-wrap">{{ proposal.objectives || $t('common.not_specified') }}</p>
                 </div>
                 <div>
-                  <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-2">{{ $t('common.core_functions') }}</h4>
-                  <p class="text-slate-600 text-sm whitespace-pre-wrap">{{ proposal.functions || 'Not specified.' }}</p>
+                  <h4 class="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-2">{{ $t('fields.core_functions') }}</h4>
+                  <p class="text-slate-600 text-sm whitespace-pre-wrap">{{ proposal.functions || $t('common.not_specified') }}</p>
                 </div>
               </div>
             </div>
 
-            <div class="space-y-6 lg:border-l lg:border-slate-100 lg:pl-8">
+            <div class="space-y-6 lg:border-s lg:border-slate-100 lg:ps-8">
               <div>
-                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">{{ $t('messages.similarity_score') }}</h4>
+                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">{{ $t('student.overview.similarity_score') }}</h4>
                 <div class="flex items-center mt-2">
                   <template v-if="proposal.similarity !== null">
                     <span class="text-3xl font-black" :class="proposal.similarity < 30 ? 'text-teal-600' : proposal.similarity < 60 ? 'text-amber-500' : 'text-red-500'">{{ proposal.similarity }}%</span>
-                    <span class="ml-3 text-sm text-slate-500 font-medium">{{ $t('common.match') }}</span>
+                    <span class="ms-3 text-sm text-slate-500 font-medium">{{ $t('student.modal.match') }}</span>
                   </template>
                   <template v-else>
-                    <span class="text-lg font-medium text-slate-500">{{ $t('common.not_checked') }}</span>
+                    <span class="text-lg font-medium text-slate-500">{{ $t('student.workspace.not_checked') }}</span>
                   </template>
                 </div>
               </div>
               <div>
-                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">{{ $t('common.domain') }}</h4>
-                <p class="text-sm font-medium text-slate-900">{{ proposal.domain || 'Not assigned' }}</p>
+                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">{{ $t('fields.domain') }}</h4>
+                <p class="text-sm font-medium text-slate-900">{{ proposal.domain || $t('student.modal.not_assigned') }}</p>
               </div>
               <div>
-                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Tags / Keywords</h4>
+                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ $t('student.repo.keywords_tags') }}</h4>
                 <div class="flex flex-wrap gap-2">
                   <span v-for="tag in (proposal.tags ? proposal.tags.split(',') : [])" :key="tag" class="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
                     {{ tag.trim() }}
@@ -70,7 +70,7 @@
                 </div>
               </div>
               <div>
-                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ $t('messages.technology_used') }}</h4>
+                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ $t('fields.technologies') }}</h4>
                 <div class="flex flex-wrap gap-2">
                   <span v-for="tech in (proposal.tech ? proposal.tech.split(',') : [])" :key="tech" class="inline-flex items-center rounded-md bg-blue-50 text-blue-700 px-2 py-1 text-xs font-medium border border-blue-100">
                     {{ tech.trim() }}
@@ -78,8 +78,8 @@
                 </div>
               </div>
               <div>
-                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">{{ $t('common.created_date') }}</h4>
-                <p class="text-sm text-slate-600">{{ proposal.date || 'Today' }}</p>
+                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">{{ $t('student.modal.created_date') }}</h4>
+                <p class="text-sm text-slate-600">{{ proposal.date || $t('student.modal.today') }}</p>
               </div>
             </div>
           </div>
@@ -88,40 +88,43 @@
         <!-- Footer Actions -->
         <div class="bg-slate-50 px-6 py-4 flex flex-wrap sm:flex-nowrap justify-end gap-3 border-t border-slate-100 shrink-0">
           <button 
-            v-if="!proposal.is_locked && proposal.status !== 'accepted'"
+            v-if="type === 'draft' || (type === 'active' && proposal.can_edit)"
             @click="$emit('edit', proposal)" 
             class="inline-flex justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none transition-colors"
           >
-            Edit Proposal
+            {{ $t('student.modal.edit') }}
           </button>
+          <div v-else-if="type === 'active' && !proposal.can_edit" class="text-xs text-slate-500 italic self-center px-2">
+            {{ $t('student.modal.edit_locked_revision') }}
+          </div>
           <div v-else class="text-xs text-slate-500 italic self-center px-2">
-            Proposal is locked and cannot be edited.
+            {{ $t('student.modal.edit_locked') }}
           </div>
 
           <template v-if="type === 'draft'">
             <button @click="$emit('check-similarity')" class="inline-flex justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none transition-colors">
-              Check Similarity
+              {{ $t('student.modal.check_similarity') }}
             </button>
             <button @click="$emit('archive')" class="inline-flex justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-600 shadow-sm hover:bg-slate-50 focus:outline-none transition-colors">
-              Archive
-            </button>
-            <button @click="$emit('delete', proposal)" class="inline-flex justify-center rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 shadow-sm hover:bg-red-50 focus:outline-none transition-colors">
-              Delete Draft
+              {{ $t('student.modal.archive') }}
             </button>
             <button @click="$emit('confirm')" class="inline-flex justify-center rounded-lg border border-transparent bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none transition-colors">
-              Confirm Proposal
+              {{ $t('student.form.confirm') }}
             </button>
           </template>
 
           <template v-else-if="type === 'active'">
             <button @click="$emit('view-report')" class="inline-flex justify-center rounded-lg border border-transparent bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none transition-colors">
-              View Report
+              {{ $t('student.modal.view_report') }}
             </button>
           </template>
 
           <template v-else-if="type === 'archived'">
+            <button @click="$emit('delete', proposal)" class="inline-flex justify-center rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 shadow-sm hover:bg-red-50 focus:outline-none transition-colors">
+              {{ $t('common.delete') }}
+            </button>
             <button @click="$emit('restore')" class="inline-flex justify-center rounded-lg border border-transparent bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 focus:outline-none transition-colors">
-              Restore to Draft
+              {{ $t('student.modal.restore') }}
             </button>
           </template>
         </div>

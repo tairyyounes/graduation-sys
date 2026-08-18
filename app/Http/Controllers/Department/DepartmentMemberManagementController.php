@@ -62,6 +62,7 @@ class DepartmentMemberManagementController extends Controller
             $user->department_id = $departmentId;
             $user->is_active = $validated['is_active'];
             $user->password = Hash::make($validated['password']);
+            $user->email_verified_at = now(); // System-created user, auto-verified
             $user->save();
 
             DB::commit();

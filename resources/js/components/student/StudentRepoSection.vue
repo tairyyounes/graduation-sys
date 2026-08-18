@@ -5,9 +5,9 @@
     <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
       <div class="flex items-start justify-between gap-4 mb-5">
         <div>
-          <h2 class="text-xl font-bold text-slate-900 mb-1">{{ $t('proposals.repository') }}</h2>
+          <h2 class="text-xl font-bold text-slate-900 mb-1">{{ $t('nav.repository') }}</h2>
           <p class="text-sm text-slate-500">
-            Browse previous proposals from your department to explore ideas and avoid duplication.
+            {{ $t('student.repo.subtitle') }}
           </p>
         </div>
         <div v-if="departmentName" class="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-700 ring-1 ring-teal-600/20">
@@ -25,11 +25,11 @@
           <input
             v-model="filters.search"
             type="text"
-            placeholder="Search by title, keywords, or technologies..."
-            class="w-full rounded-xl border border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm pl-10 pr-4 py-2.5"
+            :placeholder="$t('student.repo.search_placeholder')"
+            class="w-full rounded-xl border border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm ps-10 pe-4 py-2.5"
             @input="debounceSearch"
           >
-          <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+          <span class="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
@@ -43,7 +43,7 @@
             class="w-full rounded-xl border border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm py-2.5 px-3"
             @change="fetchProposals"
           >
-            <option value="">{{ $t('common.all_years') }}</option>
+            <option value="">{{ $t('student.repo.all_years') }}</option>
             <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
           </select>
         </div>
@@ -53,7 +53,7 @@
     <!-- Loading -->
     <div v-if="loading" class="text-center py-20 bg-white rounded-2xl border border-slate-200 shadow-sm">
       <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-teal-600 mb-3"></div>
-      <p class="text-sm font-medium text-slate-500">Searching archive...</p>
+      <p class="text-sm font-medium text-slate-500">{{ $t('student.repo.searching') }}</p>
     </div>
 
     <!-- Empty state -->
@@ -66,9 +66,9 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
         </svg>
       </div>
-      <p class="text-base font-semibold text-slate-900">{{ $t('proposals.nos_found') }}</p>
+      <p class="text-base font-semibold text-slate-900">{{ $t('student.repo.none_found') }}</p>
       <p class="mt-1 text-sm text-slate-500">
-        {{ filters.search || filters.year ? 'Try adjusting your search or year filter.' : 'No previous proposals in your department yet.' }}
+        {{ filters.search || filters.year ? $t('student.repo.adjust_filter') : $t('student.repo.no_previous') }}
       </p>
     </div>
 
@@ -84,7 +84,7 @@
           <!-- Year pill -->
           <div class="flex items-center justify-between mb-3">
             <span class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 uppercase tracking-wider">
-              {{ prop.year || 'N/A' }}
+              {{ prop.year || $t('common.not_available') }}
             </span>
             <span class="text-xs text-slate-400">{{ prop.author }}</span>
           </div>
@@ -112,7 +112,7 @@
             </span>
           </div>
           <span class="shrink-0 text-xs font-semibold text-teal-600 hover:text-teal-700 whitespace-nowrap">
-            View details →
+            {{ $t('student.repo.view_details') }} <span class="rtl:hidden">→</span><span class="hidden rtl:inline">←</span>
           </span>
         </div>
       </div>
@@ -131,14 +131,14 @@
         <div class="flex min-h-screen items-center justify-center p-4 sm:p-0">
           <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="closeDetails"></div>
 
-          <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 w-full max-w-4xl flex flex-col max-h-[90vh]">
+          <div class="relative transform overflow-hidden rounded-2xl bg-white text-start shadow-2xl transition-all sm:my-8 w-full max-w-4xl flex flex-col max-h-[90vh]">
 
             <!-- Modal Header -->
             <div class="border-b border-slate-100 px-6 py-5 bg-slate-50/60 flex justify-between items-start shrink-0">
-              <div class="pr-8">
+              <div class="pe-8">
                 <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">{{ selectedProposal.year }}</p>
                 <h3 class="text-xl font-bold text-slate-900 leading-snug">{{ selectedProposal.title }}</h3>
-                <p class="text-xs text-slate-500 mt-1">Submitted by: <span class="font-medium text-slate-700">{{ selectedProposal.author }}</span></p>
+                <p class="text-xs text-slate-500 mt-1">{{ $t('student.repo.submitted_by') }}: <span class="font-medium text-slate-700">{{ selectedProposal.author }}</span></p>
               </div>
               <button @click="closeDetails" class="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100 shrink-0">
                 <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -154,33 +154,33 @@
                 <!-- Main content -->
                 <div class="lg:col-span-2 space-y-6">
                   <div>
-                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ $t('messages.problem_statement') }}</h4>
+                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ $t('fields.problem_statement') }}</h4>
                     <p class="text-slate-700 leading-relaxed text-sm bg-slate-50 p-4 rounded-xl border border-slate-100">
-                      {{ selectedProposal.problem || 'Not specified.' }}
+                      {{ selectedProposal.problem || $t('common.not_specified') }}
                     </p>
                   </div>
                   <div>
-                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ $t('messages.proposed_solution') }}</h4>
+                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ $t('fields.proposed_solution') }}</h4>
                     <p class="text-slate-700 leading-relaxed text-sm bg-slate-50 p-4 rounded-xl border border-slate-100">
-                      {{ selectedProposal.solution || 'Not specified.' }}
+                      {{ selectedProposal.solution || $t('common.not_specified') }}
                     </p>
                   </div>
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                      <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ $t('common.objectives') }}</h4>
-                      <p class="text-slate-600 text-sm whitespace-pre-wrap leading-relaxed">{{ selectedProposal.objectives || 'Not specified.' }}</p>
+                      <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ $t('fields.objectives') }}</h4>
+                      <p class="text-slate-600 text-sm whitespace-pre-wrap leading-relaxed">{{ selectedProposal.objectives || $t('common.not_specified') }}</p>
                     </div>
                     <div>
-                      <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ $t('common.core_functions') }}</h4>
-                      <p class="text-slate-600 text-sm whitespace-pre-wrap leading-relaxed">{{ selectedProposal.functions || 'Not specified.' }}</p>
+                      <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ $t('fields.core_functions') }}</h4>
+                      <p class="text-slate-600 text-sm whitespace-pre-wrap leading-relaxed">{{ selectedProposal.functions || $t('common.not_specified') }}</p>
                     </div>
                   </div>
                 </div>
 
                 <!-- Sidebar -->
-                <div class="space-y-5 lg:border-l lg:border-slate-100 lg:pl-7">
+                <div class="space-y-5 lg:border-s lg:border-slate-100 lg:ps-7">
                   <div>
-                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Keywords / Tags</h4>
+                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ $t('student.repo.keywords_tags') }}</h4>
                     <div class="flex flex-wrap gap-1.5">
                       <span
                         v-for="tag in getTags(selectedProposal.tags)"
@@ -193,7 +193,7 @@
                     </div>
                   </div>
                   <div>
-                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ $t('common.technologies') }}</h4>
+                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ $t('fields.technologies') }}</h4>
                     <div class="flex flex-wrap gap-1.5">
                       <span
                         v-for="tech in getTags(selectedProposal.tech)"
@@ -206,8 +206,8 @@
                     </div>
                   </div>
                   <div>
-                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">{{ $t('messages.submission_date') }}</h4>
-                    <p class="text-sm text-slate-700 font-medium">{{ selectedProposal.date || 'N/A' }}</p>
+                    <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">{{ $t('student.repo.submission_date') }}</h4>
+                    <p class="text-sm text-slate-700 font-medium">{{ selectedProposal.date || $t('common.not_available') }}</p>
                   </div>
                 </div>
               </div>
@@ -215,13 +215,13 @@
 
             <!-- Modal Footer -->
             <div class="bg-slate-50 px-6 py-4 flex justify-between items-center border-t border-slate-100 shrink-0">
-              <span class="text-xs text-slate-400">Proposal #{{ selectedProposal.id }}</span>
+              <span class="text-xs text-slate-400">{{ $t('student.repo.proposal_number', { id: selectedProposal.id }) }}</span>
               <div class="flex gap-2">
                 <button
                   @click="closeDetails"
                   class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
                 >
-                  Close
+                  {{ $t('common.close') }}
                 </button>
                 <button
                   v-if="activeProposal"
@@ -231,7 +231,7 @@
                   <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                   </svg>
-                  Compare with My Proposal
+                  {{ $t('student.repo.compare_cta') }}
                 </button>
               </div>
             </div>

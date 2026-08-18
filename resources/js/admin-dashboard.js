@@ -3,7 +3,7 @@ import AdminDashboard from './components/AdminDashboard.vue'
 import router from './router/admin'
 import Toast from 'vue-toastification'
 import 'vue-toastification/dist/index.css'
-import i18n from './i18n'
+import { i18n } from './i18n'
 
 const adminRoot = document.getElementById('admin-dashboard')
 

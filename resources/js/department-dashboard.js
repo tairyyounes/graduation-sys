@@ -3,7 +3,7 @@ import DepartmentDashboard from './components/DepartmentDashboard.vue'
 import router from './router/department'
 import Toast from 'vue-toastification'
 import 'vue-toastification/dist/index.css'
-import i18n from './i18n'
+import { i18n } from './i18n'
 
 const departmentRoot = document.getElementById('department-dashboard')
 

@@ -30,9 +30,26 @@ class StudentTeamController extends Controller
 
     public function invite(Request $request, Proposal $proposal): JsonResponse
     {
-        $request->validate([
-            'reg_number' => 'required|string|exists:students,student_number',
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'reg_number' => [
+                'required',
+                'numeric',
+                'digits_between:1,6',
+                'exists:students,student_number',
+            ],
+        ], [
+            'reg_number.required' => 'Student number is required.',
+            'reg_number.numeric' => 'Student number must contain numbers only.',
+            'reg_number.digits_between' => 'Student number must not be more than 6 digits.',
+            'reg_number.exists' => 'This student does not exist in the system.',
         ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => $validator->errors()->first('reg_number'),
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
         // Security: Proposal max 3 students
         if ($proposal->students()->count() >= 3) {
@@ -40,14 +57,26 @@ class StudentTeamController extends Controller
         }
 
         $newStudent = Student::where('student_number', $request->reg_number)->first();
+        $currentStudent = $request->user()->student;
 
-        // Check if student is already in a team or has an active proposal
-        if ($newStudent->proposals()->where('submission_status', 'submitted')->exists()) {
-            return response()->json(['message' => 'This student is already part of another active proposal.'], 422);
+        // Check duplicate check (same student added twice or logged-in student duplicated)
+        if ($proposal->students()->where('students.student_id', $newStudent->student_id)->exists() || ($currentStudent && $newStudent->student_id === $currentStudent->student_id)) {
+            return response()->json([
+                'message' => 'This student is already added to this team.',
+                'errors' => ['reg_number' => ['This student is already added to this team.']]
+            ], 422);
         }
 
-        if ($proposal->students()->where('students.student_id', $newStudent->student_id)->exists()) {
-            return response()->json(['message' => 'This student is already in your team.'], 422);
+        // Check if student belongs to another active proposal
+        $hasActive = $newStudent->proposals()
+            ->where('submission_status', 'submitted')
+            ->where('proposals.proposal_id', '!=', $proposal->proposal_id)
+            ->exists();
+        if ($hasActive) {
+            return response()->json([
+                'message' => 'This student already belongs to another active proposal.',
+                'errors' => ['reg_number' => ['This student already belongs to another active proposal.']]
+            ], 422);
         }
 
         $proposal->students()->attach($newStudent->student_id, [

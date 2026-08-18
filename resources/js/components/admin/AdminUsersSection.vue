@@ -5,8 +5,8 @@
         class="inline-flex items-center justify-center rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
         @click="openCreateModal"
       >
-        <svg class="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        Add User
+        <svg class="me-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        {{ $t('admin.users.add') }}
       </button>
     </div>
 
@@ -22,10 +22,10 @@
       <div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500 mb-4">
         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
       </div>
-      <h3 class="text-lg font-semibold text-slate-900">{{ $t('common.no_users_found') }}</h3>
-      <p class="mt-1 max-w-sm text-sm text-slate-500">Get started by creating a new user to grant them access to the platform.</p>
+      <h3 class="text-lg font-semibold text-slate-900">{{ $t('admin.users.none_found') }}</h3>
+      <p class="mt-1 max-w-sm text-sm text-slate-500">{{ $t('admin.users.none_desc') }}</p>
       <button @click="openCreateModal" class="mt-5 rounded-lg bg-white border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50">
-        Add new user
+        {{ $t('admin.users.add_new') }}
       </button>
     </div>
 
@@ -33,7 +33,7 @@
       <!-- Search Bar -->
       <div class="flex items-center justify-between">
         <div class="relative w-full sm:w-96">
-          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+          <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
             <svg class="h-5 w-5 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
             </svg>
@@ -41,29 +41,29 @@
           <input
             v-model="searchQuery"
             type="text"
-            class="block w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-3 text-sm placeholder-slate-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition"
-            placeholder="Search by name, email, or department..."
+            class="block w-full rounded-xl border border-slate-300 bg-white py-2.5 ps-10 pe-3 text-sm placeholder-slate-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 transition"
+            :placeholder="$t('admin.users.search_ph')"
           />
         </div>
       </div>
 
       <!-- Data Table -->
       <div class="hidden overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm md:block">
-        <table class="min-w-full text-left text-sm">
+        <table class="min-w-full text-start text-sm">
           <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
             <tr>
-              <th class="px-6 py-4 font-semibold">{{ $t('common.full_name') }}</th>
-              <th class="px-6 py-4 font-semibold">{{ $t('auth.email') }}</th>
-              <th class="px-6 py-4 font-semibold">{{ $t('common.role') }}</th>
-              <th class="px-6 py-4 font-semibold">{{ $t('departments.department') }}</th>
-              <th class="px-6 py-4 font-semibold">{{ $t('common.status') }}</th>
-              <th class="px-6 py-4 font-semibold text-right">{{ $t('common.actions') }}</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('dept.students.full_name') }}</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('dept.students.email') }}</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('student.team.role') }}</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('fields.department') }}</th>
+              <th class="px-6 py-4 font-semibold">{{ $t('fields.status') }}</th>
+              <th class="px-6 py-4 font-semibold text-end">{{ $t('fields.actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
             <tr v-if="paginatedUsers.length === 0">
               <td colspan="6" class="px-6 py-12 text-center text-slate-500">
-                No users match your search query.
+                {{ $t('admin.users.no_match') }}
               </td>
             </tr>
             <tr v-for="user in paginatedUsers" :key="user.email" class="transition hover:bg-slate-50">
@@ -75,10 +75,10 @@
               <td class="px-6 py-4 text-slate-500">{{ user.department }}</td>
               <td class="px-6 py-4">
                 <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset" :class="user.status === 'Active' ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' : 'bg-slate-50 text-slate-600 ring-slate-500/10'">
-                  {{ user.status }}
+                  {{ user.status === 'Active' ? $t('status.active') : $t('dept.students.disabled') }}
                 </span>
               </td>
-              <td class="px-6 py-4 text-right">
+              <td class="px-6 py-4 text-end">
                 <div class="flex items-center justify-end gap-3">
                   <button class="text-slate-400 hover:text-teal-600 transition" @click="openEditModal(user)">
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -95,9 +95,7 @@
         <!-- Pagination -->
         <div v-if="totalPages > 1" class="flex items-center justify-between border-t border-slate-200 bg-white px-6 py-3">
           <div class="text-sm text-slate-500">
-            Showing <span class="font-medium text-slate-900">{{ (currentPage - 1) * itemsPerPage + 1 }}</span> to
-            <span class="font-medium text-slate-900">{{ Math.min(currentPage * itemsPerPage, filteredUsers.length) }}</span> of
-            <span class="font-medium text-slate-900">{{ filteredUsers.length }}</span> results
+            {{ $t('dept.students.showing', { from: (currentPage - 1) * itemsPerPage + 1, to: Math.min(currentPage * itemsPerPage, filteredUsers.length), total: filteredUsers.length }) }}
           </div>
           <div class="flex items-center gap-2">
             <button
@@ -105,14 +103,14 @@
               :disabled="currentPage === 1"
               @click="currentPage--"
             >
-              Previous
+              {{ $t('common.previous') }}
             </button>
             <button
               class="rounded-md border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
               :disabled="currentPage === totalPages"
               @click="currentPage++"
             >
-              Next
+              {{ $t('common.next') }}
             </button>
           </div>
         </div>
@@ -121,7 +119,7 @@
       <!-- Mobile Cards -->
       <div class="grid gap-3 md:hidden">
         <div v-if="paginatedUsers.length === 0" class="rounded-xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500 shadow-sm">
-          No users match your search query.
+          {{ $t('admin.users.no_match') }}
         </div>
         <article v-for="user in paginatedUsers" :key="`mobile-${user.email}`" class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div class="flex items-start justify-between gap-2">
@@ -130,7 +128,7 @@
               <p class="text-sm text-slate-500">{{ user.email }}</p>
             </div>
             <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset" :class="user.status === 'Active' ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20' : 'bg-slate-50 text-slate-600 ring-slate-500/10'">
-              {{ user.status }}
+              {{ user.status === 'Active' ? $t('status.active') : $t('dept.students.disabled') }}
             </span>
           </div>
           <div class="mt-4 flex items-center justify-between text-sm">
@@ -150,7 +148,7 @@
             :disabled="currentPage === 1"
             @click="currentPage--"
           >
-            Previous
+            {{ $t('common.previous') }}
           </button>
           <span class="text-sm text-slate-500">{{ currentPage }} / {{ totalPages }}</span>
           <button
@@ -158,7 +156,7 @@
             :disabled="currentPage === totalPages"
             @click="currentPage++"
           >
-            Next
+            {{ $t('common.next') }}
           </button>
         </div>
       </div>
@@ -180,8 +178,8 @@
   <DeleteConfirmationModal
     :is-open="isDeleteModalOpen"
     :is-deleting="isDeleting"
-    title="Delete User"
-    :message="`Are you sure you want to delete ${userToDelete?.name}? This action cannot be undone.`"
+    :title="$t('admin.users.delete_title')"
+    :message="$t('admin.users.delete_message', { name: userToDelete?.name })"
     @close="closeDeleteModal"
     @confirm="confirmDelete"
   />
@@ -190,10 +188,12 @@
 <script setup>
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useToast } from 'vue-toastification'
+import { useI18n } from 'vue-i18n'
 import AdminUserModal from './AdminUserModal.vue'
 import DeleteConfirmationModal from '../common/DeleteConfirmationModal.vue'
 
 const toast = useToast()
+const { t } = useI18n()
 
 const users = ref([])
 const departmentOptions = ref([])
@@ -246,7 +246,12 @@ const userForm = reactive({
   password: '',
 })
 
-const roleLabel = (role) => (role === 'department_member' ? 'department' : role)
+const roleLabel = (role) => {
+  const normalized = role === 'department_member' ? 'department' : role
+  const key = `roles.${normalized}`
+  const translated = t(key)
+  return translated === key ? normalized : translated
+}
 
 const getCsrfToken = () => {
   const tokenTag = document.querySelector('meta[name="csrf-token"]')
@@ -291,7 +296,7 @@ const closeUserModal = () => {
 
 const parseErrors = (payload) => {
   if (!payload || !payload.errors) {
-    return { general: payload?.message || 'Unable to save user.' }
+    return { general: payload?.message || t('admin.users.toast.save_failed') }
   }
   return payload.errors
 }
@@ -306,14 +311,14 @@ const loadUsers = async () => {
     })
 
     if (!response.ok) {
-      throw new Error('Failed to load users.')
+      throw new Error(t('admin.users.toast.load_failed'))
     }
 
     const data = await response.json()
     users.value = data.users ?? []
     departmentOptions.value = data.departments ?? []
   } catch (error) {
-    toast.error(error.message || 'Failed to load users.')
+    toast.error(error.message || t('admin.users.toast.load_failed'))
   } finally {
     loading.value = false
   }
@@ -360,10 +365,10 @@ const submitUserForm = async () => {
 
     await loadUsers()
     closeUserModal()
-    toast.success(isEditingUser.value ? 'User updated successfully.' : 'User created successfully.')
+    toast.success(isEditingUser.value ? t('admin.users.toast.updated') : t('admin.users.toast.created'))
   } catch (error) {
     if (Object.keys(formErrors.value).length === 0) {
-      toast.error('An unexpected error occurred.')
+      toast.error(t('admin.users.toast.unexpected'))
     }
   } finally {
     submittingUserForm.value = false
@@ -394,20 +399,20 @@ const confirmDelete = async () => {
     })
 
     if (!response.ok) {
-      throw new Error('Unable to delete user.')
+      throw new Error(t('admin.users.toast.delete_failed'))
     }
 
     users.value = users.value.filter((item) => item.id !== userToDelete.value.id)
-    
+
     // adjust pagination if last item on page deleted
     if (paginatedUsers.value.length === 0 && currentPage.value > 1) {
       currentPage.value--
     }
 
-    toast.success('User deleted successfully.')
+    toast.success(t('admin.users.toast.deleted'))
     closeDeleteModal()
   } catch (error) {
-    toast.error(error.message || 'Unable to delete user.')
+    toast.error(error.message || t('admin.users.toast.delete_failed'))
   } finally {
     isDeleting.value = false
   }

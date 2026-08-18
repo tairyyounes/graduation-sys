@@ -14,6 +14,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
+
+        // يضبط لغة التطبيق من كوكي app_locale في كل طلبات الويب
+        $middleware->encryptCookies(except: [
+            'app_locale',
+        ]);
+
+        $middleware->web(append: [
+            \App\Http\Middleware\SetLocale::class,
+        ]);
         
         $middleware->web(append: [
             \App\Http\Middleware\SetLocale::class,

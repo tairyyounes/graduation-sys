@@ -11,8 +11,8 @@
 
       <!-- Sidebar -->
       <aside
-        class="fixed inset-y-0 left-0 rtl:right-0 rtl:left-auto z-40 flex w-72 flex-col border-r rtl:border-l rtl:border-r-0 border-slate-200 bg-white transition-transform duration-300 ease-out lg:static lg:w-64 lg:translate-x-0"
-        :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'"
+        class="fixed inset-y-0 start-0 z-40 flex w-72 flex-col border-e border-slate-200 bg-white transition-transform duration-300 ease-out lg:static lg:w-64 lg:translate-x-0"
+        :class="sidebarOpen ? 'translate-x-0' : 'max-lg:-translate-x-full max-lg:rtl:translate-x-full'"
       >
         <!-- Brand Header -->
         <div class="border-b border-slate-100 px-5 py-6">
@@ -23,8 +23,8 @@
               </svg>
             </div>
             <div>
-              <p class="text-lg font-bold tracking-tight text-slate-900">{{ $t('proposals.proposalguard_ai') }}</p>
-              <p class="mt-1 text-xs leading-4 text-slate-500">{{ $t('students.dashboard') }}</p>
+              <p class="text-lg font-bold tracking-tight text-slate-900">ProposalGuard AI</p>
+              <p class="mt-1 text-xs leading-4 text-slate-500">{{ $t('student.dashboard_subtitle') }}</p>
             </div>
           </div>
         </div>
@@ -37,13 +37,13 @@
               <a
                 href="#"
                 @click.prevent="currentView = item.name; sidebarOpen = false"
-                class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left rtl:text-right text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+                class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
                 :class="currentView === item.name
                   ? 'bg-teal-50 text-teal-800 shadow-sm ring-1 ring-teal-500/10'
                   : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
               >
                 <span :class="[currentView === item.name ? 'text-teal-600' : 'text-slate-400 group-hover:text-slate-600']" v-html="item.icon"></span>
-                <span>{{ $t(item.name) }}</span>
+                <span>{{ viewLabel(item.name) }}</span>
               </a>
             </li>
           </ul>
@@ -57,7 +57,7 @@
             </div>
             <div class="overflow-hidden">
               <p class="truncate text-sm font-semibold text-slate-900">{{ studentData.name || $t('common.loading') }}</p>
-              <p class="truncate text-xs text-slate-500">{{ studentData.department || $t('students.account') }}</p>
+              <p class="truncate text-xs text-slate-500">{{ studentData.department || $t('student.student_account') }}</p>
             </div>
           </div>
           <div class="mt-4">
@@ -68,7 +68,7 @@
                 <button
                   type="submit"
                   class="rounded-md p-1.5 text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400"
-                  title="Logout"
+                  :title="$t('common.logout')"
                 >
                   <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1m0-10V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2v-1" />
@@ -96,20 +96,23 @@
             {{ $t('common.menu') }}
           </button>
 
-          <div class="hidden lg:block text-2xl font-bold text-slate-900 tracking-tight">{{ $t(currentView) }}</div>
+          <div class="hidden lg:block text-2xl font-bold text-slate-900 tracking-tight">{{ viewLabel(currentView) }}</div>
 
-          <a
-            href="/"
-            class="ml-auto rtl:mr-auto rtl:ml-0 inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
-          >
-            <svg class="h-4 w-4 rtl:-scale-x-100" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            {{ $t('common.back_to_home') }}
-          </a>
+          <div class="ms-auto flex items-center gap-4">
+            <LangToggle />
+            <a
+              href="/"
+              class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
+            >
+              <svg class="h-4 w-4 rtl:-scale-x-100" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              {{ $t('common.back_to_home') }}
+            </a>
+          </div>
         </div>
 
-        <div class="lg:hidden text-2xl font-bold text-slate-900 tracking-tight mb-6">{{ $t(currentView) }}</div>
+        <div class="lg:hidden text-2xl font-bold text-slate-900 tracking-tight mb-6">{{ viewLabel(currentView) }}</div>
 
         <!-- Dashboard Views -->
         <div class="transition-all">
@@ -149,6 +152,7 @@
             :summary="similaritySummary"
             :ai-status="similarityAiStatus"
             :recommendations="similarityRecommendations"
+            :analyzed-at="similarityAnalyzedAt"
             @navigate="currentView = $event"
             @recheck="fetchSimilarity(similarityProposal?.id, true)"
           />
@@ -234,11 +238,30 @@ import StudentProposalModal from './student/StudentProposalModal.vue';
 import StudentInviteMemberModal from './student/StudentInviteMemberModal.vue';
 import StudentRepoSection from './student/StudentRepoSection.vue';
 import StudentCompareSection from './student/StudentCompareSection.vue';
+import LangToggle from './common/LangToggle.vue';
 import { useToast } from "vue-toastification";
+import { useI18n } from 'vue-i18n';
 
 const toast = useToast();
+const { t } = useI18n();
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 const sidebarOpen = ref(false);
+
+// خريطة الاسم الداخلي (مفتاح منطقي إنجليزي) -> مفتاح الترجمة المعروض
+const VIEW_KEYS = {
+  'Overview': 'nav.overview',
+  'Project Workspace': 'nav.workspace',
+  'Project Team': 'nav.team',
+  'Similarity Report': 'nav.similarity_report',
+  'Version History': 'nav.version_history',
+  'Domain Feedback': 'nav.domain_feedback',
+  'Proposal Repository': 'nav.repository',
+  'Compare View': 'nav.compare_view',
+};
+
+function viewLabel(name) {
+  return VIEW_KEYS[name] ? t(VIEW_KEYS[name]) : name;
+}
 
 const navItems = [
   { name: 'Overview', icon: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>' },
@@ -294,6 +317,7 @@ const topMatches = ref([]);
 const similaritySummary = ref(null);   // AI breakdown summary for top card
 const similarityAiStatus = ref('none'); // 'pending' | 'success' | 'failed' | 'none'
 const similarityRecommendations = ref([]);
+const similarityAnalyzedAt = ref(null); // ISO timestamp of last analysis run
 const versionHistory = ref([]);
 const domainFeedback = ref(null);
 const compareProposalId = ref(null);
@@ -359,6 +383,7 @@ async function fetchSimilarity(proposalId, recheck = false) {
     similaritySummary.value = data.summary ?? null;
     similarityAiStatus.value = data.ai_status ?? 'none';
     similarityRecommendations.value = data.recommendations ?? [];
+    similarityAnalyzedAt.value = data.analyzed_at ?? null;
   }
 }
 
@@ -371,7 +396,7 @@ async function saveAsDraft() {
     body: JSON.stringify(newProposal.value)
   });
   if (res.ok) {
-    toast.success('Draft saved successfully.');
+    toast.success(t('student.toast.draft_saved'));
     showNewProposalForm.value = false;
     fetchProposals();
   } else {
@@ -379,7 +404,7 @@ async function saveAsDraft() {
     if (data.errors) {
       proposalErrors.value = data.errors;
     }
-    toast.error(data.message || 'Error saving draft.');
+    toast.error(data.message || t('student.toast.draft_save_error'));
   }
 }
 
@@ -396,7 +421,7 @@ async function saveAndConfirmProposal() {
     const data = await res.json();
     
     // 2. Perform pre-submission similarity analysis
-    toast.info('Running pre-submission similarity analysis...');
+    toast.info(t('student.toast.running_presubmission'));
     let similarity = null;
     const checkRes = await fetch(`/student/proposals/${data.proposal.id}/similarity`);
     if (checkRes.ok) {
@@ -408,15 +433,15 @@ async function saveAndConfirmProposal() {
 
     // 3. Show high similarity warning if needed, otherwise normal confirmation
     if (similarity !== null && similarity >= 60) {
-      if (!confirm("Warning: High similarity detected with an approved project. The project details are hidden for privacy reasons. Please consider adjusting your project scope or selecting a different direction.\n\nDo you still want to submit this proposal anyway?")) {
-        toast.info('Saved as draft. You can review the Similarity Report in your workspace.');
+      if (!confirm(t('student.confirm.high_similarity'))) {
+        toast.info(t('student.toast.saved_draft_review'));
         showNewProposalForm.value = false;
         fetchProposals();
         return;
       }
     } else {
-      if (!confirm("Are you sure you want to submit this proposal? Please review your information before confirming.")) {
-        toast.info('Saved as draft.');
+      if (!confirm(t('student.confirm.submit'))) {
+        toast.info(t('student.toast.saved_draft'));
         showNewProposalForm.value = false;
         fetchProposals();
         return;
@@ -429,7 +454,7 @@ async function saveAndConfirmProposal() {
       headers: { 'X-CSRF-TOKEN': csrfToken }
     });
     if (submitRes.ok) {
-      toast.success('Proposal submitted.');
+      toast.success(t('student.toast.submitted'));
       showNewProposalForm.value = false;
       fetchProposals();
       workspaceTab.value = 'Active Proposal';
@@ -438,14 +463,14 @@ async function saveAndConfirmProposal() {
       if (submitData.errors) {
         proposalErrors.value = submitData.errors;
       }
-      toast.error(submitData.message || 'Error submitting proposal.');
+      toast.error(submitData.message || t('student.toast.submit_error'));
     }
   } else {
     const data = await res.json();
     if (data.errors) {
       proposalErrors.value = data.errors;
     }
-    toast.error(data.message || 'Error saving proposal.');
+    toast.error(data.message || t('student.toast.save_error'));
   }
 }
 
@@ -457,7 +482,7 @@ async function updateProposal(proposal) {
     body: JSON.stringify(proposal)
   });
   if (res.ok) {
-    toast.success('Proposal updated (new version created).');
+    toast.success(t('student.toast.updated'));
     showNewProposalForm.value = false;
     closeProposalDetails();
     fetchProposals();
@@ -466,7 +491,7 @@ async function updateProposal(proposal) {
     if (data.errors) {
       proposalErrors.value = data.errors;
     }
-    toast.error(data.message || 'Error updating proposal.');
+    toast.error(data.message || t('student.toast.update_error'));
   }
 }
 
@@ -488,7 +513,7 @@ async function checkDraftSimilarity(proposal) {
   similarityProposal.value = proposal;
   currentView.value = 'Similarity Report';
   
-  toast.info('Starting draft similarity analysis...');
+  toast.info(t('student.toast.starting_draft_analysis'));
   await fetchSimilarity(proposal.id, true);
   fetchProposals();
 }
@@ -498,7 +523,7 @@ async function confirmDraftProposal(proposal) {
 
   // Run similarity check first if it was never analyzed
   if (similarity === null) {
-    toast.info('Running pre-submission similarity analysis...');
+    toast.info(t('student.toast.running_presubmission'));
     const checkRes = await fetch(`/student/proposals/${proposal.id}/similarity`);
     if (checkRes.ok) {
       const checkData = await checkRes.json();
@@ -525,13 +550,13 @@ async function confirmDraftProposal(proposal) {
     headers: { 'X-CSRF-TOKEN': csrfToken }
   });
   if (res.ok) {
-    toast.success('Proposal submitted.');
+    toast.success(t('student.toast.submitted'));
     closeProposalDetails();
     fetchProposals();
     workspaceTab.value = 'Active Proposal';
   } else {
     const data = await res.json();
-    toast.error(data.message || 'Error submitting proposal.');
+    toast.error(data.message || t('student.toast.submit_error'));
   }
 }
 
@@ -541,52 +566,52 @@ async function archiveProposal(proposal) {
     headers: { 'X-CSRF-TOKEN': csrfToken }
   });
   if (res.ok) {
-    toast.success('Proposal archived.');
+    toast.success(t('student.toast.archived'));
     closeProposalDetails();
     fetchProposals();
   }
 }
 
 async function deleteProposal(proposal) {
-  if (!confirm('Are you sure you want to delete this proposal?')) return;
+  if (!confirm(t('student.confirm.delete'))) return;
   const res = await fetch(`/student/proposals/${proposal.id}`, {
     method: 'DELETE',
     headers: { 'X-CSRF-TOKEN': csrfToken }
   });
   if (res.ok) {
-    toast.success('Proposal deleted.');
+    toast.success(t('student.toast.deleted'));
     closeProposalDetails();
     fetchProposals();
   } else {
     const data = await res.json();
-    toast.error(data.message || 'Error deleting proposal.');
+    toast.error(data.message || t('student.toast.delete_error'));
   }
 }
 
 async function restoreProposal(proposal) {
-  if (!confirm('Restore this archived proposal to Draft Ideas?')) return;
+  if (!confirm(t('student.confirm.restore'))) return;
   const res = await fetch(`/student/proposals/${proposal.id}/restore`, {
     method: 'PUT',
     headers: { 'X-CSRF-TOKEN': csrfToken }
   });
   if (res.ok) {
-    toast.success('Proposal restored to draft.');
+    toast.success(t('student.toast.restored'));
     closeProposalDetails();
     fetchProposals();
     workspaceTab.value = 'Draft Ideas';
   } else {
     const data = await res.json();
-    toast.error(data.message || 'Error restoring proposal.');
+    toast.error(data.message || t('student.toast.restore_error'));
   }
 }
 
 async function sendInvitation() {
   if (!inviteRegNumber.value) {
-    inviteError.value = 'Please enter a registration number.';
+    inviteError.value = t('student.toast.enter_reg_number');
     return;
   }
   if (!activeProposal.value) {
-    toast.error('You need an active proposal to invite team members.');
+    toast.error(t('student.toast.need_active_proposal'));
     return;
   }
   const res = await fetch(`/student/proposals/${activeProposal.value.id}/invite`, {
@@ -595,12 +620,12 @@ async function sendInvitation() {
     body: JSON.stringify({ reg_number: inviteRegNumber.value })
   });
   if (res.ok) {
-    toast.success('Member added.');
+    toast.success(t('student.toast.member_added'));
     closeInviteModal();
     fetchTeam(activeProposal.value.id);
   } else {
     const data = await res.json();
-    inviteError.value = data.message || 'Error inviting member.';
+    inviteError.value = data.message || t('student.toast.invite_error');
   }
 }
 

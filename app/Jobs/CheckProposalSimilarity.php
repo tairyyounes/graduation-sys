@@ -71,25 +71,39 @@ class CheckProposalSimilarity implements ShouldQueue
             $results = $apiResponse['results'] ?? [];
 
             foreach ($results as $match) {
+                // The AI engine's /search_proposals now returns "score" as an
+                // already-calibrated 0-1 overall similarity (Dense+FAISS+
+                // Cross-Encoder, temperature-scaled sigmoid applied server-side
+                // in dense.py — see calibrate_ce_score()) plus a nested
+                // "similarity" breakdown, "verdict", and "explanation". This is
+                // the ONE authoritative score — no re-derivation here.
                 $sim = $match['similarity'] ?? [];
+                $score = isset($match['score']) ? $this->clampScore((float) $match['score']) : null;
 
                 SimilarityResult::create([
                     'proposal_version_id'   => $versionId,
+                    // The AI engine's comparison corpus is an external
+                    // dataset, not this application's own proposals — most
+                    // matches have no real proposal_versions row to point
+                    // to, so this is null unless a genuine one is found.
                     'compared_version_id'   => $this->resolveComparedVersionId($match['project_id'] ?? null),
                     'ai_status'             => 'success',
 
                     // Legacy field — store final score × 100 for backwards-compat
-                    'similarity_score'      => round(($sim['final_similarity'] ?? 0) * 100, 2),
+                    'similarity_score'      => round(($score ?? 0) * 100, 2),
 
-                    // Breakdown dimensions (0–1 range)
-                    'semantic_similarity'   => $sim['semantic_similarity']   ?? null,
-                    'functions_similarity'  => $sim['functions_similarity']  ?? null,
-                    'objectives_similarity' => $sim['objectives_similarity'] ?? null,
-                    'tags_similarity'       => $sim['tags_similarity']       ?? null,
+                    // Breakdown dimensions (0–1 range). null = not evaluated
+                    // (a field was empty on one side), 0.0 = evaluated with no
+                    // overlap found — never conflate the two.
+                    'problem_similarity'      => $sim['problem_similarity']      ?? null,
+                    'solution_similarity'     => $sim['solution_similarity']     ?? null,
+                    'objectives_similarity'   => $sim['objectives_similarity']   ?? null,
+                    'functions_similarity'    => $sim['functions_similarity']    ?? null,
+                    'tags_similarity'         => $sim['tags_similarity']         ?? null,
                     'technologies_similarity' => $sim['technologies_similarity'] ?? null,
-                    'final_score'           => $sim['final_similarity']      ?? null,
+                    'final_score'             => $score,
 
-                    // AI verdict + explanation
+                    // AI-generated verdict + explanation (backend, not Vue-invented)
                     'verdict'               => $match['verdict']     ?? null,
                     'explanation'           => $match['explanation']  ?? null,
 
@@ -141,29 +155,38 @@ class CheckProposalSimilarity implements ShouldQueue
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
     /**
-     * Attempt to look up the compared ProposalVersion by the AI project_id.
-     *
-     * The AI engine uses string project IDs from its own dataset, which may not
-     * directly map to our database primary keys. We try a best-effort lookup;
-     * if nothing is found we fall back to the current version's own ID so the
-     * FK constraint is satisfied (the row is still useful for score storage).
+     * Defensive safety clamp — the AI engine now returns an already-
+     * calibrated 0-1 overall score (see dense.py's calibrate_ce_score()),
+     * so this is not a re-derivation, just a guard against float edge cases
+     * (e.g. 1.0000000002) before it's persisted or multiplied for display.
      */
-    private function resolveComparedVersionId(?string $aiProjectId): int
+    private function clampScore(float $score): float
     {
-        if ($aiProjectId === null) {
-            return $this->version->version_id;
-        }
+        return max(0.0, min(1.0, $score));
+    }
 
-        // Try matching proposal_id or version_id in our database
-        $match = ProposalVersion::whereHas('proposal', function ($q) use ($aiProjectId) {
-            $q->where('proposal_id', $aiProjectId);
-        })->first();
-
-        if ($match) {
-            return $match->version_id;
-        }
-
-        // Fallback: self-reference (won't break FK, still stores AI data)
-        return $this->version->version_id;
+    /**
+     * Resolve the compared ProposalVersion for an AI match, if one genuinely
+     * exists in this system.
+     *
+     * VERIFIED (see AI similarity investigation): the AI engine's comparison
+     * corpus is loaded entirely from static research CSVs (data_prep.py /
+     * load_all()) — it never contains this application's own proposals. Its
+     * project_id is an independent sequence (1..~3000) that numerically
+     * collides with real Laravel proposal_id values purely by coincidence
+     * (confirmed empirically: 3 of 10 matches in one real test resolved to
+     * an unrelated real proposal this way). Matching on project_id ==
+     * proposal_id would therefore attribute a synthetic corpus entry's
+     * similarity to a real, unrelated proposal and display its title.
+     *
+     * Until the AI engine can tag a match as "this really is one of our own
+     * proposals" (e.g. a dedicated external_id column it doesn't currently
+     * have), there is no reliable way to distinguish a genuine match from a
+     * coincidental ID collision — so this always returns null, and the
+     * frontend correctly falls back to the AI engine's own raw title/domain.
+     */
+    private function resolveComparedVersionId(?string $aiProjectId): ?int
+    {
+        return null;
     }
 }

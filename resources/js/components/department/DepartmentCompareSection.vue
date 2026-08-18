@@ -2,17 +2,17 @@
   <section class="space-y-5">
     <div class="flex items-center justify-between">
       <router-link :to="{ name: 'DepartmentProposal' }" class="inline-flex items-center text-sm font-medium text-slate-500 hover:text-teal-600 transition">
-        <svg class="mr-1 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-        Back to proposal
+        <svg class="me-1 h-4 w-4 rtl:-scale-x-100" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        {{ $t('dept.compare.back') }}
       </router-link>
       <div class="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">
-        Similarity score: {{ historicalProposal.score }}
+        {{ $t('dept.compare.similarity_score', { score: historicalProposal.score }) }}
       </div>
     </div>
 
     <div>
-      <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">{{ $t('proposals.compares') }}</h1>
-      <p class="mt-1 text-sm text-slate-500">Detailed side-by-side view to identify matching content.</p>
+      <h1 class="text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">{{ $t('dept.compare.title') }}</h1>
+      <p class="mt-1 text-sm text-slate-500">{{ $t('dept.compare.subtitle') }}</p>
     </div>
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -20,19 +20,19 @@
       <article class="flex flex-col rounded-2xl border border-teal-200 bg-white shadow-sm overflow-hidden">
         <div class="border-b border-teal-100 bg-teal-50/50 p-5">
           <div class="mb-3 inline-block rounded-full bg-teal-100 px-2.5 py-0.5 text-xs font-semibold text-teal-800">
-            Current Submission
+            {{ $t('dept.compare.current') }}
           </div>
           <h2 class="text-xl font-bold text-slate-900">{{ currentProposal.title }}</h2>
           <p class="mt-1 text-sm font-medium text-slate-600">{{ currentProposal.author }} · Programming</p>
         </div>
         <div class="flex-1 p-5">
-          <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">Abstract / Description</h3>
+          <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">{{ $t('dept.compare.abstract') }}</h3>
           <p class="text-base leading-relaxed text-slate-700 whitespace-pre-wrap">
             {{ currentProposal.description }}
           </p>
           
           <div class="mt-6 border-t border-slate-100 pt-5">
-             <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">{{ $t('common.keywords') }}</h3>
+             <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">{{ $t('dept.compare.keywords') }}</h3>
              <div class="flex flex-wrap gap-2">
                 <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">#library</span>
                 <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">#NFC</span>
@@ -46,19 +46,19 @@
       <article class="flex flex-col rounded-2xl border border-amber-200 bg-white shadow-sm overflow-hidden">
         <div class="border-b border-amber-100 bg-amber-50/50 p-5">
           <div class="mb-3 inline-block rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800">
-            Historical Match ({{ historicalProposal.year }})
+            {{ $t('dept.compare.historical_match', { year: historicalProposal.year }) }}
           </div>
           <h2 class="text-xl font-bold text-slate-900">{{ historicalProposal.title }}</h2>
           <p class="mt-1 text-sm font-medium text-slate-600">{{ historicalProposal.author }}</p>
         </div>
         <div class="flex-1 p-5">
-          <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">Abstract / Description</h3>
+          <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">{{ $t('dept.compare.abstract') }}</h3>
           <p class="text-base leading-relaxed text-slate-700 whitespace-pre-wrap">
             {{ historicalProposal.description }}
           </p>
 
           <div class="mt-6 border-t border-slate-100 pt-5">
-             <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">{{ $t('common.keywords') }}</h3>
+             <h3 class="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-3">{{ $t('dept.compare.keywords') }}</h3>
              <div class="flex flex-wrap gap-2">
                 <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">#machine_learning</span>
                 <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">#IDS</span>
@@ -75,10 +75,10 @@
         :to="{ name: 'DepartmentProposal' }"
         class="rounded-lg border border-slate-300 bg-white px-5 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
       >
-        Done comparing
+        {{ $t('dept.compare.done') }}
       </router-link>
       <button class="rounded-lg bg-red-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-red-700">
-        Flag as Plagiarized
+        {{ $t('dept.compare.flag') }}
       </button>
     </div>
   </section>

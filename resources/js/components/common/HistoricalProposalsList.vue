@@ -2,20 +2,20 @@
   <div class="space-y-6">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <h2 class="text-xl font-bold text-slate-900 tracking-tight">{{ $t('proposals.previouss') }}</h2>
-        <p class="mt-1 text-sm text-slate-500">Explore accepted proposals from past semesters to guide your own work.</p>
+        <h2 class="text-xl font-bold text-slate-900 tracking-tight">{{ $t('deptnav.previous_proposals') }}</h2>
+        <p class="mt-1 text-sm text-slate-500">{{ $t('hist.list_subtitle') }}</p>
       </div>
-      
+
       <!-- Search/Filter Controls -->
       <div class="flex items-center gap-3">
         <div class="relative">
-          <input 
-            v-model="searchQuery" 
-            type="text" 
-            placeholder="Search proposals..." 
-            class="block w-full sm:w-64 rounded-xl border-slate-300 pl-10 text-sm focus:border-teal-500 focus:ring-teal-500 shadow-sm"
+          <input
+            v-model="searchQuery"
+            type="text"
+            :placeholder="$t('hist.search_ph')"
+            class="block w-full sm:w-64 rounded-xl border-slate-300 ps-10 text-sm focus:border-teal-500 focus:ring-teal-500 shadow-sm"
           >
-          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+          <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
             <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
@@ -30,16 +30,16 @@
         <table class="min-w-full divide-y divide-slate-200">
           <thead class="bg-slate-50">
             <tr>
-              <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('common.project_title') }}</th>
-              <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('common.domain') }}</th>
-              <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('departments.department') }}</th>
-              <th scope="col" class="px-6 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('common.submitted_on') }}</th>
-              <th scope="col" class="px-6 py-3.5 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('common.action') }}</th>
+              <th scope="col" class="px-6 py-3.5 text-start text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('hist.project_title') }}</th>
+              <th scope="col" class="px-6 py-3.5 text-start text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('fields.domain') }}</th>
+              <th scope="col" class="px-6 py-3.5 text-start text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('fields.department') }}</th>
+              <th scope="col" class="px-6 py-3.5 text-start text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('hist.submitted_on') }}</th>
+              <th scope="col" class="px-6 py-3.5 text-end text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('fields.actions') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-200 bg-white">
             <tr v-if="loading" class="animate-pulse">
-              <td colspan="5" class="px-6 py-10 text-center text-sm text-slate-500">Loading previous proposals...</td>
+              <td colspan="5" class="px-6 py-10 text-center text-sm text-slate-500">{{ $t('hist.loading') }}</td>
             </tr>
             <tr v-else-if="filteredProposals.length === 0">
               <td colspan="5" class="px-6 py-10 text-center text-sm text-slate-500">
@@ -47,7 +47,7 @@
                   <svg class="mx-auto h-12 w-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  <span class="mt-2 block font-medium">No previous proposals found.</span>
+                  <span class="mt-2 block font-medium">{{ $t('hist.none_found') }}</span>
                 </div>
               </td>
             </tr>
@@ -67,12 +67,12 @@
                 <td class="whitespace-nowrap px-6 py-4 text-sm text-slate-500">
                   {{ formatDate(proposal.created_at) }}
                 </td>
-                <td class="whitespace-nowrap px-6 py-4 text-right">
-                  <button 
+                <td class="whitespace-nowrap px-6 py-4 text-end">
+                  <button
                     @click="expandedId = expandedId === proposal.id ? null : proposal.id"
                     class="inline-flex items-center gap-1 text-sm font-medium text-teal-600 hover:text-teal-700"
                   >
-                    {{ expandedId === proposal.id ? 'Hide Details' : 'View Details' }}
+                    {{ expandedId === proposal.id ? $t('hist.hide_details') : $t('hist.view_details') }}
                     <svg class="h-4 w-4 transition-transform duration-200" :class="{'rotate-180': expandedId === proposal.id}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                     </svg>
@@ -84,12 +84,12 @@
                 <td colspan="5" class="px-6 py-6">
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                     <div>
-                      <h4 class="font-semibold text-slate-900 mb-1">{{ $t('messages.problem_statement') }}</h4>
-                      <p class="text-slate-600 whitespace-pre-wrap">{{ proposal.problem || 'Not provided' }}</p>
+                      <h4 class="font-semibold text-slate-900 mb-1">{{ $t('fields.problem_statement') }}</h4>
+                      <p class="text-slate-600 whitespace-pre-wrap">{{ proposal.problem || $t('hist.not_provided') }}</p>
                     </div>
                     <div>
-                      <h4 class="font-semibold text-slate-900 mb-1">{{ $t('messages.proposed_solution') }}</h4>
-                      <p class="text-slate-600 whitespace-pre-wrap">{{ proposal.solution || 'Not provided' }}</p>
+                      <h4 class="font-semibold text-slate-900 mb-1">{{ $t('fields.proposed_solution') }}</h4>
+                      <p class="text-slate-600 whitespace-pre-wrap">{{ proposal.solution || $t('hist.not_provided') }}</p>
                     </div>
                     <!-- Optionally add more fields if needed -->
                   </div>
@@ -105,6 +105,9 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+
+const { locale } = useI18n();
 
 const proposals = ref([]);
 const loading = ref(true);
@@ -140,7 +143,7 @@ const filteredProposals = computed(() => {
 function formatDate(dateString) {
   if (!dateString) return '';
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  return date.toLocaleDateString(locale.value === 'ar' ? 'ar' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 onMounted(() => {

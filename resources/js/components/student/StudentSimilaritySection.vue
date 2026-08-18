@@ -1,334 +1,532 @@
 <template>
   <section class="space-y-6">
-    <div class="mb-8">
-      <h2 class="text-2xl font-bold text-slate-900">{{ $t('messages.similarity_report') }}</h2>
-      <p class="mt-1 text-slate-500 text-sm">AI-based semantic comparison for the active proposal.</p>
+
+    <!-- ── Header ───────────────────────────────────────────────────── -->
+    <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 pb-4">
+      <div class="min-w-0">
+        <h2 class="text-xl font-bold text-slate-900">{{ $t('nav.similarity_report') }}</h2>
+        <div v-if="activeProposal" class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-500">
+          <span class="font-medium text-slate-800">{{ activeProposal.title }}</span>
+          <span v-if="activeProposal.domain" class="text-slate-300">·</span>
+          <span v-if="activeProposal.domain">{{ activeProposal.domain }}</span>
+          <span v-if="activeProposal.submission_status === 'draft'"
+            class="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-600">{{ $t('student.simreport.draft_badge') }}</span>
+        </div>
+        <p v-else class="mt-1 text-sm text-slate-500">{{ $t('student.simreport.subtitle') }}</p>
+      </div>
+
+      <div v-if="activeProposal && aiStatus === 'success'" class="flex items-center gap-3">
+        <span v-if="formattedAnalyzedAt" class="hidden text-xs text-slate-400 sm:inline-block">
+          {{ $t('student.simreport.last_analyzed', { date: formattedAnalyzedAt }) }}
+        </span>
+        <button 
+          @click="$emit('recheck')" 
+          class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-2xs transition hover:border-slate-300 hover:bg-slate-50"
+        >
+          <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          {{ $t('student.simreport.recheck') }}
+        </button>
+      </div>
     </div>
 
-    <!-- No active proposal -->
-    <div v-if="!activeProposal" class="rounded-xl border border-slate-200 bg-white p-12 shadow-sm text-center">
-      <p class="text-slate-500">You must confirm a proposal to view its similarity report.</p>
-      <button @click="$emit('navigate', 'Project Workspace')" class="mt-4 text-teal-600 font-medium hover:text-teal-700">{{ $t('messages.go_to_workspace') }}</button>
+    <!-- ══ STATE: No active proposal ══════════════════════════════════ -->
+    <div v-if="!activeProposal" class="rounded-xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+      <p class="text-slate-500 text-sm">{{ $t('student.simreport.need_confirm') }}</p>
+      <button @click="$emit('navigate', 'Project Workspace')" class="mt-3 text-sm font-medium text-teal-600 hover:text-teal-700">
+        {{ $t('student.overview.go_to_workspace') }} <span class="rtl:rotate-180 inline-block">→</span>
+      </button>
     </div>
 
     <template v-else>
 
-      <!-- ── AI Status Banner ─────────────────────────────────────────── -->
-      <div v-if="aiStatus === 'pending'" class="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
-        <svg class="h-5 w-5 animate-spin text-amber-500" fill="none" viewBox="0 0 24 24">
+      <!-- ══ STATE: analysis running ══════════════════════════════════ -->
+      <div v-if="aiStatus === 'pending'" class="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50/60 px-5 py-4 text-amber-900 shadow-2xs">
+        <svg class="h-5 w-5 animate-spin text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
         </svg>
-        <p class="text-sm font-medium text-amber-800">AI similarity analysis is running… results will appear shortly.</p>
-      </div>
-      <div v-else-if="aiStatus === 'failed'" class="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-5 py-4">
-        <svg class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-        </svg>
-        <p class="text-sm font-medium text-red-800">AI analysis failed. The proposal was still saved. Retry by re-submitting the proposal.</p>
-      </div>
-      <div v-else-if="aiStatus === 'no_comparisons'" class="flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 px-5 py-4">
-        <svg class="h-5 w-5 text-blue-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <p class="text-sm font-medium text-blue-800">
-          No previous proposals available for comparison. This proposal will be used as a baseline for future similarity checks.
-        </p>
+        <p class="text-sm font-medium">{{ $t('student.simreport.running') }}</p>
       </div>
 
-      <!-- ── Current-Year Confirmed Proposal Warning Banner ────────────────── -->
-      <div v-if="hasHiddenMatch" class="flex items-start gap-4 rounded-xl border border-red-200 bg-red-50/50 p-6 shadow-sm border-l-4 border-l-red-500 mb-6">
-        <div class="mt-0.5 text-red-500 shrink-0">
-          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-          </svg>
+      <!-- ══ STATE: analysis unavailable / failed ═════════════════════ -->
+      <div v-else-if="aiStatus === 'failed'" class="rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm space-y-3">
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
         </div>
+        <h3 class="text-base font-semibold text-slate-900">{{ $t('student.simreport.unavailable_title') }}</h3>
+        <p class="mx-auto max-w-md text-sm text-slate-500">{{ $t('student.simreport.unavailable_desc') }}</p>
+        <button @click="$emit('recheck')" class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800">
+          {{ $t('student.simreport.try_again') }}
+        </button>
+      </div>
+
+      <!-- ══ STATE: never analyzed ════════════════════════════════════ -->
+      <div v-else-if="aiStatus === 'none'" class="rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm space-y-3">
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-teal-50 text-teal-600">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+        </div>
+        <h3 class="text-base font-semibold text-slate-900">{{ $t('student.simreport.none_title') }}</h3>
+        <p class="mx-auto max-w-md text-sm text-slate-500">{{ $t('student.simreport.none_desc') }}</p>
+        <button @click="$emit('recheck')" class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-2xs transition hover:bg-teal-700">
+          {{ $t('student.simreport.run_check') }}
+        </button>
+      </div>
+
+      <!-- ══ STATE: analyzed, no similar projects ═════════════════════ -->
+      <div v-else-if="!hasMatches" class="flex items-start gap-4 rounded-xl border border-teal-200 bg-teal-50/60 p-5 shadow-2xs">
+        <svg class="h-6 w-6 shrink-0 text-teal-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         <div>
-          <h4 class="text-sm font-bold text-red-900 mb-1">{{ $t('common.warning') }}</h4>
-          <p class="text-sm text-red-700 font-medium">
-            High similarity detected with an approved project from the current academic year. The project details are hidden for privacy reasons. Please consider adjusting your project scope or selecting a different direction.
+          <h3 class="text-base font-bold text-teal-900">{{ $t('student.simreport.no_matches_title') }}</h3>
+          <p class="mt-1 text-sm text-teal-800 leading-relaxed">
+            {{ aiStatus === 'no_comparisons'
+              ? $t('student.simreport.no_comparisons')
+              : $t('student.simreport.distinct') }}
           </p>
         </div>
       </div>
 
-      <!-- ── Top Cards ───────────────────────────────────────────────── -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <!-- ══ STATE: matches found ═════════════════════════════════════ -->
+      <template v-else>
 
-        <!-- Active Proposal Summary Card -->
-        <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
-          <div class="flex justify-between items-start mb-4">
-            <p class="text-sm font-semibold text-slate-500 uppercase tracking-wider">
-              {{ activeProposal.submission_status === 'draft' ? 'Draft Proposal Summary' : 'Active Proposal Summary' }}
-            </p>
-            <!-- Verdict badge (from AI) -->
-            <span v-if="summary?.verdict" :class="verdictBadgeClass(summary.verdict)"
-              class="inline-flex items-center rounded-full px-3 py-1 text-xs font-bold border shadow-sm">
-              {{ summary.verdict }}
+        <!-- A. Executive Score Summary Card -->
+        <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+          <p class="text-xs font-bold uppercase tracking-wider text-slate-400">{{ $t('student.simreport.overall_title') }}</p>
+          
+          <div class="flex flex-wrap items-baseline gap-x-4 gap-y-2">
+            <span class="text-5xl font-extrabold tracking-tight leading-none" :class="tone(closestMatch.verdict).text">
+              {{ closestMatch.final_score }}%
             </span>
-            <!-- Fallback risk badge based on score -->
-            <span v-else-if="overallScore !== null" :class="[
-              overallScore < 30 ? 'bg-teal-50 text-teal-700 border-teal-200'
-              : overallScore < 60 ? 'bg-amber-50 text-amber-700 border-amber-200'
-              : 'bg-red-50 text-red-700 border-red-200',
-              'inline-flex items-center rounded-full px-3 py-1 text-xs font-bold border shadow-sm'
-            ]">
-              {{ overallScore < 30 ? 'Low Risk' : overallScore < 60 ? 'Medium Risk' : 'High Risk' }}
+            <span v-if="closestMatch.verdict" class="rounded-full border px-3 py-1 text-xs font-semibold" :class="tone(closestMatch.verdict).badge">
+              {{ closestMatch.verdict }}
             </span>
           </div>
-          <h3 class="text-xl font-bold text-slate-900 mb-2">{{ activeProposal.title }}</h3>
-          <div class="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-sm text-slate-600">
-            <div><span class="font-medium text-slate-900">Domain:</span> {{ activeProposal.domain }}</div>
-            <div><span class="font-medium text-slate-900">Status:</span> {{ activeProposal.status }}</div>
-            <div>
-              <span class="font-medium text-slate-900">AI:</span>
-              <span :class="aiStatusClass" class="ml-1 font-semibold capitalize">{{ aiStatus }}</span>
+
+          <p class="text-sm text-slate-600 leading-relaxed">{{ overallDescription }}</p>
+
+          <div v-if="closestMatch.explanation" class="rounded-lg border border-slate-100 bg-slate-50 p-3.5 text-xs text-slate-600">
+            <span class="font-semibold text-slate-700">{{ $t('student.simreport.why_flagged') }}:</span> 
+            <span class="ms-1">{{ closestMatch.explanation }}</span>
+          </div>
+        </div>
+
+        <!-- B. Similarity Breakdown (6 Indicators) -->
+        <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">{{ $t('student.simreport.breakdown_title') }}</h3>
+            <span v-if="highestOverlapDim" class="text-xs text-slate-500 font-medium">
+              {{ $t('student.simreport.highest_overlap_tag', { name: $t(highestOverlapDim.labelKey), value: highestOverlapDim.value }) }}
+            </span>
+          </div>
+
+          <div class="space-y-3">
+            <div v-for="dim in breakdownDims" :key="dim.key" class="space-y-1">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-medium text-slate-700">
+                  {{ $t(dim.labelKey) }}
+                  <span class="text-[10px] text-slate-400 font-normal ms-1">· {{ $t(dim.methodKey) }}</span>
+                </span>
+                <span class="font-semibold" :class="dim.value !== null ? tone(null, dim.value).text : 'text-slate-400 italic'">
+                  {{ dim.value !== null ? dim.value + '%' : $t('student.simreport.not_evaluated') }}
+                </span>
+              </div>
+              <div class="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 rtl:[transform:scaleX(-1)]">
+                <div 
+                  v-if="dim.value !== null" 
+                  class="h-full rounded-full transition-all duration-500" 
+                  :class="tone(null, dim.value).bar" 
+                  :style="{ width: dim.value + '%' }"
+                ></div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Main Similarity Score Card -->
-        <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm flex flex-col items-center justify-center text-center relative overflow-hidden">
-          <div class="relative z-10">
-            <p class="text-sm font-semibold text-slate-500 mb-2">{{ $t('messages.overall_similarity_1') }}</p>
-            <div v-if="overallScore !== null"
-              class="text-5xl font-black mb-2"
-              :class="overallScore < 30 ? 'text-teal-600' : overallScore < 60 ? 'text-amber-500' : 'text-red-500'">
-              {{ overallScore }}<span class="text-3xl text-slate-400">%</span>
-            </div>
-            <div v-else class="text-2xl font-bold text-slate-400 mb-2">—</div>
-            <p class="text-xs text-slate-500 mt-2 px-4">
-              {{ overallScore !== null
-                ? 'Final weighted score from the AI engine combining all similarity dimensions.'
-                : 'Waiting for AI analysis to complete.' }}
-            </p>
-          </div>
-        </div>
-      </div>
+        <!-- C. Matched Projects Explorer -->
+        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          
+          <div class="border-b border-slate-100 bg-slate-50/60 px-5 py-3.5 sm:flex sm:items-center sm:justify-between sm:gap-4 space-y-3 sm:space-y-0">
+            <h3 class="text-sm font-bold text-slate-900">{{ $t('student.simreport.top_matches_title') }}</h3>
 
-      <!-- ── AI Explanation Card ────────────────────────────────────── -->
-      <div v-if="summary?.explanation"
-        class="mb-6 rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 to-white p-6 shadow-sm border-l-4"
-        :class="overallScore !== null && overallScore < 30 ? 'border-l-teal-500' : overallScore !== null && overallScore < 60 ? 'border-l-amber-500' : 'border-l-red-500'">
-        <div class="flex items-start gap-4">
-          <div class="mt-1" :class="overallScore !== null && overallScore < 30 ? 'text-teal-500' : overallScore !== null && overallScore < 60 ? 'text-amber-500' : 'text-red-500'">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+            <div class="flex flex-wrap items-center gap-2">
+              <!-- Search Box -->
+              <input 
+                v-model="searchQuery" 
+                type="text" 
+                :placeholder="$t('student.simreport.search_placeholder')"
+                class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:border-teal-500 focus:outline-none"
+              />
+
+              <!-- Filter Tabs -->
+              <div class="flex items-center rounded-lg bg-slate-200/60 p-0.5 text-[11px] font-medium text-slate-600">
+                <button 
+                  v-for="filter in ['all', 'high', 'moderate', 'low']" 
+                  :key="filter"
+                  @click="activeFilter = filter"
+                  class="rounded-md px-2.5 py-1 transition"
+                  :class="activeFilter === filter ? 'bg-white text-slate-900 shadow-2xs font-semibold' : 'hover:text-slate-900'"
+                >
+                  {{ $t(`student.simreport.filter_${filter}`) }}
+                </button>
+              </div>
+            </div>
           </div>
+
+          <div v-if="filteredMatches.length === 0" class="p-8 text-center text-sm text-slate-400">
+            No matching projects found.
+          </div>
+
+          <ul v-else class="divide-y divide-slate-100">
+            <li 
+              v-for="(m, i) in filteredMatches" 
+              :key="i" 
+              class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-3.5 transition hover:bg-slate-50/50"
+              :class="i === 0 && activeFilter === 'all' && !searchQuery ? 'bg-teal-50/20' : ''"
+            >
+              <div class="flex items-start gap-3 min-w-0 flex-1">
+                <span class="mt-0.5 text-xs font-bold w-5 shrink-0" :class="i === 0 ? 'text-teal-700' : 'text-slate-400'">
+                  #{{ i + 1 }}
+                </span>
+
+                <div class="min-w-0 flex-1 space-y-0.5">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <p class="truncate text-sm font-semibold text-slate-900">
+                      <span v-if="m.details_hidden" class="italic text-slate-500 font-normal">🔒 {{ $t('student.simreport.hidden_privacy') }}</span>
+                      <template v-else>{{ m.title }}</template>
+                    </p>
+                    <span v-if="i === 0 && activeFilter === 'all' && !searchQuery" class="rounded-full bg-teal-100 px-2 py-0.5 text-[10px] font-bold text-teal-800">
+                      {{ $t('student.simreport.closest_match') }}
+                    </span>
+                  </div>
+
+                  <p class="truncate text-xs text-slate-400">
+                    {{ m.details_hidden ? $t('student.simreport.privacy_notice_desc') : (m.domain ?? $t('common.not_available')) }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Actions & Score -->
+              <div class="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                <span v-if="m.verdict" class="rounded-full border px-2.5 py-0.5 text-[11px] font-medium" :class="tone(m.verdict).badge">
+                  {{ m.verdict }}
+                </span>
+
+                <span class="text-sm font-bold w-12 text-end" :class="tone(m.verdict).text">
+                  {{ m.score || m.final_score }}%
+                </span>
+
+                <!-- Side by Side Compare Action Button -->
+                <button 
+                  v-if="!m.details_hidden" 
+                  @click="openSideBySideModal(m)"
+                  class="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-2xs hover:bg-slate-50 transition"
+                >
+                  {{ $t('student.simreport.compare_side_by_side') }}
+                </button>
+                <button 
+                  v-else 
+                  @click="showPrivacyModal = true"
+                  class="rounded-lg border border-slate-100 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-400 cursor-not-allowed"
+                >
+                  {{ $t('student.simreport.privacy_protected') }}
+                </button>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- D. Suggested Alternative Directions -->
+        <div v-if="recommendations && recommendations.length > 0" class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
           <div>
-            <h4 class="text-sm font-bold text-slate-900 mb-1">{{ $t('common.ai_explanation') }}</h4>
-            <p class="text-sm text-slate-700">{{ summary.explanation }}</p>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">{{ $t('student.simreport.suggestions_title') }}</h3>
+            <p class="mt-1 text-xs text-slate-500">{{ $t('student.simreport.suggestions_desc') }}</p>
           </div>
-        </div>
-      </div>
 
-      <!-- ── Similarity Breakdown (real AI dimensions) ─────────────── -->
-      <h3 class="text-lg font-semibold text-slate-900 mb-4 mt-8">{{ $t('messages.similarity_breakdown') }}</h3>
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-
-        <div v-for="dim in breakdownDimensions" :key="dim.key" class="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <p class="text-xs font-medium text-slate-500 mb-1">{{ dim.label }}</p>
-          <p class="text-lg font-bold"
-            :class="dim.value === null ? 'text-slate-300'
-                  : dim.value < 30 ? 'text-teal-600'
-                  : dim.value < 60 ? 'text-amber-500'
-                  : 'text-red-500'">
-            {{ dim.value !== null ? dim.value + '%' : '—' }}
-          </p>
-          <!-- Mini bar -->
-          <div class="mt-2 h-1.5 rounded-full bg-slate-100">
-            <div class="h-1.5 rounded-full transition-all"
-              :class="dim.value === null ? 'bg-slate-200'
-                    : dim.value < 30 ? 'bg-teal-400'
-                    : dim.value < 60 ? 'bg-amber-400'
-                    : 'bg-red-400'"
-              :style="{ width: (dim.value ?? 0) + '%' }">
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ── Top Similar Projects ───────────────────────────────────── -->
-      <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-          <h3 class="text-base font-semibold text-slate-900">{{ $t('messages.top_similar_projects_in_databa') }}</h3>
-          <button @click="$emit('recheck')" class="text-xs font-medium text-teal-600 hover:text-teal-800 bg-teal-50 px-3 py-1.5 rounded-md transition-colors">
-            Recheck Similarity
-          </button>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-slate-200">
-            <thead class="bg-white">
-              <tr>
-                <th class="py-3.5 pl-6 pr-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('common.rank') }}</th>
-                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('common.project_title') }}</th>
-                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('common.domain') }}</th>
-                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('common.final_score') }}</th>
-                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">{{ $t('common.verdict') }}</th>
-                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">{{ $t('common.semantic') }}</th>
-                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider hidden lg:table-cell">{{ $t('common.functions') }}</th>
-                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider hidden xl:table-cell">{{ $t('common.objectives') }}</th>
-                <th class="px-3 py-3.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider hidden xl:table-cell">{{ $t('common.tags') }}</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 bg-white">
-              <!-- No results yet -->
-              <tr v-if="!topMatches || topMatches.length === 0">
-                <td colspan="9" class="py-10 text-center text-sm text-slate-400">
-                  <template v-if="aiStatus === 'pending'">⏳ Analysis is running…</template>
-                  <template v-else-if="aiStatus === 'failed'">❌ Analysis failed. No matches available.</template>
-                  <template v-else-if="aiStatus === 'no_comparisons'">ℹ️ No previous proposals available for comparison.</template>
-                  <template v-else>No similar proposals found in the database.</template>
-                </td>
-              </tr>
-              <tr v-for="(match, index) in topMatches" :key="index" class="hover:bg-slate-50/50 transition-colors">
-                <td class="whitespace-nowrap py-4 pl-6 pr-3 text-sm font-medium text-slate-400">#{{ index + 1 }}</td>
-                <td class="px-3 py-4 text-sm font-medium text-slate-900 max-w-xs truncate">{{ match.title }}</td>
-                <td class="whitespace-nowrap px-3 py-4 text-sm text-slate-600">{{ match.domain ?? 'N/A' }}</td>
-                <td class="whitespace-nowrap px-3 py-4 text-sm font-semibold"
-                  :class="(match.final_score ?? 0) < 30 ? 'text-teal-600' : (match.final_score ?? 0) < 60 ? 'text-amber-600' : 'text-red-600'">
-                  {{ match.score }}
-                </td>
-                <td class="whitespace-nowrap px-3 py-4">
-                  <span v-if="match.verdict" :class="verdictBadgeClass(match.verdict)"
-                    class="inline-block rounded-full px-2.5 py-1 text-xs font-semibold border">
-                    {{ match.verdict }}
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div 
+              v-for="rec in recommendations" 
+              :key="rec.title" 
+              class="flex flex-col justify-between rounded-lg border border-slate-200 p-4 bg-slate-50/50 hover:bg-white transition shadow-2xs"
+            >
+              <div class="space-y-2">
+                <div class="flex items-start justify-between gap-2">
+                  <h5 class="text-sm font-semibold text-slate-900 leading-snug">{{ rec.title }}</h5>
+                  <span class="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                    {{ rec.relevance || 'High' }}
                   </span>
-                  <span v-else class="text-slate-400 text-xs">—</span>
-                </td>
-                <td class="whitespace-nowrap px-3 py-4 text-sm text-slate-600 hidden lg:table-cell">
-                  {{ match.semantic_similarity !== null ? match.semantic_similarity + '%' : '—' }}
-                </td>
-                <td class="whitespace-nowrap px-3 py-4 text-sm text-slate-600 hidden lg:table-cell">
-                  {{ match.functions_similarity !== null ? match.functions_similarity + '%' : '—' }}
-                </td>
-                <td class="whitespace-nowrap px-3 py-4 text-sm text-slate-600 hidden xl:table-cell">
-                  {{ match.objectives_similarity !== null ? match.objectives_similarity + '%' : '—' }}
-                </td>
-                <td class="whitespace-nowrap px-3 py-4 text-sm text-slate-600 hidden xl:table-cell">
-                  {{ match.tags_similarity !== null ? match.tags_similarity + '%' : '—' }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+                </div>
 
-      <!-- ── Explanation column for top match ──────────────────────── -->
-      <div v-if="topMatches && topMatches[0]?.explanation"
-        class="mt-4 rounded-lg border border-slate-100 bg-slate-50 px-5 py-4 text-sm text-slate-600">
-        <span class="font-semibold text-slate-800">Top match note: </span>{{ topMatches[0].explanation }}
-      </div>
+                <p class="text-[11px] text-slate-400 font-medium">
+                  {{ $t('fields.domain') }}: {{ rec.domain }}
+                </p>
 
-      <!-- ── AI Recommendations ──────────────────────────────────────── -->
-      <div v-if="recommendations && recommendations.length > 0" class="mt-8 rounded-xl border border-teal-200 bg-teal-50/20 p-6 shadow-sm text-left">
-        <div class="flex items-start gap-4 mb-4">
-          <div class="text-teal-600 shrink-0">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-          </div>
-          <div>
-            <h4 class="text-sm font-bold text-teal-900 mb-1">{{ $t('messages.ai_project_recommendations') }}</h4>
-            <p class="text-xs text-teal-700">The AI suggests these alternative directions in the same domain that are unique:</p>
-          </div>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div v-for="rec in recommendations" :key="rec.title" class="bg-white p-4 rounded-xl border border-teal-100 shadow-sm flex flex-col justify-between">
-            <div>
-              <h5 class="text-sm font-semibold text-slate-900 leading-snug">{{ rec.title }}</h5>
-              <p class="text-[10px] font-bold text-slate-400 mt-1">Domain: {{ rec.domain }}</p>
-              <p class="text-xs text-slate-600 mt-2 leading-normal line-clamp-3">{{ rec.explanation }}</p>
-            </div>
-            <div class="mt-3 pt-3 border-t border-slate-50 flex justify-between items-center text-xs">
-              <span class="text-slate-500 font-medium">Relevance: {{ rec.relevance }}</span>
-              <span class="text-teal-600 font-semibold">{{ $t('common.unique_option') }}</span>
+                <p class="text-xs leading-relaxed text-slate-600 line-clamp-3">
+                  {{ rec.explanation }}
+                </p>
+              </div>
+
+              <div class="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                <button 
+                  @click="copyRecommendation(rec)"
+                  class="text-xs font-medium text-teal-600 hover:text-teal-700 transition"
+                >
+                  {{ $t('student.simreport.copy_suggestion') }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="mt-8 text-center">
-        <button @click="$emit('navigate', 'Project Workspace')" class="inline-flex items-center text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
-          <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-          Back to Workspace
+      </template>
+
+      <!-- Footer Navigation -->
+      <div class="pt-2 text-center">
+        <button 
+          @click="$emit('navigate', 'Project Workspace')" 
+          class="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 transition"
+        >
+          <svg class="h-4 w-4 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+          {{ $t('student.simreport.back_workspace') }}
         </button>
       </div>
 
     </template>
+
+    <!-- ══ MODAL: Side-by-Side Comparison ═════════════════════════════ -->
+    <div v-if="selectedCompareMatch" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+      <div class="relative w-full max-w-4xl rounded-2xl bg-white shadow-xl overflow-hidden flex flex-col max-h-[85vh] border border-slate-200">
+        
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between border-b border-slate-200 px-6 py-4 bg-slate-50">
+          <div>
+            <h3 class="text-base font-bold text-slate-900">{{ $t('student.simreport.modal_compare_title') }}</h3>
+            <p class="text-xs text-slate-500">Comparing active proposal content against historical project.</p>
+          </div>
+          <button @click="selectedCompareMatch = null" class="rounded-lg p-1 text-slate-400 hover:bg-slate-200 hover:text-slate-700 transition">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <!-- Modal Body (Scrollable Side-by-Side Columns) -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Left Column: Student's Proposal -->
+            <div class="rounded-xl border border-teal-200 bg-white p-5 space-y-4">
+              <div class="border-b border-teal-100 pb-3">
+                <span class="inline-block rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-semibold text-teal-700 border border-teal-200">
+                  {{ $t('student.simreport.modal_your_proposal') }}
+                </span>
+                <h4 class="mt-2 text-base font-bold text-slate-900">{{ activeProposal?.title }}</h4>
+                <p class="text-xs text-slate-500">{{ activeProposal?.domain || 'General' }}</p>
+              </div>
+
+              <div>
+                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{{ $t('fields.problem_statement') }}</h5>
+                <p class="text-xs leading-relaxed text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100">{{ activeProposal?.problem || 'Not specified' }}</p>
+              </div>
+
+              <div>
+                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{{ $t('fields.proposed_solution') }}</h5>
+                <p class="text-xs leading-relaxed text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100">{{ activeProposal?.solution || 'Not specified' }}</p>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{{ $t('fields.tags') }}</h5>
+                  <p class="text-xs text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100">{{ activeProposal?.tags || 'None' }}</p>
+                </div>
+                <div>
+                  <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{{ $t('fields.technologies') }}</h5>
+                  <p class="text-xs text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100">{{ activeProposal?.tech || 'None' }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column: Historical Match -->
+            <div class="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
+              <div class="border-b border-slate-200 pb-3 flex items-start justify-between">
+                <div>
+                  <span class="inline-block rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-700">
+                    {{ $t('student.simreport.modal_matched_proposal', { year: selectedCompareMatch.year || 'Historical' }) }}
+                  </span>
+                  <h4 class="mt-2 text-base font-bold text-slate-900">{{ selectedCompareMatch.title }}</h4>
+                  <p class="text-xs text-slate-500">{{ selectedCompareMatch.domain || 'Repository' }}</p>
+                </div>
+                <span class="text-base font-bold" :class="tone(selectedCompareMatch.verdict).text">
+                  {{ selectedCompareMatch.score || selectedCompareMatch.final_score }}%
+                </span>
+              </div>
+
+              <div>
+                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{{ $t('fields.problem_statement') }}</h5>
+                <p class="text-xs leading-relaxed text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100">{{ selectedCompareMatch.problem || selectedCompareMatch.description || 'Details unavailable' }}</p>
+              </div>
+
+              <div>
+                <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{{ $t('fields.proposed_solution') }}</h5>
+                <p class="text-xs leading-relaxed text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100">{{ selectedCompareMatch.solution || 'Details unavailable' }}</p>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{{ $t('fields.tags') }}</h5>
+                  <p class="text-xs text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100">{{ selectedCompareMatch.tags || 'None' }}</p>
+                </div>
+                <div>
+                  <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{{ $t('fields.technologies') }}</h5>
+                  <p class="text-xs text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100">{{ selectedCompareMatch.tech || selectedCompareMatch.technologies || 'None' }}</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="border-t border-slate-200 px-6 py-3 bg-slate-50 flex justify-end">
+          <button @click="selectedCompareMatch = null" class="rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 transition">
+            {{ $t('student.simreport.close') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ MODAL: Privacy Protection Notice ══════════════════════════ -->
+    <div v-if="showPrivacyModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+      <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-slate-200 space-y-4">
+        <h4 class="text-base font-bold text-slate-900">{{ $t('student.simreport.privacy_notice_title') }}</h4>
+        <p class="text-xs leading-relaxed text-slate-600">
+          {{ $t('student.simreport.privacy_notice_desc') }}
+        </p>
+        <div class="pt-2 flex justify-end">
+          <button @click="showPrivacyModal = false" class="rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800 transition">
+            {{ $t('student.simreport.close') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
   </section>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useToast } from 'vue-toastification'
+
+const { t } = useI18n()
+const toast = useToast()
 
 const props = defineProps({
-  activeProposal: {
-    type: Object,
-    default: null,
-  },
-  topMatches: {
-    type: Array,
-    default: () => [],
-  },
-  /** Full breakdown summary from the AI (for the top card) */
-  summary: {
-    type: Object,
-    default: null,
-  },
-  /** 'pending' | 'success' | 'failed' | 'none' */
-  aiStatus: {
-    type: String,
-    default: 'none',
-  },
-  recommendations: {
-    type: Array,
-    default: () => [],
-  },
+  activeProposal: { type: Object, default: null },
+  topMatches: { type: Array, default: () => [] },
+  summary: { type: Object, default: null },
+  /** 'pending' | 'success' | 'failed' | 'no_comparisons' | 'none' */
+  aiStatus: { type: String, default: 'none' },
+  recommendations: { type: Array, default: () => [] },
+  analyzedAt: { type: String, default: null },
 })
 
 defineEmits(['navigate', 'recheck'])
 
-// ── Computed ────────────────────────────────────────────────────────────────
+// Interactive States
+const searchQuery = ref('')
+const activeFilter = ref('all') // 'all' | 'high' | 'moderate' | 'low'
+const selectedCompareMatch = ref(null)
+const showPrivacyModal = ref(false)
 
-/** Overall score as a number (0–100), or null if not available */
-const overallScore = computed(() => {
-  if (props.summary?.final_score != null) return props.summary.final_score
-  return null
+const hasMatches = computed(() => (props.topMatches?.length ?? 0) > 0)
+const closestMatch = computed(() => props.topMatches?.[0] ?? {})
+
+const formattedAnalyzedAt = computed(() => {
+  if (!props.analyzedAt) return null
+  const d = new Date(props.analyzedAt)
+  if (isNaN(d.getTime())) return null
+  return d.toLocaleString(undefined, {
+    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+  })
 })
 
-const hasHiddenMatch = computed(() => {
-  return props.topMatches.some(m => m.details_hidden);
+const breakdownDims = computed(() => {
+  const m = closestMatch.value ?? {}
+  return [
+    { key: 'problem',      labelKey: 'student.simreport.dim_problem',      methodKey: 'student.simreport.method_semantic',     value: m.problem_similarity ?? null },
+    { key: 'solution',     labelKey: 'student.simreport.dim_solution',     methodKey: 'student.simreport.method_semantic',     value: m.solution_similarity ?? null },
+    { key: 'objectives',   labelKey: 'student.simreport.dim_objectives',   methodKey: 'student.simreport.method_semantic',     value: m.objectives_similarity ?? null },
+    { key: 'functions',    labelKey: 'student.simreport.dim_functions',    methodKey: 'student.simreport.method_semantic_set', value: m.functions_similarity ?? null },
+    { key: 'tags',         labelKey: 'student.simreport.dim_tags',         methodKey: 'student.simreport.method_lexical',      value: m.tags_similarity ?? null },
+    { key: 'tech',         labelKey: 'student.simreport.dim_tech',         methodKey: 'student.simreport.method_lexical',      value: m.technologies_similarity ?? null },
+  ]
 })
 
-/** CSS class for the AI status text label */
-const aiStatusClass = computed(() => {
-  if (props.aiStatus === 'success')        return 'text-teal-600'
-  if (props.aiStatus === 'pending')        return 'text-amber-500'
-  if (props.aiStatus === 'failed')         return 'text-red-500'
-  if (props.aiStatus === 'no_comparisons') return 'text-blue-500'
-  return 'text-slate-400'
+const highestOverlapDim = computed(() => {
+  const valid = breakdownDims.value.filter(d => d.value !== null && d.value > 0)
+  if (valid.length === 0) return null
+  return valid.reduce((max, d) => (d.value > max.value ? d : max), valid[0])
 })
 
-/** The 5 AI breakdown dimensions */
-const breakdownDimensions = computed(() => [
-  { key: 'semantic',      label: 'Semantic',      value: props.summary?.semantic_similarity     ?? null },
-  { key: 'functions',     label: 'Functions',     value: props.summary?.functions_similarity    ?? null },
-  { key: 'objectives',    label: 'Objectives',    value: props.summary?.objectives_similarity   ?? null },
-  { key: 'tags',          label: 'Tags',          value: props.summary?.tags_similarity         ?? null },
-  { key: 'technologies',  label: 'Technologies',  value: props.summary?.technologies_similarity ?? null },
-])
+const filteredMatches = computed(() => {
+  let list = props.topMatches || []
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
+  // Apply Risk Tier Filter
+  if (activeFilter.value === 'high') {
+    list = list.filter(m => (m.score || m.final_score || 0) >= 60)
+  } else if (activeFilter.value === 'moderate') {
+    list = list.filter(m => {
+      const s = m.score || m.final_score || 0
+      return s >= 30 && s < 60
+    })
+  } else if (activeFilter.value === 'low') {
+    list = list.filter(m => (m.score || m.final_score || 0) < 30)
+  }
 
-function verdictBadgeClass(verdict) {
-  if (!verdict) return 'bg-slate-100 text-slate-600 border-slate-200'
-  const v = verdict.toLowerCase()
-  if (v.includes('very high')) return 'bg-red-50 text-red-700 border-red-200'
-  if (v.includes('high'))      return 'bg-orange-50 text-orange-700 border-orange-200'
-  if (v.includes('moderate'))  return 'bg-amber-50 text-amber-700 border-amber-200'
-  if (v.includes('low'))       return 'bg-teal-50 text-teal-700 border-teal-200'
-  return 'bg-slate-100 text-slate-600 border-slate-200'
+  // Apply Search Query
+  if (searchQuery.value.trim()) {
+    const q = searchQuery.value.toLowerCase().trim()
+    list = list.filter(m => {
+      const title = (m.title || '').toLowerCase()
+      const domain = (m.domain || '').toLowerCase()
+      return title.includes(q) || domain.includes(q)
+    })
+  }
+
+  return list
+})
+
+const overallDescription = computed(() => {
+  const v = (closestMatch.value?.verdict || '').toLowerCase()
+  if (v.includes('very high')) return t('student.simreport.overall_desc_very_high')
+  if (v.includes('high'))      return t('student.simreport.overall_desc_high')
+  if (v.includes('moderate'))  return t('student.simreport.overall_desc_moderate')
+  return t('student.simreport.overall_desc_low')
+})
+
+function tone(verdict, fallbackPercent = null) {
+  const v = (verdict || '').toLowerCase()
+  if (v.includes('very high')) return { text: 'text-red-600',   badge: 'bg-red-50 text-red-700 border-red-200',       bar: 'bg-red-500' }
+  if (v.includes('high'))      return { text: 'text-orange-600',badge: 'bg-orange-50 text-orange-700 border-orange-200', bar: 'bg-orange-400' }
+  if (v.includes('moderate'))  return { text: 'text-amber-600', badge: 'bg-amber-50 text-amber-700 border-amber-200',   bar: 'bg-amber-400' }
+  if (v.includes('low'))       return { text: 'text-teal-600',  badge: 'bg-teal-50 text-teal-700 border-teal-200',     bar: 'bg-teal-500' }
+
+  const n = fallbackPercent ?? 0
+  if (n >= 85) return { text: 'text-red-600', bar: 'bg-red-500' }
+  if (n >= 70) return { text: 'text-orange-600', bar: 'bg-orange-400' }
+  if (n >= 55) return { text: 'text-amber-600', bar: 'bg-amber-400' }
+  return { text: 'text-teal-600', bar: 'bg-teal-500' }
+}
+
+function openSideBySideModal(match) {
+  selectedCompareMatch.value = match
+}
+
+function copyRecommendation(rec) {
+  const text = `${rec.title}\nDomain: ${rec.domain}\n${rec.explanation}`
+  navigator.clipboard.writeText(text).then(() => {
+    toast.success(t('student.simreport.copied_toast'))
+  }).catch(() => {
+    toast.info(`${rec.title} - ${rec.explanation}`)
+  })
 }
 </script>
