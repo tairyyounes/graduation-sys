@@ -152,6 +152,7 @@
             :ai-status="similarityAiStatus"
             :recommendations="similarityRecommendations"
             :analyzed-at="similarityAnalyzedAt"
+            :is-checking="isFetchingSimilarity"
             @navigate="currentView = $event"
             @recheck="fetchSimilarity(similarityProposal?.id, true)"
           />
@@ -316,6 +317,7 @@ const similaritySummary = ref(null);   // AI breakdown summary for top card
 const similarityAiStatus = ref('none'); // 'pending' | 'success' | 'failed' | 'none'
 const similarityRecommendations = ref([]);
 const similarityAnalyzedAt = ref(null); // ISO timestamp of last analysis run
+const isFetchingSimilarity = ref(false); // guards against duplicate concurrent AI checks
 const versionHistory = ref([]);
 const domainFeedback = ref(null);
 const compareProposalId = ref(null);
@@ -373,15 +375,31 @@ async function fetchDecision(proposalId) {
 
 async function fetchSimilarity(proposalId, recheck = false) {
   if (!proposalId) return;
-  const url = `/student/proposals/${proposalId}/similarity` + (recheck ? '?recheck=true' : '');
-  const res = await fetch(url);
-  if (res.ok) {
-    const data = await res.json();
-    topMatches.value = data.results ?? [];
-    similaritySummary.value = data.summary ?? null;
-    similarityAiStatus.value = data.ai_status ?? 'none';
-    similarityRecommendations.value = data.recommendations ?? [];
-    similarityAnalyzedAt.value = data.analyzed_at ?? null;
+  // Guard against duplicate concurrent AI checks for the same proposal.
+  // This was a real bug: navigating to the report set currentView, which
+  // triggers the currentView watcher's own fetchSimilarity() call, while a
+  // caller (e.g. checkDraftSimilarity) also awaited an explicit recheck
+  // call — both firing at once, dispatching two concurrent AI analyses for
+  // one submission and doubling load on the (CPU-bound, single-process)
+  // similarity service. Only one fetch may be in flight at a time; a
+  // second call while one is running is simply skipped rather than queued,
+  // since the in-flight request already covers it (or the recheck button
+  // is disabled below to prevent it from being user-triggered).
+  if (isFetchingSimilarity.value) return;
+  isFetchingSimilarity.value = true;
+  try {
+    const url = `/student/proposals/${proposalId}/similarity` + (recheck ? '?recheck=true' : '');
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      topMatches.value = data.results ?? [];
+      similaritySummary.value = data.summary ?? null;
+      similarityAiStatus.value = data.ai_status ?? 'none';
+      similarityRecommendations.value = data.recommendations ?? [];
+      similarityAnalyzedAt.value = data.analyzed_at ?? null;
+    }
+  } finally {
+    isFetchingSimilarity.value = false;
   }
 }
 
@@ -509,10 +527,16 @@ async function checkDraftSimilarity(proposal) {
   if (!proposal) return;
   closeProposalDetails();
   similarityProposal.value = proposal;
-  currentView.value = 'Similarity Report';
-  
   toast.info(t('student.toast.starting_draft_analysis'));
-  await fetchSimilarity(proposal.id, true);
+
+  // Fire the forced recheck BEFORE switching views: fetchSimilarity sets
+  // its in-flight guard synchronously, so when the next line flips
+  // currentView (which triggers the currentView watcher's own
+  // fetchSimilarity call), that call reliably sees the guard already held
+  // and skips itself instead of racing a second concurrent AI request.
+  const fetchPromise = fetchSimilarity(proposal.id, true);
+  currentView.value = 'Similarity Report';
+  await fetchPromise;
   fetchProposals();
 }
 
@@ -658,6 +682,9 @@ function closeInviteModal() {
 }
 
 function viewReportFromModal() {
+  if (selectedProposal.value) {
+    similarityProposal.value = selectedProposal.value;
+  }
   closeProposalDetails();
   currentView.value = 'Similarity Report';
 }

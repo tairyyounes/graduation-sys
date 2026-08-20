@@ -592,6 +592,7 @@
       "no_comparisons": "There are no previous proposals to compare against yet. Yours becomes a baseline for future checks.",
       "distinct": "Your idea looks distinct — no meaningfully similar project was found in the database.",
       "recheck": "Recheck",
+      "checking": "Checking…",
       "summary": "Compared against existing projects — showing the {count} most similar, ranked.",
       "last_analyzed": "Last analyzed: {date}",
       "closest_match": "Closest match",
