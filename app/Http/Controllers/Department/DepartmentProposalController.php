@@ -162,10 +162,18 @@ class DepartmentProposalController extends Controller
             ->get();
 
         $statuses = $allResults->pluck('ai_status')->unique()->values();
-        $aiStatus = $statuses->contains('failed') ? 'failed'
+        // See StudentProposalController::similarity() for why stale
+        // 'pending' rows (an interrupted check) must be treated as failed
+        // rather than left as a permanent, unrecoverable spinner state.
+        $staleCutoff = now()->subMinutes(3);
+        $hasStalePending = $allResults->contains(
+            fn($r) => $r->ai_status === 'pending' && $r->updated_at && $r->updated_at->lt($staleCutoff)
+        );
+        $aiStatus = $hasStalePending ? 'failed'
+                  : ($statuses->contains('failed') ? 'failed'
                   : ($statuses->contains('pending') ? 'pending'
                   : ($statuses->contains('no_comparisons') ? 'no_comparisons'
-                  : ($allResults->isEmpty() ? 'none' : 'success')));
+                  : ($allResults->isEmpty() ? 'none' : 'success'))));
 
         // If it failed or has never been checked, dispatch job
         // Do NOT re-dispatch for 'no_comparisons' — there is nothing to compare against.
@@ -185,10 +193,14 @@ class DepartmentProposalController extends Controller
                 ->get();
 
             $statuses = $allResults->pluck('ai_status')->unique()->values();
-            $aiStatus = $statuses->contains('failed') ? 'failed'
+            $hasStalePending = $allResults->contains(
+                fn($r) => $r->ai_status === 'pending' && $r->updated_at && $r->updated_at->lt($staleCutoff)
+            );
+            $aiStatus = $hasStalePending ? 'failed'
+                      : ($statuses->contains('failed') ? 'failed'
                       : ($statuses->contains('pending') ? 'pending'
                       : ($statuses->contains('no_comparisons') ? 'no_comparisons'
-                      : ($allResults->isEmpty() ? 'none' : 'success')));
+                      : ($allResults->isEmpty() ? 'none' : 'success'))));
         }
 
         // Early return — no proposals existed to compare against

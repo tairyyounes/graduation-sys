@@ -19,14 +19,15 @@
         <span v-if="formattedAnalyzedAt" class="hidden text-xs text-slate-400 sm:inline-block">
           {{ $t('student.simreport.last_analyzed', { date: formattedAnalyzedAt }) }}
         </span>
-        <button 
-          @click="$emit('recheck')" 
-          class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-2xs transition hover:border-slate-300 hover:bg-slate-50"
+        <button
+          @click="$emit('recheck')"
+          :disabled="isChecking"
+          class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 shadow-2xs transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg class="h-3.5 w-3.5 text-slate-500" :class="{ 'animate-spin': isChecking }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
           </svg>
-          {{ $t('student.simreport.recheck') }}
+          {{ isChecking ? $t('student.simreport.checking') : $t('student.simreport.recheck') }}
         </button>
       </div>
     </div>
@@ -47,7 +48,15 @@
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
         </svg>
-        <p class="text-sm font-medium">{{ $t('student.simreport.running') }}</p>
+        <p class="flex-1 text-sm font-medium">{{ $t('student.simreport.running') }}</p>
+        <!-- Fail-safe: a check that gets interrupted (server restart, lost
+             connection) can be left showing this state with nothing to move
+             it forward. The backend auto-recovers a stuck pending after 3
+             minutes, but this button means the student is never stuck
+             waiting on that — they can always force it themselves. -->
+        <button @click="$emit('recheck')" :disabled="isChecking" class="shrink-0 text-xs font-semibold text-amber-800 underline decoration-dotted underline-offset-2 hover:text-amber-900 disabled:cursor-not-allowed disabled:opacity-50">
+          {{ $t('student.simreport.recheck') }}
+        </button>
       </div>
 
       <!-- ══ STATE: analysis unavailable / failed ═════════════════════ -->
@@ -57,8 +66,8 @@
         </div>
         <h3 class="text-base font-semibold text-slate-900">{{ $t('student.simreport.unavailable_title') }}</h3>
         <p class="mx-auto max-w-md text-sm text-slate-500">{{ $t('student.simreport.unavailable_desc') }}</p>
-        <button @click="$emit('recheck')" class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800">
-          {{ $t('student.simreport.try_again') }}
+        <button @click="$emit('recheck')" :disabled="isChecking" class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50">
+          {{ isChecking ? $t('student.simreport.checking') : $t('student.simreport.try_again') }}
         </button>
       </div>
 
@@ -69,8 +78,8 @@
         </div>
         <h3 class="text-base font-semibold text-slate-900">{{ $t('student.simreport.none_title') }}</h3>
         <p class="mx-auto max-w-md text-sm text-slate-500">{{ $t('student.simreport.none_desc') }}</p>
-        <button @click="$emit('recheck')" class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-2xs transition hover:bg-teal-700">
-          {{ $t('student.simreport.run_check') }}
+        <button @click="$emit('recheck')" :disabled="isChecking" class="inline-flex items-center gap-2 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white shadow-2xs transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-50">
+          {{ isChecking ? $t('student.simreport.checking') : $t('student.simreport.run_check') }}
         </button>
       </div>
 
@@ -99,7 +108,7 @@
               {{ closestMatch.final_score }}%
             </span>
             <span v-if="closestMatch.verdict" class="rounded-full border px-3 py-1 text-xs font-semibold" :class="tone(closestMatch.verdict).badge">
-              {{ closestMatch.verdict }}
+              {{ verdictLabel(closestMatch.verdict) }}
             </span>
           </div>
 
@@ -209,11 +218,11 @@
               <!-- Actions & Score -->
               <div class="flex items-center justify-between sm:justify-end gap-3 shrink-0">
                 <span v-if="m.verdict" class="rounded-full border px-2.5 py-0.5 text-[11px] font-medium" :class="tone(m.verdict).badge">
-                  {{ m.verdict }}
+                  {{ verdictLabel(m.verdict) }}
                 </span>
 
                 <span class="text-sm font-bold w-12 text-end" :class="tone(m.verdict).text">
-                  {{ m.score || m.final_score }}%
+                  {{ m.final_score }}%
                 </span>
 
                 <!-- Side by Side Compare Action Button -->
@@ -355,7 +364,7 @@
                   <p class="text-xs text-slate-500">{{ selectedCompareMatch.domain || 'Repository' }}</p>
                 </div>
                 <span class="text-base font-bold" :class="tone(selectedCompareMatch.verdict).text">
-                  {{ selectedCompareMatch.score || selectedCompareMatch.final_score }}%
+                  {{ selectedCompareMatch.final_score }}%
                 </span>
               </div>
 
@@ -427,6 +436,8 @@ const props = defineProps({
   aiStatus: { type: String, default: 'none' },
   recommendations: { type: Array, default: () => [] },
   analyzedAt: { type: String, default: null },
+  /** True while a fetch (initial check or recheck) is in flight — disables the recheck/try-again/run-check buttons. */
+  isChecking: { type: Boolean, default: false },
 })
 
 defineEmits(['navigate', 'recheck'])
@@ -470,16 +481,18 @@ const highestOverlapDim = computed(() => {
 const filteredMatches = computed(() => {
   let list = props.topMatches || []
 
-  // Apply Risk Tier Filter
+  // Apply Risk Tier Filter — m.score is a formatted "63%" string (not
+  // numeric), which silently broke every comparison below (NaN >= 60 is
+  // always false). m.final_score is the real number; use that.
   if (activeFilter.value === 'high') {
-    list = list.filter(m => (m.score || m.final_score || 0) >= 60)
+    list = list.filter(m => (m.final_score ?? 0) >= 60)
   } else if (activeFilter.value === 'moderate') {
     list = list.filter(m => {
-      const s = m.score || m.final_score || 0
+      const s = m.final_score ?? 0
       return s >= 30 && s < 60
     })
   } else if (activeFilter.value === 'low') {
-    list = list.filter(m => (m.score || m.final_score || 0) < 30)
+    list = list.filter(m => (m.final_score ?? 0) < 30)
   }
 
   // Apply Search Query
@@ -494,6 +507,19 @@ const filteredMatches = computed(() => {
 
   return list
 })
+
+// The backend sends the verdict as a fixed English string (see
+// server_dense.py's compute_verdict()); translate the known set for
+// display while keeping the raw string for tone()/description matching.
+function verdictLabel(verdict) {
+  const v = (verdict || '').toLowerCase()
+  if (v.includes('very high')) return t('student.simreport.verdict_very_high')
+  if (v.includes('high'))      return t('student.simreport.verdict_high')
+  if (v.includes('moderate'))  return t('student.simreport.verdict_moderate')
+  if (v.includes('low'))       return t('student.simreport.verdict_low')
+  if (v.includes('no matches')) return t('student.simreport.verdict_no_matches')
+  return verdict
+}
 
 const overallDescription = computed(() => {
   const v = (closestMatch.value?.verdict || '').toLowerCase()

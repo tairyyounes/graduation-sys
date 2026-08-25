@@ -345,10 +345,25 @@ class StudentProposalController extends Controller
             ->get();
  
         $statuses  = $allResults->pluck('ai_status')->unique()->values();
-        $aiStatus  = $statuses->contains('failed') ? 'failed'
+
+        // A 'pending' row means a check is in progress. If that check gets
+        // interrupted — server restart, dropped connection, browser
+        // navigated away mid-request — before it reaches success/failed,
+        // the row is left stuck at 'pending' forever: nothing below
+        // previously re-triggered for that status, and the frontend showed
+        // an infinite "analysis running" spinner with no way out. Treat a
+        // pending row older than this as stale so it can self-heal into a
+        // retriable 'failed' state instead of hanging indefinitely.
+        $staleCutoff = now()->subMinutes(3);
+        $hasStalePending = $allResults->contains(
+            fn($r) => $r->ai_status === 'pending' && $r->updated_at && $r->updated_at->lt($staleCutoff)
+        );
+
+        $aiStatus  = $hasStalePending ? 'failed'
+                   : ($statuses->contains('failed') ? 'failed'
                    : ($statuses->contains('pending') ? 'pending'
                    : ($statuses->contains('no_comparisons') ? 'no_comparisons'
-                   : ($allResults->isEmpty() ? 'none' : 'success')));
+                   : ($allResults->isEmpty() ? 'none' : 'success'))));
 
         // If forced recheck OR if it failed OR if it was never checked:
         // Do NOT re-dispatch for 'no_comparisons' — there is nothing to compare against.
