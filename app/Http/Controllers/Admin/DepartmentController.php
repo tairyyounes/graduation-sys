@@ -53,7 +53,19 @@ class DepartmentController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'department_name' => ['required', 'string', 'max:255', 'unique:departments,department_name'],
+            'department_name' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[\pL\s]+$/u',
+                'unique:departments,department_name',
+            ],
+        ], [
+            'department_name.required' => __('validation.custom.department_name.required'),
+            'department_name.string' => __('validation.custom.department_name.string'),
+            'department_name.max' => __('validation.custom.department_name.max'),
+            'department_name.unique' => __('validation.custom.department_name.unique'),
+            'department_name.regex' => __('validation.custom.department_name.regex'),
         ]);
 
         DB::table('departments')->insert([
@@ -75,7 +87,19 @@ class DepartmentController extends Controller
     public function update(Request $request, $id): JsonResponse
     {
         $validated = $request->validate([
-            'department_name' => ['required', 'string', 'max:255', Rule::unique('departments', 'department_name')->ignore($id, 'department_id')],
+            'department_name' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[\pL\s]+$/u',
+                Rule::unique('departments', 'department_name')->ignore($id, 'department_id'),
+            ],
+        ], [
+            'department_name.required' => __('validation.custom.department_name.required'),
+            'department_name.string' => __('validation.custom.department_name.string'),
+            'department_name.max' => __('validation.custom.department_name.max'),
+            'department_name.unique' => __('validation.custom.department_name.unique'),
+            'department_name.regex' => __('validation.custom.department_name.regex'),
         ]);
 
         $updated = DB::table('departments')

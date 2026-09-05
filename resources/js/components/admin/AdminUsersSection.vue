@@ -191,6 +191,7 @@ import { useToast } from 'vue-toastification'
 import { useI18n } from 'vue-i18n'
 import AdminUserModal from './AdminUserModal.vue'
 import DeleteConfirmationModal from '../common/DeleteConfirmationModal.vue'
+import { usePersistedForm } from '../../composables/usePersistedForm'
 
 const toast = useToast()
 const { t } = useI18n()
@@ -246,6 +247,8 @@ const userForm = reactive({
   password: '',
 })
 
+const { clearPersistedForm } = usePersistedForm('admin_user_form', userForm)
+
 const roleLabel = (role) => {
   const normalized = role === 'department_member' ? 'department' : role
   const key = `roles.${normalized}`
@@ -266,10 +269,13 @@ const clearForm = () => {
   userForm.student_number = ''
   userForm.is_active = true
   userForm.password = ''
+  clearPersistedForm()
 }
 
 const openCreateModal = () => {
-  clearForm()
+  if (!localStorage.getItem('admin_user_form')) {
+    clearForm()
+  }
   formErrors.value = {}
   isEditingUser.value = false
   editingUserId.value = null
@@ -365,6 +371,7 @@ const submitUserForm = async () => {
 
     await loadUsers()
     closeUserModal()
+    clearPersistedForm()
     toast.success(isEditingUser.value ? t('admin.users.toast.updated') : t('admin.users.toast.created'))
   } catch (error) {
     if (Object.keys(formErrors.value).length === 0) {

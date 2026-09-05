@@ -106,6 +106,7 @@ return [
             'regex' => 'The email format is invalid.',
             'unique' => 'The email has already been taken.',
             'student_format' => 'Student email must be in the format xxxxxx@cctt.edu.ly',
+            'member_format' => 'Department member email must be in @cctt.edu.ly format',
         ],
         'role' => [
             'required' => 'Please select a role.',
@@ -113,16 +114,62 @@ return [
         ],
         'student_number' => [
             'required' => 'The student number is required.',
+            'required_if' => 'The student number is required.',
             'digits' => 'The student number must be exactly 6 digits.',
             'unique' => 'The student number has already been taken.',
         ],
         'department_id' => [
             'required' => 'Please select a department.',
+            'required_if' => 'Please select a department.',
             'exists' => 'The selected department is invalid.',
+        ],
+        'department_name' => [
+            'required' => 'The department name is required.',
+            'string' => 'The department name must be a string.',
+            'max' => 'The department name may not be greater than 255 characters.',
+            'unique' => 'The department name has already been taken.',
+            'regex' => 'The department name must contain letters and spaces only and no numbers.',
         ],
         'password' => [
             'required' => 'The password is required.',
             'min' => 'The password must be at least :min characters.',
+            'max' => 'The password must be less than :max characters'
+        ],
+        'title' => [
+            'required' => 'The proposal title is required.',
+            'regex' => 'The proposal title must not consist only of symbols.',
+            'word_count_min' => 'The proposal title must be clear and contain at least 5 words.',
+            'word_count_max' => 'The proposal title cannot exceed 20 words.',
+        ],
+        'problem' => [
+            'required' => 'The problem statement is required.',
+            'word_count_min' => 'The problem statement must contain at least 30 words and clearly explain the issue.',
+            'word_count_max' => 'The problem statement cannot exceed 250 words.',
+        ],
+        'solution' => [
+            'required' => 'The proposed solution is required.',
+            'word_count_min' => 'The proposed solution must contain at least 30 words and clearly explain how the system solves the problem.',
+            'word_count_max' => 'The proposed solution cannot exceed 250 words.',
+        ],
+        'functions' => [
+            'required' => 'Please describe the main system functions in at least 20 words.',
+            'word_count_min' => 'Please describe the main system functions in at least 20 words.',
+            'word_count_max' => 'The system functions cannot exceed 200 words.',
+        ],
+        'objectives' => [
+            'required' => 'Please write at least 20 words explaining the project objectives.',
+            'word_count_min' => 'Please write at least 20 words explaining the project objectives.',
+            'word_count_max' => 'The project objectives cannot exceed 200 words.',
+        ],
+        'tags' => [
+            'required' => 'Please add at least 3 relevant tags.',
+            'min_items' => 'Please add at least 3 relevant tags.',
+            'max_items' => 'The tags cannot exceed 10 items.',
+        ],
+        'tech' => [
+            'required' => 'Please add at least 2 technologies that will be used in the project.',
+            'min_items' => 'Please add at least 2 technologies that will be used in the project.',
+            'max_items' => 'The technologies cannot exceed 12 items.',
         ],
     ],
 
@@ -142,6 +189,7 @@ return [
         'student_number' => 'Student Number',
         'semester' => 'Semester',
         'department_id' => 'Department',
+        'department_name' => 'Department Name',
         'role' => 'Role',
         'is_active' => 'Status',
     ],

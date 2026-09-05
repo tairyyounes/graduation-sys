@@ -91,7 +91,38 @@
                       <h4 class="font-semibold text-slate-900 mb-1">{{ $t('fields.proposed_solution') }}</h4>
                       <p class="text-slate-600 whitespace-pre-wrap">{{ proposal.solution || $t('hist.not_provided') }}</p>
                     </div>
-                    <!-- Optionally add more fields if needed -->
+                    <div v-if="proposal.objectives">
+                      <h4 class="font-semibold text-slate-900 mb-1">{{ $t('student.form.objectives') }}</h4>
+                      <p class="text-slate-600 whitespace-pre-wrap">{{ proposal.objectives }}</p>
+                    </div>
+                    <div v-if="proposal.functions">
+                      <h4 class="font-semibold text-slate-900 mb-1">{{ $t('fields.core_functions') }}</h4>
+                      <p class="text-slate-600 whitespace-pre-wrap">{{ proposal.functions }}</p>
+                    </div>
+                    <div v-if="proposal.tags">
+                      <h4 class="font-semibold text-slate-900 mb-1">{{ $t('student.form.tags') }}</h4>
+                      <div class="flex flex-wrap gap-1.5 mt-1">
+                        <span
+                          v-for="tag in proposal.tags.split(',').map(t => t.trim()).filter(Boolean)"
+                          :key="tag"
+                          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200"
+                        >
+                          {{ tag }}
+                        </span>
+                      </div>
+                    </div>
+                    <div v-if="proposal.technologies">
+                      <h4 class="font-semibold text-slate-900 mb-1">{{ $t('student.form.tech') }}</h4>
+                      <div class="flex flex-wrap gap-1.5 mt-1">
+                        <span
+                          v-for="tech in proposal.technologies.split(',').map(t => t.trim()).filter(Boolean)"
+                          :key="tech"
+                          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-teal-700 border border-teal-200"
+                        >
+                          {{ tech }}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </td>
               </tr>

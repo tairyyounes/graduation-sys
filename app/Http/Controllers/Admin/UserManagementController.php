@@ -115,6 +115,11 @@ class UserManagementController extends Controller
                 }
             }
 
+            activity()
+                ->performedOn($user)
+                ->causedBy($request->user())
+                ->log("Created user: {$user->full_name} ({$user->role})");
+
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
@@ -220,6 +225,11 @@ class UserManagementController extends Controller
                 DB::table('students')->where('official_email', $oldEmail)->delete();
             }
 
+            activity()
+                ->performedOn($user)
+                ->causedBy($request->user())
+                ->log("Updated user: {$user->full_name}");
+
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
@@ -255,28 +265,33 @@ class UserManagementController extends Controller
      * @return JsonResponse
      */
     public function destroy(User $user): JsonResponse
-{
-    DB::beginTransaction();
-    try {
-        if ($user->role === 'student') {
-            DB::table('students')->where('official_email', $user->email)->update([
-                'deleted_at' => now(),
-                'is_active' => false,
-            ]);
+    {
+        DB::beginTransaction();
+        try {
+            if ($user->role === 'student') {
+                DB::table('students')->where('official_email', $user->email)->update([
+                    'deleted_at' => now(),
+                    'is_active' => false,
+                ]);
+            }
+
+            $user->is_active = false;
+            $user->save();
+            $user->delete(); // now soft deletes (sets deleted_at) instead of hard delete
+
+            activity()
+                ->performedOn($user)
+                ->causedBy(auth()->user())
+                ->log("Deleted user: {$user->full_name}");
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
         }
 
-        $user->is_active = false;
-        $user->save();
-        $user->delete(); // now soft deletes (sets deleted_at) instead of hard delete
-
-        DB::commit();
-    } catch (\Exception $e) {
-        DB::rollBack();
-        throw $e;
+        return response()->json(['message' => 'User deleted successfully.']);
     }
-
-    return response()->json(['message' => 'User deleted successfully.']);
-}
     
 
     /**

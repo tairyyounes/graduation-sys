@@ -37,12 +37,17 @@ class HistoricalProposalController extends Controller
         // Let's return all.
         
         $proposals = $proposalsQuery->get()->map(function ($proposal) {
+            $v = $proposal->latestVersion;
             return [
                 'id' => $proposal->proposal_id,
-                'title' => $proposal->latestVersion ? $proposal->latestVersion->title : 'Untitled',
-                'domain' => $proposal->latestVersion ? $proposal->latestVersion->domain : 'N/A', // Assuming domain exists, if not it will be null
-                'problem' => $proposal->latestVersion ? $proposal->latestVersion->problem : '',
-                'solution' => $proposal->latestVersion ? $proposal->latestVersion->solution : '',
+                'title' => $v ? $v->title : 'Untitled',
+                'domain' => $proposal->department ? $proposal->department->department_name : 'N/A',
+                'tags' => $v ? $v->tags : '',
+                'problem' => $v ? $v->problem : '',
+                'solution' => $v ? $v->solution : '',
+                'objectives' => $v ? $v->objectives : '',
+                'functions' => $v ? $v->functions : '',
+                'technologies' => $v ? $v->technologies_used : '',
                 'department' => $proposal->department ? $proposal->department->department_name : 'Unknown',
                 'status' => $proposal->review_status,
                 'created_at' => $proposal->created_at->format('Y-m-d'),
@@ -70,20 +75,24 @@ class HistoricalProposalController extends Controller
         
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'domain' => 'nullable|string|max:255', // tags/domain
+            'department_id' => 'nullable|exists:departments,department_id',
+            'date' => 'required|date',
             'problem' => 'nullable|string',
             'solution' => 'nullable|string',
             'objectives' => 'nullable|string',
             'functions' => 'nullable|string',
+            'tags' => 'nullable|string',
             'technologies' => 'nullable|string',
-            'department_id' => 'nullable|exists:departments,department_id',
-            'date' => 'required|date',
+            'tech' => 'nullable|string',
+            'domain' => 'nullable|string',
         ]);
 
-        $departmentId = $user->role === 'department_head' ? $user->department_id : $validated['department_id'];
+        $departmentId = in_array($user->role, ['department_head', 'department_member']) 
+            ? $user->department_id 
+            : ($validated['department_id'] ?? null);
 
         if (!$departmentId) {
-            return response()->json(['message' => 'Department ID is required.'], 400);
+            return response()->json(['message' => 'Department is required.'], 400);
         }
 
         DB::beginTransaction();
@@ -91,7 +100,7 @@ class HistoricalProposalController extends Controller
             $proposal = Proposal::forceCreate([
                 'department_id' => $departmentId,
                 'submission_status' => 'archived',
-                'review_status' => 'accepted', // We assume imported historical proposals are accepted
+                'review_status' => 'accepted', // Historical proposals are stored as accepted archive
                 'created_at' => $validated['date'],
                 'updated_at' => $validated['date'],
             ]);
@@ -100,12 +109,12 @@ class HistoricalProposalController extends Controller
                 'proposal_id' => $proposal->proposal_id,
                 'version_number' => 1,
                 'title' => $validated['title'],
-                'tags' => $validated['domain'], // mapping domain to tags if domain column doesn't exist directly
-                'problem' => $validated['problem'],
-                'solution' => $validated['solution'],
-                'objectives' => $validated['objectives'],
-                'functions' => $validated['functions'],
-                'technologies_used' => $validated['technologies'],
+                'tags' => $validated['tags'] ?? $validated['domain'] ?? null,
+                'problem' => $validated['problem'] ?? null,
+                'solution' => $validated['solution'] ?? null,
+                'objectives' => $validated['objectives'] ?? null,
+                'functions' => $validated['functions'] ?? null,
+                'technologies_used' => $validated['technologies'] ?? $validated['tech'] ?? null,
             ]);
 
             DB::commit();

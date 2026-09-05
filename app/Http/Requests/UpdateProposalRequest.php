@@ -50,28 +50,28 @@ class UpdateProposalRequest extends FormRequest
                 'title' => [
                     'required',
                     'string',
-                    $this->validateWordCount(5, 20, 'proposal title', 'The proposal title must be clear and contain at least 5 words.'),
+                    $this->validateWordCount(5, 20),
                     'regex:/^(?![\W_]+$).+$/',
                 ],
                 'problem' => [
                     'nullable',
                     'string',
-                    $this->validateWordCount(30, 250, 'problem statement', 'The problem statement must contain at least 30 words and clearly explain the issue.'),
+                    $this->validateWordCount(30, 250),
                 ],
                 'solution' => [
                     'nullable',
                     'string',
-                    $this->validateWordCount(30, 250, 'proposed solution', 'The proposed solution must contain at least 30 words and clearly explain how the system solves the problem.'),
+                    $this->validateWordCount(30, 250),
                 ],
                 'functions' => [
                     'nullable',
                     'string',
-                    $this->validateWordCount(20, 200, 'system functions', 'Please describe the main system functions in at least 20 words.'),
+                    $this->validateWordCount(20, 200),
                 ],
                 'objectives' => [
                     'nullable',
                     'string',
-                    $this->validateWordCount(20, 200, 'project objectives', 'Please write at least 20 words explaining the project objectives.'),
+                    $this->validateWordCount(20, 200),
                 ],
                 'tags' => [
                     'nullable',
@@ -81,10 +81,10 @@ class UpdateProposalRequest extends FormRequest
                         $items = array_filter(array_map('trim', explode(',', $value)));
                         $count = count($items);
                         if ($count < 3) {
-                            $fail('Please add at least 3 relevant tags.');
+                            $fail(__('validation.custom.tags.min_items'));
                         }
                         if ($count > 10) {
-                            $fail('The tags cannot exceed 10 items.');
+                            $fail(__('validation.custom.tags.max_items'));
                         }
                     }
                 ],
@@ -96,10 +96,10 @@ class UpdateProposalRequest extends FormRequest
                         $items = array_filter(array_map('trim', explode(',', $value)));
                         $count = count($items);
                         if ($count < 2) {
-                            $fail('Please add at least 2 technologies that will be used in the project.');
+                            $fail(__('validation.custom.tech.min_items'));
                         }
                         if ($count > 12) {
-                            $fail('The technologies cannot exceed 12 items.');
+                            $fail(__('validation.custom.tech.max_items'));
                         }
                     }
                 ],
@@ -110,28 +110,28 @@ class UpdateProposalRequest extends FormRequest
             'title' => [
                 'required',
                 'string',
-                $this->validateWordCount(5, 20, 'proposal title', 'The proposal title must be clear and contain at least 5 words.'),
+                $this->validateWordCount(5, 20),
                 'regex:/^(?![\W_]+$).+$/',
             ],
             'problem' => [
                 'required',
                 'string',
-                $this->validateWordCount(30, 250, 'problem statement', 'The problem statement must contain at least 30 words and clearly explain the issue.'),
+                $this->validateWordCount(30, 250),
             ],
             'solution' => [
                 'required',
                 'string',
-                $this->validateWordCount(30, 250, 'proposed solution', 'The proposed solution must contain at least 30 words and clearly explain how the system solves the problem.'),
+                $this->validateWordCount(30, 250),
             ],
             'functions' => [
                 'required',
                 'string',
-                $this->validateWordCount(20, 200, 'system functions', 'Please describe the main system functions in at least 20 words.'),
+                $this->validateWordCount(20, 200),
             ],
             'objectives' => [
                 'required',
                 'string',
-                $this->validateWordCount(20, 200, 'project objectives', 'Please write at least 20 words explaining the project objectives.'),
+                $this->validateWordCount(20, 200),
             ],
             'tags' => [
                 'required',
@@ -140,10 +140,10 @@ class UpdateProposalRequest extends FormRequest
                     $items = array_filter(array_map('trim', explode(',', $value)));
                     $count = count($items);
                     if ($count < 3) {
-                        $fail('Please add at least 3 relevant tags.');
+                        $fail(__('validation.custom.tags.min_items'));
                     }
                     if ($count > 10) {
-                        $fail('The tags cannot exceed 10 items.');
+                        $fail(__('validation.custom.tags.max_items'));
                     }
                 }
             ],
@@ -154,10 +154,10 @@ class UpdateProposalRequest extends FormRequest
                     $items = array_filter(array_map('trim', explode(',', $value)));
                     $count = count($items);
                     if ($count < 2) {
-                        $fail('Please add at least 2 technologies that will be used in the project.');
+                        $fail(__('validation.custom.tech.min_items'));
                     }
                     if ($count > 12) {
-                        $fail('The technologies cannot exceed 12 items.');
+                        $fail(__('validation.custom.tech.max_items'));
                     }
                 }
             ],
@@ -167,39 +167,18 @@ class UpdateProposalRequest extends FormRequest
     /**
      * Word count validation helper.
      */
-    private function validateWordCount(int $min, int $max, string $fieldName, string $customMinMessage)
+    private function validateWordCount(int $min, int $max)
     {
-        return function ($attribute, $value, $fail) use ($min, $max, $fieldName, $customMinMessage) {
+        return function ($attribute, $value, $fail) use ($min, $max) {
             if (empty($value)) return;
             $trimmed = trim($value);
             $words = empty($trimmed) ? 0 : count(preg_split('/\s+/', $trimmed));
             if ($words < $min) {
-                $fail($customMinMessage);
+                $fail(__('validation.custom.' . $attribute . '.word_count_min'));
             }
             if ($words > $max) {
-                $fail("The {$fieldName} cannot exceed {$max} words.");
+                $fail(__('validation.custom.' . $attribute . '.word_count_max'));
             }
         };
-    }
-
-    public function messages(): array
-    {
-        return [
-            'title.required' => 'The proposal title is required.',
-            'title.string' => 'The proposal title must be a string.',
-            'title.regex' => 'The proposal title must not consist only of symbols.',
-            'problem.required' => 'The problem statement is required.',
-            'problem.string' => 'The problem statement must be a string.',
-            'solution.required' => 'The proposed solution is required.',
-            'solution.string' => 'The proposed solution must be a string.',
-            'functions.required' => 'Please describe the main system functions in at least 20 words.',
-            'functions.string' => 'The system functions must be a string.',
-            'objectives.required' => 'Please write at least 20 words explaining the project objectives.',
-            'objectives.string' => 'The project objectives must be a string.',
-            'tags.required' => 'Please add at least 3 relevant tags.',
-            'tags.string' => 'The tags must be a string.',
-            'tech.required' => 'Please add at least 2 technologies that will be used in the project.',
-            'tech.string' => 'The technologies must be a string.',
-        ];
     }
 }

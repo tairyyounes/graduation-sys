@@ -21,16 +21,11 @@ class AddingUserRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        // Auto-assign department_id when missing for student role, regardless of admin status.
-        if ($this->has('role') && $this->role === 'student' && !$this->has('department_id')) {
-            $deptId = $this->user() ? $this->user()->department_id : null;
-            if ($deptId) {
-                $this->merge(['department_id' => $deptId]);
+        // Auto-assign department_id when missing for non-admin users (e.g. department head creating a student/member)
+        if ($this->user() && $this->user()->role !== 'admin' && empty($this->department_id)) {
+            if ($this->user()->department_id) {
+                $this->merge(['department_id' => $this->user()->department_id]);
             }
-        }
-        // Also assign for other roles (member, head) when missing.
-        if ($this->user() && $this->user()->role !== 'admin' && in_array($this->role, ['department_member', 'department_head']) && !$this->has('department_id')) {
-            $this->merge(['department_id' => $this->user()->department_id]);
         }
     }
     /**
@@ -45,7 +40,7 @@ class AddingUserRequest extends FormRequest
             'full_name' => [
                 'required',
                 'string',
-                'max:255',
+                'max:50',
                 'regex:/^[\pL\s]+$/u',
                 
             ],
@@ -55,6 +50,7 @@ class AddingUserRequest extends FormRequest
                 'required',
                 \Illuminate\Validation\Rule::in(['admin', 'student', 'department_member', 'department_head']),
             ],
+            // email
             'email' => [
                 'required',
                 'email',
@@ -64,15 +60,17 @@ class AddingUserRequest extends FormRequest
                 function ($attribute, $value, $fail) {
                     if ($this->role === 'student') {
                         if (!preg_match('/^[A-Za-z0-9._%+-]+@cctt\.edu\.ly$/', $value)) {
-                            $fail('Student Email Must Be In xxxxxx@cctt.edu.ly format');
+                            $fail(__('validation.custom.email.student_format'));
                         }
+                    } else if ($this->role === 'department_member' && !preg_match('/^[A-Za-z0-9._%+-]+@cctt\.edu\.ly$/', $value)) {
+                        $fail(__('validation.custom.email.member_format'));
                     }
                 }
             ],
 
-            // Department ID — required for students unless the admin will assign it later
+            // Department ID — required for students, department members, and department heads
             'department_id' => [
-                \Illuminate\Validation\Rule::requiredIf(fn() => $this->role === 'student' && ($this->user()?->role ?? null) !== 'admin'),
+                \Illuminate\Validation\Rule::requiredIf(fn() => in_array($this->role, ['student', 'department_member', 'department_head'])),
                 'nullable',
                 'exists:departments,department_id',
             ],
@@ -83,20 +81,45 @@ class AddingUserRequest extends FormRequest
                 'nullable',
                 'digits:6',
                 \Illuminate\Validation\Rule::unique('students', 'student_number')->whereNull('deleted_at'),
-            ],            // Semester — optional; controllers may default to 8 if not provided
+            ],
+            
+            // Semester — optional; controllers may default to 8 if not provided
             'semester' => [
                 'nullable',
                 'integer',
                 'min:1',
-                'max:12',
+                'max:8',
             ],
-
 
             // Status
             'is_active' => ['required', 'boolean'],
 
             // Password
-            'password' => ['required', 'string', 'min:6'],
+            'password' => ['required', 'string', 'min:8', 'max:32'],
+        ];
+    }
+
+    /**
+     * Custom validation messages.
+     */
+    public function messages(): array
+    {
+        return [
+            'department_id.required' => __('validation.custom.department_id.required'),
+            'department_id.required_if' => __('validation.custom.department_id.required_if'),
+            'department_id.exists' => __('validation.custom.department_id.exists'),
+            'student_number.required' => __('validation.custom.student_number.required'),
+            'student_number.required_if' => __('validation.custom.student_number.required_if'),
+            'student_number.digits' => __('validation.custom.student_number.digits'),
+            'student_number.unique' => __('validation.custom.student_number.unique'),
+            'full_name.required' => __('validation.custom.full_name.required'),
+            'full_name.regex' => __('validation.custom.full_name.regex'),
+            'email.required' => __('validation.custom.email.required'),
+            'email.email' => __('validation.custom.email.email'),
+            'email.unique' => __('validation.custom.email.unique'),
+            'password.required' => __('validation.custom.password.required'),
+            'password.min' => __('validation.custom.password.min'),
+            'password.max' => __('validation.custom.password.max'),
         ];
     }
 }

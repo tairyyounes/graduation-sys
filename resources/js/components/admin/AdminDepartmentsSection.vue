@@ -109,6 +109,7 @@ import { useToast } from 'vue-toastification'
 import { useI18n } from 'vue-i18n'
 import AdminDepartmentModal from './AdminDepartmentModal.vue'
 import DeleteConfirmationModal from '../common/DeleteConfirmationModal.vue'
+import { usePersistedForm } from '../../composables/usePersistedForm'
 
 const toast = useToast()
 const { t } = useI18n()
@@ -131,6 +132,8 @@ const departmentForm = reactive({
   department_name: '',
 })
 
+const { clearPersistedForm } = usePersistedForm('admin_dept_form', departmentForm)
+
 const getCsrfToken = () => {
   const tokenTag = document.querySelector('meta[name="csrf-token"]')
   return tokenTag ? tokenTag.getAttribute('content') : ''
@@ -138,10 +141,13 @@ const getCsrfToken = () => {
 
 const clearForm = () => {
   departmentForm.department_name = ''
+  clearPersistedForm()
 }
 
 const openCreateModal = () => {
-  clearForm()
+  if (!localStorage.getItem('admin_dept_form')) {
+    clearForm()
+  }
   formErrors.value = {}
   isEditing.value = false
   editingId.value = null
@@ -220,6 +226,7 @@ const submitForm = async () => {
 
     await fetchDepartments()
     closeModal()
+    clearPersistedForm()
     toast.success(isEditing.value ? t('admin.departments.toast.updated') : t('admin.departments.toast.created'))
   } catch (error) {
     if (Object.keys(formErrors.value).length === 0) {

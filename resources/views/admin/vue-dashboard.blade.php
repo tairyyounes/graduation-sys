@@ -10,6 +10,9 @@
     @vite(['resources/css/app.css', 'resources/js/admin-dashboard.js'])
 </head>
 <body class="font-sans antialiased">
+    <script>
+        window.authUser = @json(auth()->user());
+    </script>
     <div id="admin-dashboard"></div>
 </body>
 </html>

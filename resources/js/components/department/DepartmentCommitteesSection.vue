@@ -115,6 +115,7 @@ import { useToast } from 'vue-toastification'
 import { useI18n } from 'vue-i18n'
 import DepartmentCommitteeModal from './DepartmentCommitteeModal.vue'
 import DeleteConfirmationModal from '../common/DeleteConfirmationModal.vue'
+import { usePersistedForm } from '../../composables/usePersistedForm'
 
 const toast = useToast()
 const { t, locale } = useI18n()
@@ -139,6 +140,8 @@ const committeeForm = reactive({
   members: [],
 })
 
+const { clearPersistedForm } = usePersistedForm('dept_committee_form', committeeForm)
+
 const getCsrfToken = () => {
   const tokenTag = document.querySelector('meta[name="csrf-token"]')
   return tokenTag ? tokenTag.getAttribute('content') : ''
@@ -159,10 +162,13 @@ const getInitials = (name) => {
 const clearForm = () => {
   committeeForm.name = ''
   committeeForm.members = []
+  clearPersistedForm()
 }
 
 const openCreateModal = () => {
-  clearForm()
+  if (!localStorage.getItem('dept_committee_form')) {
+    clearForm()
+  }
   formErrors.value = {}
   isEditing.value = false
   editingId.value = null
@@ -244,6 +250,7 @@ const submitForm = async () => {
 
     await fetchCommittees()
     closeModal()
+    clearPersistedForm()
     toast.success(isEditing.value ? t('dept.committees.toast.updated') : t('dept.committees.toast.created'))
   } catch (error) {
     if (Object.keys(formErrors.value).length === 0) {
