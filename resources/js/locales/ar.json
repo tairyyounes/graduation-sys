@@ -1,4 +1,5 @@
 {
+<<<<<<< Updated upstream
   "common": {
     "save": "حفظ",
     "cancel": "إلغاء",
@@ -712,6 +713,64 @@
       "step_extracting": "الخطوة 1/3: استخراج الخصائص النصية والدلالية...",
       "step_embedding": "الخطوة 2/3: حوسبة المتجهات المصفوفية ونسب التداخل...",
       "step_analyzing": "الخطوة 3/3: تقييم التداخل وصياغة التوجيهات البديلة..."
+=======
+  "layout": {
+    "logout": "تسجيل الخروج",
+    "back_to_home": "العودة للرئيسية",
+    "menu": "القائمة",
+    "english": "English",
+    "arabic": "العربية"
+  },
+  "welcome": {
+    "brand_title": "ProposalGuard AI",
+    "brand_subtitle": "كلية تقنية الحاسوب — طرابلس",
+    "nav_home": "الرئيسية",
+    "nav_features": "المميزات",
+    "nav_how_it_works": "كيف يعمل",
+    "login": "تسجيل الدخول",
+    "dashboard": "لوحة التحكم",
+    "logout": "تسجيل الخروج",
+    "hero_title_1": "اكتشف تشابه المقترحات",
+    "hero_title_2": "قبل الموافقة.",
+    "hero_desc": "منصة أكاديمية تساعد الطلاب على تقديم المقترحات وتساعد الأقسام على اتخاذ قرارات واثقة بالقبول أو الرفض أو التعديل — مدعومة بالذكاء الاصطناعي الدلالي.",
+    "submit_proposal": "تقديم مقترح",
+    "go_to_dashboard": "الذهاب للوحة التحكم",
+    "stats_proposals": "المقترحات المحللة",
+    "stats_accuracy": "الدقة الدلالية",
+    "stats_departments": "الأقسام",
+    "stats_review_time": "متوسط وقت المراجعة"
+  },
+  "admin": {
+    "nav": {
+      "title": "لوحة تحكم المشرف",
+      "overview": "نظرة عامة",
+      "users": "المستخدمين",
+      "departments": "الأقسام",
+      "activity_logs": "سجل النشاطات",
+      "previous_proposals": "المقترحات السابقة"
+    }
+  },
+  "department": {
+    "nav": {
+      "title": "لوحة التحكم",
+      "overview": "نظرة عامة",
+      "queue": "طابور المراجعة",
+      "decisions": "القرارات",
+      "students": "الطلاب",
+      "members": "أعضاء القسم",
+      "committees": "لجان المراجعة",
+      "previous_proposals": "المقترحات السابقة"
+    }
+  },
+  "student": {
+    "nav": {
+      "overview": "نظرة عامة",
+      "workspace": "مساحة عمل المشروع",
+      "team": "فريق المشروع",
+      "similarity": "تقرير التشابه",
+      "version_history": "سجل الإصدارات",
+      "domain_feedback": "ملاحظات المجال"
+>>>>>>> Stashed changes
     }
   }
 }

@@ -62,7 +62,11 @@
                   <button
                     type="submit"
                     class="rounded-md p-1.5 text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400"
+<<<<<<< Updated upstream
                     :title="$t('common.logout')"
+=======
+                    :title="$t('layout.logout')"
+>>>>>>> Stashed changes
                   >
                     <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1m0-10V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2v-1" />
@@ -84,11 +88,16 @@
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
+<<<<<<< Updated upstream
             {{ $t('common.menu') }}
+=======
+            {{ $t('layout.menu') }}
+>>>>>>> Stashed changes
           </button>
 
           <div class="hidden lg:block text-2xl font-bold text-slate-900 tracking-tight">{{ currentTitle }}</div>
 
+<<<<<<< Updated upstream
           <div class="ms-auto flex items-center gap-4">
             <LangToggle />
             <a
@@ -101,6 +110,38 @@
               {{ $t('common.back_to_home') }}
             </a>
           </div>
+=======
+          <a
+            v-if="currentLocale === 'ar'"
+            href="/lang/en"
+            class="ml-auto inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors mr-4"
+          >
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path>
+            </svg>
+            {{ $t('layout.english') }}
+          </a>
+          <a
+            v-else
+            href="/lang/ar"
+            class="ml-auto inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors mr-4"
+          >
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path>
+            </svg>
+            {{ $t('layout.arabic') }}
+          </a>
+
+          <a
+            href="/"
+            class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
+          >
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            {{ $t('layout.back_to_home') }}
+          </a>
+>>>>>>> Stashed changes
         </div>
 
         <div class="lg:hidden text-2xl font-bold text-slate-900 tracking-tight mb-6">{{ $t(currentTitle) }}</div>
@@ -164,4 +205,5 @@ const currentTitle = computed(() => {
 
 const sidebarOpen = ref(false)
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+const currentLocale = ref(document.documentElement.lang || 'en')
 </script>

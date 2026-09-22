@@ -3,12 +3,17 @@ import DepartmentDashboard from './components/DepartmentDashboard.vue'
 import router from './router/department'
 import Toast from 'vue-toastification'
 import 'vue-toastification/dist/index.css'
+<<<<<<< Updated upstream
 import { i18n } from './i18n'
+=======
+import i18n from './i18n'
+>>>>>>> Stashed changes
 
 const departmentRoot = document.getElementById('department-dashboard')
 
 if (departmentRoot) {
     const app = createApp(DepartmentDashboard)
+    app.use(i18n)
     app.use(router)
     app.use(i18n)
     app.use(Toast, {

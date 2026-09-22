@@ -1,4 +1,5 @@
 {
+<<<<<<< Updated upstream
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -712,6 +713,64 @@
       "step_extracting": "Step 1/3: Extracting textual & semantic features...",
       "step_embedding": "Step 2/3: Computing vector embeddings & similarity matrix...",
       "step_analyzing": "Step 3/3: Evaluating cross-repository overlap & recommendations..."
+=======
+  "layout": {
+    "logout": "Logout",
+    "back_to_home": "Back to Home",
+    "menu": "Menu",
+    "english": "English",
+    "arabic": "العربية"
+  },
+  "welcome": {
+    "brand_title": "ProposalGuard AI",
+    "brand_subtitle": "College of Computer Technology — Tripoli",
+    "nav_home": "Home",
+    "nav_features": "Features",
+    "nav_how_it_works": "How it works",
+    "login": "Login",
+    "dashboard": "Dashboard",
+    "logout": "Logout",
+    "hero_title_1": "Detect proposal similarity",
+    "hero_title_2": "before approval.",
+    "hero_desc": "An academic platform that helps students submit proposals and helps departments make confident accept, reject, or revise decisions — backed by semantic AI.",
+    "submit_proposal": "Submit a proposal",
+    "go_to_dashboard": "Go to Dashboard",
+    "stats_proposals": "Proposals analyzed",
+    "stats_accuracy": "Semantic accuracy",
+    "stats_departments": "Departments",
+    "stats_review_time": "Avg. review time"
+  },
+  "admin": {
+    "nav": {
+      "title": "Admin dashboard",
+      "overview": "Overview",
+      "users": "Users",
+      "departments": "Departments",
+      "activity_logs": "Activity logs",
+      "previous_proposals": "Previous Proposals"
+    }
+  },
+  "department": {
+    "nav": {
+      "title": "Dashboard",
+      "overview": "Overview",
+      "queue": "Review queue",
+      "decisions": "Decisions",
+      "students": "Students",
+      "members": "Department Members",
+      "committees": "Review Committees",
+      "previous_proposals": "Previous Proposals"
+    }
+  },
+  "student": {
+    "nav": {
+      "overview": "Overview",
+      "workspace": "Project Workspace",
+      "team": "Project Team",
+      "similarity": "Similarity Report",
+      "version_history": "Version History",
+      "domain_feedback": "Domain Feedback"
+>>>>>>> Stashed changes
     }
   }
 }
