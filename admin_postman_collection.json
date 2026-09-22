@@ -1,0 +1,167 @@
+{
+  "info": {
+    "name": "Graduation System - Admin API Tests",
+    "description": "Functional API test suite for Admin role",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01. Auth - Get CSRF Cookie",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 or 204\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+              "});",
+              "const xsrfCookie = pm.cookies.get(\"XSRF-TOKEN\");",
+              "if (xsrfCookie) {",
+              "    pm.environment.set(\"xsrf_token\", decodeURIComponent(xsrfCookie));",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json, text/html" }],
+        "url": { "raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"] }
+      }
+    },
+    {
+      "name": "02. Auth - Admin Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Admin login successful (200/302)\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 302]);",
+              "});",
+              "const xsrfCookie = pm.cookies.get(\"XSRF-TOKEN\");",
+              "if (xsrfCookie) {",
+              "    pm.environment.set(\"xsrf_token\", decodeURIComponent(xsrfCookie));",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}"
+        },
+        "url": { "raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"] }
+      }
+    },
+    {
+      "name": "03. Admin - System Stats",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Stats contain overviewCards and submissionsBars\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.have.property('overviewCards');",
+              "    pm.expect(json).to.have.property('submissionsBars');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": { "raw": "{{base_url}}/admin/stats", "host": ["{{base_url}}"], "path": ["admin", "stats"] }
+      }
+    },
+    {
+      "name": "04. Admin - User Management List",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Returns list of users or pagination object\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.be.an('object');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": { "raw": "{{base_url}}/admin/users", "host": ["{{base_url}}"], "path": ["admin", "users"] }
+      }
+    },
+    {
+      "name": "05. Admin - Departments List",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Returns departments array/data\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.be.an('object');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": { "raw": "{{base_url}}/admin/departments", "host": ["{{base_url}}"], "path": ["admin", "departments"] }
+      }
+    },
+    {
+      "name": "06. Admin - Activity Logs",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Response time < 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": { "raw": "{{base_url}}/admin/activity-logs", "host": ["{{base_url}}"], "path": ["admin", "activity-logs"] }
+      }
+    }
+  ]
+}

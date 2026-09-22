@@ -27,7 +27,7 @@ class StoreProposalRequest extends FormRequest
                 'required',
                 'string',
                 $this->validateWordCount(5, 20),
-                'regex:/^(?![\W_]+$).+$/', // not only symbols
+                'regex:/[\p{L}\p{N}]/u', // must contain letters/numbers in any language (including Arabic)
             ],
             'problem' => [
                 'nullable',
@@ -90,7 +90,7 @@ class StoreProposalRequest extends FormRequest
         return function ($attribute, $value, $fail) use ($min, $max) {
             if (empty($value)) return;
             $trimmed = trim($value);
-            $words = empty($trimmed) ? 0 : count(preg_split('/\s+/', $trimmed));
+            $words = empty($trimmed) ? 0 : count(preg_split('/\s+/u', $trimmed, -1, PREG_SPLIT_NO_EMPTY));
             if ($words < $min) {
                 $fail(__('validation.custom.' . $attribute . '.word_count_min'));
             }

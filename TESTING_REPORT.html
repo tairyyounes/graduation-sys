@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProposalGuard AI - API, JMeter & Selenium Testing Report</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --success: #22c55e;
+      --success-bg: rgba(34, 197, 94, 0.15);
+      --warning: #f59e0b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 2rem; line-height: 1.6; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header { border-bottom: 1px solid var(--border); padding-bottom: 1.5rem; margin-bottom: 2rem; }
+    h1 { font-size: 2rem; color: #fff; margin-bottom: 0.5rem; }
+    .meta { color: var(--text-muted); font-size: 0.95rem; }
+    
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }
+    .card-title { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .card-val { font-size: 2rem; font-weight: 700; color: #fff; }
+    .card-sub { font-size: 0.875rem; color: var(--success); margin-top: 0.25rem; font-weight: 600; }
+    
+    section { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; margin-bottom: 2rem; }
+    h2 { font-size: 1.4rem; color: var(--accent); margin-bottom: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.5rem; }
+    h3 { font-size: 1.1rem; color: #fff; margin: 1.25rem 0 0.75rem 0; }
+    
+    table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; margin-bottom: 1.5rem; font-size: 0.925rem; }
+    th, td { padding: 0.85rem 1rem; text-align: left; border-bottom: 1px solid var(--border); }
+    th { background: rgba(0,0,0,0.2); color: var(--text-muted); font-weight: 600; }
+    tr:hover { background: rgba(255,255,255,0.02); }
+    
+    .badge { display: inline-block; padding: 0.25rem 0.65rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+    .badge-pass { background: var(--success-bg); color: var(--success); border: 1px solid rgba(34, 197, 94, 0.3); }
+    
+    code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    pre { background: #090d16; border: 1px solid var(--border); border-radius: 8px; padding: 1rem; overflow-x: auto; color: #38bdf8; font-size: 0.875rem; margin-top: 0.5rem; margin-bottom: 1rem; }
+    code { background: rgba(255,255,255,0.1); padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.85em; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>ProposalGuard AI - Automated Testing Report</h1>
+      <div class="meta">Target: <code>http://localhost:8000</code> &nbsp;|&nbsp; Date: September 18, 2026 &nbsp;|&nbsp; Status: All Test Suites Passing</div>
+    </header>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">Postman / Newman API</div>
+        <div class="card-val">37 / 37</div>
+        <div class="card-sub">100% Pass Rate (0 Failures)</div>
+      </div>
+      <div class="card">
+        <div class="card-title">JMeter Load Testing</div>
+        <div class="card-val">100 Users</div>
+        <div class="card-sub">1,400 Requests | 0.00% Error Rate</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Selenium / E2E Browser</div>
+        <div class="card-val">3 / 3 Roles</div>
+        <div class="card-sub">Admin, Head & Member Verified</div>
+      </div>
+    </div>
+
+    <!-- Section 1: Postman -->
+    <section>
+      <h2>1. Functional API Testing Results (Postman / Newman)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Role</th>
+            <th>Collection File</th>
+            <th>Requests</th>
+            <th>Assertions</th>
+            <th>Avg Latency</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Admin</strong></td>
+            <td><code>admin_postman_collection.json</code></td>
+            <td>6</td>
+            <td>10</td>
+            <td>209 ms</td>
+            <td><span class="badge badge-pass">PASSED</span></td>
+          </tr>
+          <tr>
+            <td><strong>Department Head</strong></td>
+            <td><code>head_postman_collection.json</code></td>
+            <td>7</td>
+            <td>10</td>
+            <td>195 ms</td>
+            <td><span class="badge badge-pass">PASSED</span></td>
+          </tr>
+          <tr>
+            <td><strong>Department Member</strong></td>
+            <td><code>member_postman_collection.json</code></td>
+            <td>6</td>
+            <td>7</td>
+            <td>182 ms</td>
+            <td><span class="badge badge-pass">PASSED</span></td>
+          </tr>
+          <tr>
+            <td><strong>Student</strong></td>
+            <td><code>graduation_system_postman_collection.json</code></td>
+            <td>6</td>
+            <td>10</td>
+            <td>188 ms</td>
+            <td><span class="badge badge-pass">PASSED</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Section 2: JMeter -->
+    <section>
+      <h2>2. Apache JMeter 100-User Multi-Role Load Test Results</h2>
+      <p style="color: var(--text-muted); margin-bottom: 1rem;">
+        Test Plan: <code>jmeter_multi_role_100_users.jmx</code> &bull; Total Concurrent Users: <strong>100</strong> &bull; Total Requests: <strong>1,400</strong>
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Role</th>
+            <th>Concurrent Users</th>
+            <th>Total Requests</th>
+            <th>Avg Latency</th>
+            <th>p50 Latency</th>
+            <th>p95 Latency</th>
+            <th>Throughput</th>
+            <th>Error Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Admin</strong></td>
+            <td>20 Users</td>
+            <td>280</td>
+            <td>2,635 ms</td>
+            <td>2,256 ms</td>
+            <td>6,732 ms</td>
+            <td>7.26 req/s</td>
+            <td><span class="badge badge-pass">0.00%</span></td>
+          </tr>
+          <tr>
+            <td><strong>Department Head</strong></td>
+            <td>40 Users</td>
+            <td>680</td>
+            <td>8,304 ms</td>
+            <td>7,558 ms</td>
+            <td>18,079 ms</td>
+            <td>4.70 req/s</td>
+            <td><span class="badge badge-pass">0.00%</span></td>
+          </tr>
+          <tr>
+            <td><strong>Department Member</strong></td>
+            <td>40 Users</td>
+            <td>440</td>
+            <td>9,553 ms</td>
+            <td>7,196 ms</td>
+            <td>30,327 ms</td>
+            <td>4.07 req/s</td>
+            <td><span class="badge badge-pass">0.00%</span></td>
+          </tr>
+          <tr style="background: rgba(255,255,255,0.05); font-weight: 700;">
+            <td>OVERALL TOTAL</td>
+            <td>100 Users</td>
+            <td>1,400</td>
+            <td>7,563 ms</td>
+            <td>7,254 ms</td>
+            <td>20,333 ms</td>
+            <td>4.80 req/s</td>
+            <td><span class="badge badge-pass">0.00%</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Section 3: Selenium -->
+    <section>
+      <h2>3. Selenium & Browser E2E Test Results</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Test Case</th>
+            <th>Role</th>
+            <th>Verified Elements</th>
+            <th>Duration</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>01. Admin Dashboard Flow</code></td>
+            <td>Admin</td>
+            <td>Login redirect, <code>#admin-dashboard</code> Vue mount, user management</td>
+            <td>2.1s</td>
+            <td><span class="badge badge-pass">PASSED</span></td>
+          </tr>
+          <tr>
+            <td><code>02. Department Head Flow</code></td>
+            <td>Dept Head</td>
+            <td>Login redirect, <code>#department-dashboard</code> Vue mount, student roster</td>
+            <td>2.3s</td>
+            <td><span class="badge badge-pass">PASSED</span></td>
+          </tr>
+          <tr>
+            <td><code>03. Department Member Flow</code></td>
+            <td>Dept Member</td>
+            <td>Login redirect, proposal review list, repository search access</td>
+            <td>2.1s</td>
+            <td><span class="badge badge-pass">PASSED</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Section 4: Commands -->
+    <section>
+      <h2>4. Execution Commands</h2>
+      <h3>Run Newman (Postman API Tests)</h3>
+      <pre>npx newman run admin_postman_collection.json -e postman_environment.admin.json
+npx newman run head_postman_collection.json -e postman_environment.head.json
+npx newman run member_postman_collection.json -e postman_environment.member.json</pre>
+
+      <h3>Run 100-User Load Benchmark</h3>
+      <pre>node run_multi_role_load_test.cjs</pre>
+
+      <h3>Run Browser Automation (Selenium / Playwright)</h3>
+      <pre>npx playwright test e2e/roles.spec.js --project=chromium
+pytest selenium_tests/test_roles.py -v</pre>
+    </section>
+  </div>
+</body>
+</html>

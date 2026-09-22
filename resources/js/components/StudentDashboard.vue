@@ -274,12 +274,21 @@ const navItems = [
   { name: 'Proposal Repository', icon: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"/></svg>' },
 ];
 
-const currentView = ref('Overview');
+const savedView = localStorage.getItem('student_current_view');
+const currentView = ref(savedView && VIEW_KEYS[savedView] ? savedView : 'Overview');
+watch(currentView, (val) => {
+  localStorage.setItem('student_current_view', val);
+});
+
 const studentData = ref({ name: '', email: '', department: '', status: '' });
 
 // Workspace state
 const workspaceTabs = ['Draft Ideas', 'Active Proposal', 'Archived Ideas'];
-const workspaceTab = ref('Draft Ideas');
+const savedTab = localStorage.getItem('student_workspace_tab');
+const workspaceTab = ref(savedTab && workspaceTabs.includes(savedTab) ? savedTab : 'Draft Ideas');
+watch(workspaceTab, (val) => {
+  localStorage.setItem('student_workspace_tab', val);
+});
 
 // Modal states
 const showNewProposalForm = ref(false);
@@ -408,45 +417,82 @@ async function fetchSimilarity(proposalId, recheck = false) {
 // Actions
 async function saveAsDraft() {
   proposalErrors.value = {};
-  const res = await fetch('/student/proposals', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-    body: JSON.stringify(newProposal.value)
-  });
-  if (res.ok) {
-    toast.success(t('student.toast.draft_saved'));
-    showNewProposalForm.value = false;
-    fetchProposals();
-  } else {
-    const data = await res.json();
-    if (data.errors) {
-      proposalErrors.value = data.errors;
+  try {
+    const res = await fetch('/student/proposals', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json', 
+        'X-CSRF-TOKEN': csrfToken || (document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''),
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(newProposal.value)
+    });
+    if (res.ok) {
+      toast.success(t('student.toast.draft_saved'));
+      showNewProposalForm.value = false;
+      newProposal.value = { ...emptyProposal };
+      await fetchProposals();
+      currentView.value = 'Project Workspace';
+      workspaceTab.value = 'Draft Ideas';
+    } else {
+      const data = await res.json();
+      if (data.errors) {
+        proposalErrors.value = data.errors;
+      }
+      toast.error(data.message || t('student.toast.draft_save_error'));
     }
-    toast.error(data.message || t('student.toast.draft_save_error'));
+  } catch (err) {
+    toast.error(err.message || t('student.toast.draft_save_error'));
   }
 }
 
 async function saveAndConfirmProposal() {
   proposalErrors.value = {};
 
-  // 1. First save as draft
-  const res = await fetch('/student/proposals', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-    body: JSON.stringify(newProposal.value)
-  });
-  if (res.ok) {
+  try {
+    // 1. First save as draft
+    const res = await fetch('/student/proposals', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json', 
+        'X-CSRF-TOKEN': csrfToken || (document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''),
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(newProposal.value)
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      if (data.errors) {
+        proposalErrors.value = data.errors;
+      }
+      toast.error(data.message || t('student.toast.save_error'));
+      return;
+    }
+
     const data = await res.json();
+    const proposalId = data.proposal?.id;
+
+    if (!proposalId) {
+      toast.error(t('student.toast.save_error'));
+      return;
+    }
     
-    // 2. Perform pre-submission similarity analysis
+    // 2. Perform pre-submission similarity analysis (non-blocking if server is offline)
     toast.info(t('student.toast.running_presubmission'));
     let similarity = null;
-    const checkRes = await fetch(`/student/proposals/${data.proposal.id}/similarity`);
-    if (checkRes.ok) {
-      const checkData = await checkRes.json();
-      if (checkData.summary && checkData.summary.final_score !== undefined) {
-        similarity = checkData.summary.final_score;
+    try {
+      const checkRes = await fetch(`/student/proposals/${proposalId}/similarity`, {
+        headers: { 'Accept': 'application/json' }
+      });
+      if (checkRes.ok) {
+        const checkData = await checkRes.json();
+        if (checkData.summary && checkData.summary.final_score !== undefined) {
+          similarity = checkData.summary.final_score;
+        }
       }
+    } catch (e) {
+      // Offline/unreachable AI shouldn't block submission
     }
 
     // 3. Show high similarity warning if needed, otherwise normal confirmation
@@ -454,27 +500,39 @@ async function saveAndConfirmProposal() {
       if (!confirm(t('student.confirm.high_similarity'))) {
         toast.info(t('student.toast.saved_draft_review'));
         showNewProposalForm.value = false;
-        fetchProposals();
+        newProposal.value = { ...emptyProposal };
+        await fetchProposals();
+        currentView.value = 'Project Workspace';
+        workspaceTab.value = 'Draft Ideas';
         return;
       }
     } else {
       if (!confirm(t('student.confirm.submit'))) {
         toast.info(t('student.toast.saved_draft'));
         showNewProposalForm.value = false;
-        fetchProposals();
+        newProposal.value = { ...emptyProposal };
+        await fetchProposals();
+        currentView.value = 'Project Workspace';
+        workspaceTab.value = 'Draft Ideas';
         return;
       }
     }
 
-    // 4. Submit
-    const submitRes = await fetch(`/student/proposals/${data.proposal.id}/submit`, {
+    // 4. Submit the proposal
+    const submitRes = await fetch(`/student/proposals/${proposalId}/submit`, {
       method: 'PUT',
-      headers: { 'X-CSRF-TOKEN': csrfToken }
+      headers: { 
+        'X-CSRF-TOKEN': csrfToken || (document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''),
+        'Accept': 'application/json'
+      }
     });
+
     if (submitRes.ok) {
       toast.success(t('student.toast.submitted'));
       showNewProposalForm.value = false;
-      fetchProposals();
+      newProposal.value = { ...emptyProposal };
+      await fetchProposals();
+      currentView.value = 'Project Workspace';
       workspaceTab.value = 'Active Proposal';
     } else {
       const submitData = await submitRes.json();
@@ -482,13 +540,12 @@ async function saveAndConfirmProposal() {
         proposalErrors.value = submitData.errors;
       }
       toast.error(submitData.message || t('student.toast.submit_error'));
+      await fetchProposals();
+      currentView.value = 'Project Workspace';
+      workspaceTab.value = 'Draft Ideas';
     }
-  } else {
-    const data = await res.json();
-    if (data.errors) {
-      proposalErrors.value = data.errors;
-    }
-    toast.error(data.message || t('student.toast.save_error'));
+  } catch (err) {
+    toast.error(err.message || t('student.toast.save_error'));
   }
 }
 
@@ -716,8 +773,26 @@ watch(currentView, (newView) => {
   }
 });
 
-onMounted(() => {
-  fetchStudentData();
-  fetchProposals();
+onMounted(async () => {
+  await fetchStudentData();
+  await fetchProposals();
+
+  if (currentView.value === 'Project Team' && activeProposal.value) {
+    fetchTeam(activeProposal.value.id);
+  }
+  if (currentView.value === 'Version History' && activeProposal.value) {
+    fetchVersions(activeProposal.value.id);
+  }
+  if (currentView.value === 'Domain Feedback' && activeProposal.value) {
+    fetchDecision(activeProposal.value.id);
+  }
+  if (currentView.value === 'Similarity Report') {
+    if (!similarityProposal.value && activeProposal.value) {
+      similarityProposal.value = activeProposal.value;
+    }
+    if (similarityProposal.value) {
+      fetchSimilarity(similarityProposal.value.id);
+    }
+  }
 });
 </script>

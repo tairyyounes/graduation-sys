@@ -126,7 +126,6 @@ class StudentImportController extends Controller
                     'role'        => 'student',
                     'department_id' => $departmentId,
                     'is_active'   => $validated['is_active'] ?? true,
-                    'email_verified_at' => now(),
                 ]);
             }
 
@@ -396,7 +395,6 @@ class StudentImportController extends Controller
                         'role' => 'student',
                         'department_id' => $departmentId,
                         'is_active' => $student['is_active'],
-                        'email_verified_at' => now(),
                     ]);
                 }
             }

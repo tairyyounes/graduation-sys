@@ -17,9 +17,9 @@ class ProposalRepositoryController extends Controller
     {
         // Resolve the authenticated user's department
         $user = $request->user();
-        $departmentId = $user->department_id;
+        $departmentId = $user->department_id ?? optional($user->student)->department_id;
 
-        // Determine the start of the current semester to exclude it
+        // Determine the start of the current semester to exclude active unreviewed proposals
         $currentMonth = now()->month;
         $currentYear = now()->year;
 
@@ -29,11 +29,15 @@ class ProposalRepositoryController extends Controller
             $semesterStart = now()->setDate($currentYear, 7, 1)->startOfDay();
         }
 
-        $query = Proposal::whereIn('submission_status', ['submitted', 'archived'])
-            ->where('created_at', '<', $semesterStart)
-            ->with(['latestVersion', 'department', 'students']);
+        $query = Proposal::where(function ($q) use ($semesterStart) {
+            $q->where('submission_status', 'archived')
+              ->orWhere(function ($sub) use ($semesterStart) {
+                  $sub->where('created_at', '<', $semesterStart)
+                      ->whereIn('review_status', ['accepted', 'rejected']);
+              });
+        })->with(['latestVersion', 'department', 'students']);
 
-        // Always scope to the user's own department
+        // Scope to the user's department if available
         if ($departmentId) {
             $query->where('department_id', $departmentId);
         }
@@ -56,9 +60,14 @@ class ProposalRepositoryController extends Controller
 
         $proposals = $query->latest()->get();
 
-        // Available years for this department only (exclude current semester)
-        $years = Proposal::whereIn('submission_status', ['submitted', 'archived'])
-            ->where('created_at', '<', $semesterStart)
+        // Available years for this department only
+        $years = Proposal::where(function ($q) use ($semesterStart) {
+                $q->where('submission_status', 'archived')
+                  ->orWhere(function ($sub) use ($semesterStart) {
+                      $sub->where('created_at', '<', $semesterStart)
+                          ->whereIn('review_status', ['accepted', 'rejected']);
+                  });
+            })
             ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
             ->pluck('created_at')
             ->map(fn($date) => $date ? $date->format('Y') : null)

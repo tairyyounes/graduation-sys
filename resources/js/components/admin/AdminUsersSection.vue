@@ -207,11 +207,13 @@ const itemsPerPage = 10
 
 const filteredUsers = computed(() => {
   if (!searchQuery.value) return users.value
-  const query = searchQuery.value.toLowerCase()
+  const query = searchQuery.value.toLowerCase().trim()
   return users.value.filter(user => 
-    user.name.toLowerCase().includes(query) ||
-    user.email.toLowerCase().includes(query) ||
-    (user.department && user.department.toLowerCase().includes(query))
+    (user.name && user.name.toLowerCase().includes(query)) ||
+    (user.email && user.email.toLowerCase().includes(query)) ||
+    (user.department && user.department.toLowerCase().includes(query)) ||
+    (user.studentNumber && user.studentNumber.toLowerCase().includes(query)) ||
+    (user.role && roleLabel(user.role).toLowerCase().includes(query))
   )
 })
 
@@ -247,8 +249,6 @@ const userForm = reactive({
   password: '',
 })
 
-const { clearPersistedForm } = usePersistedForm('admin_user_form', userForm)
-
 const roleLabel = (role) => {
   const normalized = role === 'department_member' ? 'department' : role
   const key = `roles.${normalized}`
@@ -261,6 +261,46 @@ const getCsrfToken = () => {
   return tokenTag ? tokenTag.getAttribute('content') : ''
 }
 
+const loadDraft = () => {
+  try {
+    const saved = localStorage.getItem('admin_user_form')
+    if (saved) {
+      Object.assign(userForm, JSON.parse(saved))
+      return true
+    }
+  } catch (e) {
+    console.warn('Could not load draft from localStorage', e)
+  }
+  return false
+}
+
+const saveDraft = () => {
+  if (isEditingUser.value) return
+  try {
+    localStorage.setItem('admin_user_form', JSON.stringify(userForm))
+  } catch (e) {
+    console.warn('Could not save draft to localStorage', e)
+  }
+}
+
+const clearDraft = () => {
+  try {
+    localStorage.removeItem('admin_user_form')
+  } catch (e) {
+    console.warn('Could not remove draft from localStorage', e)
+  }
+}
+
+watch(
+  userForm,
+  () => {
+    if (!isEditingUser.value) {
+      saveDraft()
+    }
+  },
+  { deep: true }
+)
+
 const clearForm = () => {
   userForm.full_name = ''
   userForm.email = ''
@@ -269,16 +309,23 @@ const clearForm = () => {
   userForm.student_number = ''
   userForm.is_active = true
   userForm.password = ''
-  clearPersistedForm()
+  clearDraft()
 }
 
 const openCreateModal = () => {
-  if (!localStorage.getItem('admin_user_form')) {
-    clearForm()
-  }
   formErrors.value = {}
   isEditingUser.value = false
   editingUserId.value = null
+  const hasDraft = loadDraft()
+  if (!hasDraft) {
+    userForm.full_name = ''
+    userForm.email = ''
+    userForm.role = 'student'
+    userForm.department_id = null
+    userForm.student_number = ''
+    userForm.is_active = true
+    userForm.password = ''
+  }
   isUserModalOpen.value = true
 }
 
@@ -307,6 +354,13 @@ const parseErrors = (payload) => {
   return payload.errors
 }
 
+const handleSessionExpired = () => {
+  toast.error(t('common.session_expired'))
+  setTimeout(() => {
+    window.location.href = '/login'
+  }, 1500)
+}
+
 const loadUsers = async () => {
   loading.value = true
   try {
@@ -315,6 +369,11 @@ const loadUsers = async () => {
         Accept: 'application/json',
       },
     })
+
+    if (response.status === 419 || response.status === 401) {
+      handleSessionExpired()
+      return
+    }
 
     if (!response.ok) {
       throw new Error(t('admin.users.toast.load_failed'))
@@ -362,20 +421,25 @@ const submitUserForm = async () => {
       body: JSON.stringify(payload),
     })
 
+    if (response.status === 419 || response.status === 401) {
+      handleSessionExpired()
+      return
+    }
+
     const data = await response.json()
 
     if (!response.ok) {
       formErrors.value = parseErrors(data)
-      throw new Error('Validation failed')
+      throw new Error(data?.message || 'Validation failed')
     }
 
     await loadUsers()
     closeUserModal()
-    clearPersistedForm()
+    clearDraft()
     toast.success(isEditingUser.value ? t('admin.users.toast.updated') : t('admin.users.toast.created'))
   } catch (error) {
     if (Object.keys(formErrors.value).length === 0) {
-      toast.error(t('admin.users.toast.unexpected'))
+      toast.error(error.message || t('admin.users.toast.unexpected'))
     }
   } finally {
     submittingUserForm.value = false
@@ -405,8 +469,15 @@ const confirmDelete = async () => {
       },
     })
 
+    if (response.status === 419 || response.status === 401) {
+      handleSessionExpired()
+      return
+    }
+
+    const data = await response.json()
+
     if (!response.ok) {
-      throw new Error(t('admin.users.toast.delete_failed'))
+      throw new Error(data.message || t('admin.users.toast.delete_failed'))
     }
 
     users.value = users.value.filter((item) => item.id !== userToDelete.value.id)
@@ -430,6 +501,9 @@ watch(
   (role) => {
     if (role === 'admin') {
       userForm.department_id = null
+      userForm.student_number = ''
+    } else if (role !== 'student') {
+      userForm.student_number = ''
     }
   },
 )

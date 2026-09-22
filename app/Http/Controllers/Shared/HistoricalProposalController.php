@@ -28,8 +28,13 @@ class HistoricalProposalController extends Controller
         }
 
         $proposalsQuery = Proposal::with(['department', 'latestVersion', 'students'])
-            ->where('created_at', '<', $semesterStart)
-            ->whereIn('review_status', ['accepted', 'rejected'])
+            ->where(function ($query) use ($semesterStart) {
+                $query->where('submission_status', 'archived')
+                      ->orWhere(function ($q) use ($semesterStart) {
+                          $q->where('created_at', '<', $semesterStart)
+                            ->whereIn('review_status', ['accepted', 'rejected']);
+                      });
+            })
             ->orderBy('created_at', 'desc');
 
         // Optional: Filter by department if a student calls this and we only want to show their department's past proposals.
@@ -132,18 +137,60 @@ class HistoricalProposalController extends Controller
     public function import(Request $request): JsonResponse
     {
         $request->validate([
-            'file' => 'required|file|mimes:csv,txt|max:5120',
+            'file' => [
+                'required',
+                'file',
+                'max:10240',
+                function ($attribute, $value, $fail) {
+                    $ext = strtolower($value->getClientOriginalExtension());
+                    if (!in_array($ext, ['csv', 'txt'])) {
+                        $fail('The file must be a CSV or TXT file.');
+                    }
+                },
+            ],
         ]);
 
         $user = auth()->user();
         $file = $request->file('file');
         
         $handle = fopen($file->getRealPath(), "r");
-        $header = fgetcsv($handle, 1000, ",");
-        
-        // Expected columns: Title, Domain, Problem, Solution, Objectives, Functions, Technologies, Date, Department ID
-        // To make it simple, we will map by index assuming the user downloads a template.
-        // Format: [Title, Domain, Problem, Solution, Objectives, Functions, Technologies, Date, Department ID]
+        if (!$handle) {
+            return response()->json(['message' => 'Unable to read the uploaded CSV file.'], 422);
+        }
+
+        $rawHeader = fgetcsv($handle, 5000, ",");
+        if (!$rawHeader) {
+            fclose($handle);
+            return response()->json(['message' => 'The uploaded file is empty.'], 422);
+        }
+
+        // Normalize headers to identify column positions regardless of order or naming variations
+        $colMap = [];
+        foreach ($rawHeader as $index => $colName) {
+            // Remove UTF-8 BOM and trim cleanly
+            $clean = str_replace(["\xEF\xBB\xBF", "\xFE\xFF", "\xFF\xFE"], '', trim($colName));
+            $cleanLower = mb_strtolower($clean, 'UTF-8');
+
+            if (str_contains($cleanLower, 'title') || str_contains($cleanLower, 'عنوان')) {
+                $colMap['title'] = $index;
+            } elseif (str_contains($cleanLower, 'problem') || str_contains($cleanLower, 'مشكل')) {
+                $colMap['problem'] = $index;
+            } elseif (str_contains($cleanLower, 'solution') || str_contains($cleanLower, 'حل')) {
+                $colMap['solution'] = $index;
+            } elseif (str_contains($cleanLower, 'function') || str_contains($cleanLower, 'وظائف') || str_contains($cleanLower, 'خاصيات')) {
+                $colMap['functions'] = $index;
+            } elseif (str_contains($cleanLower, 'objective') || str_contains($cleanLower, 'أهداف') || str_contains($cleanLower, 'اهداف')) {
+                $colMap['objectives'] = $index;
+            } elseif (str_contains($cleanLower, 'tag') || str_contains($cleanLower, 'domain') || str_contains($cleanLower, 'وسوم') || str_contains($cleanLower, 'مجال')) {
+                $colMap['tags'] = $index;
+            } elseif (str_contains($cleanLower, 'tech') || str_contains($cleanLower, 'تقني')) {
+                $colMap['technologies'] = $index;
+            } elseif (str_contains($cleanLower, 'date') || str_contains($cleanLower, 'تاريخ')) {
+                $colMap['date'] = $index;
+            } elseif (str_contains($cleanLower, 'dept') || str_contains($cleanLower, 'department') || str_contains($cleanLower, 'قسم')) {
+                $colMap['department_id'] = $index;
+            }
+        }
 
         $imported = 0;
         $failed = 0;
@@ -151,27 +198,38 @@ class HistoricalProposalController extends Controller
         DB::beginTransaction();
         try {
             while (($data = fgetcsv($handle, 5000, ",")) !== FALSE) {
-                // Skip empty rows
-                if (!isset($data[0]) || trim($data[0]) === '') {
-                    continue;
+                // Determine title
+                $titleIndex = $colMap['title'] ?? 0;
+                if (!isset($data[$titleIndex]) || trim($data[$titleIndex]) === '') {
+                    continue; // Skip empty rows
                 }
 
-                $title = trim($data[0]);
-                $domain = isset($data[1]) ? trim($data[1]) : '';
-                $problem = isset($data[2]) ? trim($data[2]) : '';
-                $solution = isset($data[3]) ? trim($data[3]) : '';
-                $objectives = isset($data[4]) ? trim($data[4]) : '';
-                $functions = isset($data[5]) ? trim($data[5]) : '';
-                $technologies = isset($data[6]) ? trim($data[6]) : '';
-                $date = isset($data[7]) && trim($data[7]) !== '' ? trim($data[7]) : now()->subYear()->format('Y-m-d'); // Default to 1 year ago
+                $title = trim($data[$titleIndex]);
+                $problem = isset($colMap['problem']) && isset($data[$colMap['problem']]) ? trim($data[$colMap['problem']]) : ($data[1] ?? '');
+                $solution = isset($colMap['solution']) && isset($data[$colMap['solution']]) ? trim($data[$colMap['solution']]) : ($data[2] ?? '');
+                $functions = isset($colMap['functions']) && isset($data[$colMap['functions']]) ? trim($data[$colMap['functions']]) : ($data[3] ?? '');
+                $objectives = isset($colMap['objectives']) && isset($data[$colMap['objectives']]) ? trim($data[$colMap['objectives']]) : ($data[4] ?? '');
+                $tags = isset($colMap['tags']) && isset($data[$colMap['tags']]) ? trim($data[$colMap['tags']]) : ($data[5] ?? '');
+                $technologies = isset($colMap['technologies']) && isset($data[$colMap['technologies']]) ? trim($data[$colMap['technologies']]) : ($data[6] ?? '');
+
+                // Parse date safely
+                $rawDate = isset($colMap['date']) && isset($data[$colMap['date']]) ? trim($data[$colMap['date']]) : null;
+                if ($rawDate && strtotime($rawDate)) {
+                    $date = date('Y-m-d', strtotime($rawDate));
+                } else {
+                    $date = now()->subYear()->format('Y-m-d');
+                }
+
+                // Determine department ID
+                $deptFromCsv = isset($colMap['department_id']) && isset($data[$colMap['department_id']]) ? trim($data[$colMap['department_id']]) : (isset($data[8]) ? trim($data[8]) : null);
                 
                 $departmentId = in_array($user->role, ['department_head', 'department_member']) 
-                    ? $user->department_id 
-                    : (isset($data[8]) && trim($data[8]) !== '' ? trim($data[8]) : null);
+                    ? ($user->department_id ?: ($deptFromCsv ?: 1))
+                    : ($deptFromCsv ?: ($user->department_id ?: 1));
 
                 if (!$departmentId) {
                     $failed++;
-                    continue; // Skip if no department ID for admin
+                    continue; // Skip if no department ID
                 }
 
                 $proposal = Proposal::forceCreate([
@@ -186,7 +244,7 @@ class HistoricalProposalController extends Controller
                     'proposal_id' => $proposal->proposal_id,
                     'version_number' => 1,
                     'title' => $title,
-                    'tags' => $domain,
+                    'tags' => $tags,
                     'problem' => $problem,
                     'solution' => $solution,
                     'objectives' => $objectives,
@@ -196,14 +254,17 @@ class HistoricalProposalController extends Controller
 
                 $imported++;
             }
+
             DB::commit();
             fclose($handle);
             return response()->json(['message' => "$imported proposals imported successfully. $failed failed."], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            fclose($handle);
+            if (is_resource($handle)) {
+                fclose($handle);
+            }
             Log::error('Error importing historical proposals: ' . $e->getMessage());
-            return response()->json(['message' => 'Error importing proposals. Please check your CSV format.'], 500);
+            return response()->json(['message' => 'Error importing proposals: ' . $e->getMessage()], 500);
         }
     }
 }

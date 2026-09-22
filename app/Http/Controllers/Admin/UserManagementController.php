@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Student;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,11 +12,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
-
 class UserManagementController extends Controller
 {
     /**
-     * Retrieve a list of all users along with their associated departments.
+     * Retrieve a list of all users along with their associated departments and student numbers.
      *
      * @return JsonResponse
      */
@@ -73,7 +73,6 @@ class UserManagementController extends Controller
                 $user->department_id = $validated['department_id'];
                 $user->is_active = $validated['is_active'];
                 $user->password = Hash::make($validated['password']);
-                $user->email_verified_at = now();
                 $user->save();
             } else {
                 $user = new User();
@@ -83,12 +82,11 @@ class UserManagementController extends Controller
                 $user->department_id = $validated['department_id'];
                 $user->is_active = $validated['is_active'];
                 $user->password = Hash::make($validated['password']);
-                $user->email_verified_at = now();
                 $user->save();
             }
 
             if ($validated['role'] === 'student') {
-                $student = \App\Models\Student::withTrashed()
+                $student = Student::withTrashed()
                     ->where('official_email', $validated['email'])
                     ->orWhere('student_number', $validated['student_number'])
                     ->first();
@@ -104,7 +102,7 @@ class UserManagementController extends Controller
                         'is_active'      => $validated['is_active'],
                     ]);
                 } else {
-                    \App\Models\Student::create([
+                    Student::create([
                         'student_number' => $validated['student_number'],
                         'full_name'      => $validated['full_name'],
                         'official_email' => $validated['email'],
@@ -113,6 +111,9 @@ class UserManagementController extends Controller
                         'is_active'      => $validated['is_active'],
                     ]);
                 }
+            } else {
+                // If the user was previously registered as a student, soft-delete student record
+                Student::where('official_email', $validated['email'])->delete();
             }
 
             activity()
@@ -129,7 +130,7 @@ class UserManagementController extends Controller
         // Fetch fresh user to return
         $freshUser = User::query()
             ->leftJoin('departments', 'users.department_id', '=', 'departments.department_id')
-            ->leftJoin('students', 'users.email', '=', 'students.official_email')
+            ->leftJoin('students', fn($join) => $join->on('users.email', '=', 'students.official_email')->whereNull('students.deleted_at'))
             ->select([
                 'users.id',
                 'users.full_name',
@@ -158,9 +159,32 @@ class UserManagementController extends Controller
      */
     public function update(Request $request, User $user): JsonResponse
     {
+        $oldStudent = Student::withTrashed()->where('official_email', $user->email)->first();
+        $oldStudentId = $oldStudent ? $oldStudent->student_id : null;
+
         $validated = $request->validate([
-            'full_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'full_name' => [
+                'required',
+                'string',
+                'max:50',
+                'regex:/^[\pL\s]+$/u',
+            ],
+            'email' => [
+                'required',
+                'email',
+                'regex:/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($user->id)->whereNull('deleted_at'),
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->role === 'student') {
+                        if (!preg_match('/^[A-Za-z0-9._%+-]+@cctt\.edu\.ly$/', $value)) {
+                            $fail(__('validation.custom.email.student_format'));
+                        }
+                    } else if (in_array($request->role, ['department_member', 'department_head']) && !preg_match('/^[A-Za-z0-9._%+-]+@cctt\.edu\.ly$/', $value)) {
+                        $fail(__('validation.custom.email.member_format'));
+                    }
+                }
+            ],
             'role' => ['required', Rule::in(['admin', 'student', 'department_member', 'department_head'])],
             'department_id' => [
                 Rule::requiredIf(fn() => in_array($request->role, ['student', 'department_member', 'department_head'])), 
@@ -170,14 +194,26 @@ class UserManagementController extends Controller
             'student_number' => [
                 Rule::requiredIf(fn() => $request->role === 'student'), 
                 'nullable', 
-                'string', 
-                'max:255', 
-                Rule::unique('students', 'student_number')->where(function ($query) use ($user) {
-                    return $query->where('official_email', '!=', $user->email);
-                })
+                'digits:6', 
+                Rule::unique('students', 'student_number')->ignore($oldStudentId, 'student_id')->whereNull('deleted_at')
             ],
             'is_active' => ['required', 'boolean'],
-            'password' => ['nullable', 'string', 'min:8'],
+            'password' => ['nullable', 'string', 'min:8', 'max:32'],
+        ], [
+            'full_name.required' => __('validation.custom.full_name.required'),
+            'full_name.regex' => __('validation.custom.full_name.regex'),
+            'email.required' => __('validation.custom.email.required'),
+            'email.email' => __('validation.custom.email.email'),
+            'email.unique' => __('validation.custom.email.unique'),
+            'department_id.required' => __('validation.custom.department_id.required'),
+            'department_id.required_if' => __('validation.custom.department_id.required_if'),
+            'department_id.exists' => __('validation.custom.department_id.exists'),
+            'student_number.required' => __('validation.custom.student_number.required'),
+            'student_number.required_if' => __('validation.custom.student_number.required_if'),
+            'student_number.digits' => __('validation.custom.student_number.digits'),
+            'student_number.unique' => __('validation.custom.student_number.unique'),
+            'password.min' => __('validation.custom.password.min'),
+            'password.max' => __('validation.custom.password.max'),
         ]);
 
         if ($validated['role'] === 'admin') {
@@ -201,9 +237,14 @@ class UserManagementController extends Controller
             $user->save();
 
             if ($validated['role'] === 'student') {
-                $existingStudent = DB::table('students')->where('official_email', $oldEmail)->first();
+                $existingStudent = Student::withTrashed()
+                    ->where('official_email', $oldEmail)
+                    ->orWhere('student_number', $validated['student_number'])
+                    ->first();
+
                 if ($existingStudent) {
-                    DB::table('students')->where('official_email', $oldEmail)->update([
+                    $existingStudent->restore();
+                    $existingStudent->update([
                         'student_number' => $validated['student_number'],
                         'full_name' => $validated['full_name'],
                         'official_email' => $validated['email'],
@@ -211,7 +252,7 @@ class UserManagementController extends Controller
                         'is_active' => $validated['is_active'],
                     ]);
                 } else {
-                    DB::table('students')->insert([
+                    Student::create([
                         'student_number' => $validated['student_number'],
                         'full_name' => $validated['full_name'],
                         'official_email' => $validated['email'],
@@ -221,8 +262,8 @@ class UserManagementController extends Controller
                     ]);
                 }
             } elseif ($oldRole === 'student' && $validated['role'] !== 'student') {
-                // Remove student record if they are no longer a student
-                DB::table('students')->where('official_email', $oldEmail)->delete();
+                // Soft-delete student record if they are no longer a student
+                Student::where('official_email', $oldEmail)->delete();
             }
 
             activity()
@@ -238,7 +279,7 @@ class UserManagementController extends Controller
 
         $freshUser = User::query()
             ->leftJoin('departments', 'users.department_id', '=', 'departments.department_id')
-            ->leftJoin('students', 'users.email', '=', 'students.official_email')
+            ->leftJoin('students', fn($join) => $join->on('users.email', '=', 'students.official_email')->whereNull('students.deleted_at'))
             ->select([
                 'users.id',
                 'users.full_name',
@@ -266,18 +307,21 @@ class UserManagementController extends Controller
      */
     public function destroy(User $user): JsonResponse
     {
+        if (auth()->id() === $user->id) {
+            return response()->json([
+                'message' => 'You cannot delete your own account.',
+            ], 422);
+        }
+
         DB::beginTransaction();
         try {
             if ($user->role === 'student') {
-                DB::table('students')->where('official_email', $user->email)->update([
-                    'deleted_at' => now(),
-                    'is_active' => false,
-                ]);
+                Student::where('official_email', $user->email)->delete();
             }
 
             $user->is_active = false;
             $user->save();
-            $user->delete(); // now soft deletes (sets deleted_at) instead of hard delete
+            $user->delete();
 
             activity()
                 ->performedOn($user)
@@ -292,19 +336,22 @@ class UserManagementController extends Controller
 
         return response()->json(['message' => 'User deleted successfully.']);
     }
-    
 
     /**
      * Helper function to normalize user data for the frontend.
      *
-     * @param object $user
+     * @param object|null $user
      * @return array
      */
-    private function transformUser(object $user): array
+    private function transformUser(?object $user): array
     {
+        if (!$user) {
+            return [];
+        }
+
         return [
             'id' => $user->id,
-            'name' => $user->full_name,
+            'name' => $user->full_name ?? '',
             'email' => $user->email,
             'role' => $user->role,
             'departmentId' => $user->department_id,

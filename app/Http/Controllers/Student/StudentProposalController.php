@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreProposalRequest;
+use App\Http\Requests\UpdateProposalRequest;
 use App\Jobs\CheckProposalSimilarity;
 use App\Models\Proposal;
 use App\Models\ProposalVersion;
@@ -32,7 +34,7 @@ class StudentProposalController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreProposalRequest $request): JsonResponse
     {
         $student = $request->user()->student;
 
@@ -73,7 +75,7 @@ class StudentProposalController extends Controller
         });
     }
 
-    public function update(Request $request, Proposal $proposal): JsonResponse
+    public function update(UpdateProposalRequest $request, Proposal $proposal): JsonResponse
     {
         // Security: Student can only access their own proposals
         $student = $request->user()->student;
@@ -144,7 +146,7 @@ class StudentProposalController extends Controller
                 'required',
                 'string',
                 $this->validateWordCountHelper(5, 20, 'proposal title', 'The proposal title must be clear and contain at least 5 words.'),
-                'regex:/^(?![\W_]+$).+$/',
+                'regex:/[\p{L}\p{N}]/u',
             ],
             'problem' => [
                 'required',
@@ -552,7 +554,7 @@ class StudentProposalController extends Controller
         return function ($attribute, $value, $fail) use ($min, $max, $fieldName, $customMinMessage) {
             if (empty($value)) return;
             $trimmed = trim($value);
-            $words = empty($trimmed) ? 0 : count(preg_split('/\s+/', $trimmed));
+            $words = empty($trimmed) ? 0 : count(preg_split('/\s+/u', $trimmed, -1, PREG_SPLIT_NO_EMPTY));
             if ($words < $min) {
                 $fail($customMinMessage);
             }

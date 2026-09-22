@@ -1,0 +1,155 @@
+{
+  "info": {
+    "name": "Graduation System - Department Member API Tests",
+    "description": "Functional API test suite for Department Member role with RBAC validation",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01. Auth - Get CSRF Cookie",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 or 204\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+              "});",
+              "const xsrfCookie = pm.cookies.get(\"XSRF-TOKEN\");",
+              "if (xsrfCookie) {",
+              "    pm.environment.set(\"xsrf_token\", decodeURIComponent(xsrfCookie));",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json, text/html" }],
+        "url": { "raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"] }
+      }
+    },
+    {
+      "name": "02. Auth - Department Member Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Department Member login successful (200/302)\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 302]);",
+              "});",
+              "const xsrfCookie = pm.cookies.get(\"XSRF-TOKEN\");",
+              "if (xsrfCookie) {",
+              "    pm.environment.set(\"xsrf_token\", decodeURIComponent(xsrfCookie));",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}"
+        },
+        "url": { "raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"] }
+      }
+    },
+    {
+      "name": "03. Dept Member - Department Stats",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "pm.test(\"Contains stats data\", function () {",
+              "    const json = pm.response.json();",
+              "    pm.expect(json).to.be.an('object');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": { "raw": "{{base_url}}/department/stats", "host": ["{{base_url}}"], "path": ["department", "stats"] }
+      }
+    },
+    {
+      "name": "04. Dept Member - Department Proposals",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": { "raw": "{{base_url}}/department/proposals", "host": ["{{base_url}}"], "path": ["department", "proposals"] }
+      }
+    },
+    {
+      "name": "05. Dept Member - Search Repository",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": { "raw": "{{base_url}}/repository?search=Testing", "host": ["{{base_url}}"], "path": ["repository"] }
+      }
+    },
+    {
+      "name": "06. Security/RBAC - Access Restricted Staff List",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"RBAC Check: Dept Member is Forbidden (403) from managing members\", function () {",
+              "    pm.response.to.have.status(403);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": { "raw": "{{base_url}}/department/members", "host": ["{{base_url}}"], "path": ["department", "members"] }
+      }
+    }
+  ]
+}

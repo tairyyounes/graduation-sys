@@ -24,7 +24,8 @@
     "previous": "Previous",
     "next": "Next",
     "deleting": "Deleting…",
-    "saving": "Saving…"
+    "saving": "Saving…",
+    "session_expired": "Session expired. Redirecting to login page…"
   },
   "nav": {
     "overview": "Overview",

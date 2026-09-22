@@ -180,4 +180,8 @@ function formatDate(dateString) {
 onMounted(() => {
   fetchPreviousProposals();
 });
+
+defineExpose({
+  fetchPreviousProposals
+});
 </script>

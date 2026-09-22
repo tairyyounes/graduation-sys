@@ -1,0 +1,223 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "Graduation System API Tests",
+    "description": "Functional API test suite for Graduation Project System with authentication, proposal workflow, and repository.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01. Auth - Get CSRF Cookie",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"CSRF Cookie endpoint returned 200/204 or Login Page loaded\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 204]);",
+              "});",
+              "",
+              "const xsrfCookie = pm.cookies.get(\"XSRF-TOKEN\");",
+              "if (xsrfCookie) {",
+              "    pm.environment.set(\"xsrf_token\", decodeURIComponent(xsrfCookie));",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json, text/html" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/login",
+          "host": ["{{base_url}}"],
+          "path": ["login"]
+        }
+      }
+    },
+    {
+      "name": "02. Auth - Login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Login successful (200 OK or 302 Redirect)\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 302]);",
+              "});",
+              "",
+              "pm.test(\"Response time is under 1500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+              "});",
+              "",
+              "const xsrfCookie = pm.cookies.get(\"XSRF-TOKEN\");",
+              "if (xsrfCookie) {",
+              "    pm.environment.set(\"xsrf_token\", decodeURIComponent(xsrfCookie));",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/login",
+          "host": ["{{base_url}}"],
+          "path": ["login"]
+        }
+      }
+    },
+    {
+      "name": "03. Student - Get Dashboard Data",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response contains student info\", function () {",
+              "    const jsonData = pm.response.json();",
+              "    pm.expect(jsonData).to.be.an('object');",
+              "    pm.expect(jsonData).to.have.property('student');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/student/data",
+          "host": ["{{base_url}}"],
+          "path": ["student", "data"]
+        }
+      }
+    },
+    {
+      "name": "04. Student - Create Proposal Draft",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Proposal draft created successfully (200/201)\", function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "const jsonData = pm.response.json();",
+              "if (jsonData.proposal && jsonData.proposal.proposal_id) {",
+              "    pm.environment.set(\"created_proposal_id\", jsonData.proposal.proposal_id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Accept", "value": "application/json" },
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "X-XSRF-TOKEN", "value": "{{xsrf_token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Automated API Testing & Performance Suite\",\n  \"problem\": \"Manual regression testing takes significant time.\",\n  \"solution\": \"Automated test suites with Postman and JMeter.\",\n  \"functions\": \"Proposal submission, Review assignment, Similarity analysis\",\n  \"objectives\": \"Achieve sub-500ms API response time\",\n  \"tags\": \"Testing, Automation, QA\",\n  \"tech\": \"PHP, PostgreSQL, Vue.js\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/student/proposals",
+          "host": ["{{base_url}}"],
+          "path": ["student", "proposals"]
+        }
+      }
+    },
+    {
+      "name": "05. Student - List Proposals",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response structure contains drafts, active, and archived lists\", function () {",
+              "    const data = pm.response.json();",
+              "    pm.expect(data).to.have.property('drafts');",
+              "    pm.expect(data).to.have.property('active');",
+              "    pm.expect(data).to.have.property('archived');",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/student/proposals",
+          "host": ["{{base_url}}"],
+          "path": ["student", "proposals"]
+        }
+      }
+    },
+    {
+      "name": "06. Repository - Search Proposals",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test(\"Response time is under 500ms\", function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(500);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Accept", "value": "application/json" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/repository?search=Testing",
+          "host": ["{{base_url}}"],
+          "path": ["repository"],
+          "query": [
+            { "key": "search", "value": "Testing" }
+          ]
+        }
+      }
+    }
+  ]
+}

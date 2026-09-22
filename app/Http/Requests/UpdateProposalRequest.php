@@ -51,7 +51,7 @@ class UpdateProposalRequest extends FormRequest
                     'required',
                     'string',
                     $this->validateWordCount(5, 20),
-                    'regex:/^(?![\W_]+$).+$/',
+                    'regex:/[\p{L}\p{N}]/u',
                 ],
                 'problem' => [
                     'nullable',
@@ -111,7 +111,7 @@ class UpdateProposalRequest extends FormRequest
                 'required',
                 'string',
                 $this->validateWordCount(5, 20),
-                'regex:/^(?![\W_]+$).+$/',
+                'regex:/[\p{L}\p{N}]/u',
             ],
             'problem' => [
                 'required',
@@ -172,7 +172,7 @@ class UpdateProposalRequest extends FormRequest
         return function ($attribute, $value, $fail) use ($min, $max) {
             if (empty($value)) return;
             $trimmed = trim($value);
-            $words = empty($trimmed) ? 0 : count(preg_split('/\s+/', $trimmed));
+            $words = empty($trimmed) ? 0 : count(preg_split('/\s+/u', $trimmed, -1, PREG_SPLIT_NO_EMPTY));
             if ($words < $min) {
                 $fail(__('validation.custom.' . $attribute . '.word_count_min'));
             }

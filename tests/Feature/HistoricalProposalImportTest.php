@@ -1,0 +1,34 @@
+<?php
+
+use App\Models\Department;
+use App\Models\User;
+use App\Models\Proposal;
+use Illuminate\Http\UploadedFile;
+
+it('imports historical proposals via CSV for department head', function () {
+    $dept = Department::create(['department_name' => 'Computer Science']);
+    $user = User::factory()->create([
+        'role' => 'department_head',
+        'department_id' => $dept->department_id,
+        'email' => 'head@cctt.edu.ly',
+    ]);
+
+    $csvContent = <<<CSV
+Title,Problem,Solution,Functions,Objectives,Tags,Technologies,Date(YYYY-MM-DD),DeptID(Admin only)
+Smart Student Attendance Management System Using QR Codes,"Many universities still depend on manual attendance procedures that require instructors to record student presence during every class. This process consumes valuable teaching time and may lead to incomplete, duplicated, or inaccurate attendance records. Students may also have difficulty verifying their attendance history when records are maintained on paper or in separate files. The absence of a centralized system makes it harder for academic staff to generate reliable attendance reports and identify repeated absences. In addition, manually managing attendance becomes increasingly difficult when the number of students and courses grows. Therefore, a computerized solution is needed to organize attendance information, reduce manual data entry, and provide authorized users with accurate and accessible attendance records.","The proposed system is a web-based student attendance management platform that uses QR codes to simplify attendance registration. Each class session can generate a QR code that students scan through the system to record their presence. The application stores attendance records in a centralized database and allows authorized instructors to review and manage them. Students can view their own attendance history, while instructors can generate reports for their courses. Authentication and role-based access control will ensure that users can only access functions appropriate to their roles. The solution is intended to replace repetitive paper-based procedures with a faster and more organized digital workflow while maintaining a clear history of attendance operations.","The system will provide user authentication and role management, student and course management, creation of attendance sessions, QR code generation, QR code scanning, attendance recording, attendance history, attendance correction by authorized staff, attendance search, and attendance reports. Students will be able to view their registered attendance records. Instructors will be able to open sessions, monitor attendance, and review records for their courses. Administrators will manage users and system settings. The system will also validate attendance requests and prevent duplicate attendance records for the same student and session.","The project aims to automate student attendance registration and reduce the time required for manual attendance procedures. It also aims to improve the accuracy and consistency of attendance records by storing information in a centralized database. Another objective is to provide students and instructors with convenient access to attendance information and reports. The project will also reduce repetitive administrative work, support organized record keeping, and provide authorized staff with tools for monitoring attendance patterns and managing attendance data efficiently.","attendance, students, QR, university, web","Vue.js, Laravel, PostgreSQL, JavaScript, HTML, CSS, QR Code",2026-09-20,1
+University Campus Network Monitoring and Performance Management System,"University networks contain routers, switches, access points, servers, and other devices that must remain available for students and staff. When network administrators depend mainly on manual checks, detecting device failures or performance problems can take additional time. Network interruptions may affect access to academic systems, online resources, and communication services. It can also be difficult to maintain a clear history of device status and performance measurements when information is collected separately. A centralized monitoring system can provide administrators with a consistent view of network devices, record important performance information, and generate alerts when monitored conditions exceed defined thresholds.","The proposed solution is a network monitoring platform that communicates with supported network devices and collects selected performance and availability information. The system will display the current status of monitored devices through a web dashboard and store historical measurements in a centralized database. Administrators can configure devices, define monitoring parameters, and review alerts generated when a device becomes unavailable or a measured value reaches a specified threshold. The platform will also provide reports that help administrators examine network performance over time. Access to monitoring and configuration functions will be protected through authentication and role-based permissions.","Main functions will include administrator authentication, network device registration, device editing, device removal, availability monitoring, performance metric collection, status display, threshold configuration, alert generation, alert history, device search, filtering, historical data viewing, and report generation. The dashboard will present the current condition of monitored devices. Administrators will be able to inspect individual device information and review previous measurements. The system will record monitoring events in the database so that network staff can investigate recurring availability or performance problems.",The project aims to improve the visibility of university network infrastructure and provide administrators with centralized monitoring information. It also aims to reduce the time required to identify device availability problems and improve the organization of monitoring records. Another objective is to provide historical performance information that can support network maintenance activities. The project will also provide configurable alerts and structured reports so that administrators can follow important network events without relying entirely on manual inspection.,"network monitoring, SNMP, performance, routers, switches","Python, FastAPI, SNMP, PostgreSQL, Vue.js, JavaScript, HTML, CSS",2026-09-20,2
+CSV;
+
+    $file = UploadedFile::fake()->createWithContent('proposals.csv', $csvContent);
+
+    $response = $this->actingAs($user)->post('/department/previous-proposals/import', [
+        'file' => $file,
+    ], ['Accept' => 'application/json']);
+
+    $response->assertStatus(200);
+    $response->assertJson([
+        'message' => '2 proposals imported successfully. 0 failed.',
+    ]);
+
+    expect(Proposal::count())->toBe(2);
+});

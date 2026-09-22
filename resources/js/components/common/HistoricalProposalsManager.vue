@@ -600,9 +600,7 @@ async function submitAdd() {
       toast.success(t('hist.toast.added'));
       showAddModal.value = false;
       resetForm();
-      if (listRef.value) {
-        listRef.value.fetchPreviousProposals();
-      }
+      listRef.value?.fetchPreviousProposals?.();
     } else {
       const data = await res.json();
       if (data.errors) {
@@ -633,25 +631,30 @@ async function submitImport() {
     const res = await fetch(endpoint, {
       method: 'POST',
       headers: {
-        'X-CSRF-TOKEN': csrfToken
+        'X-CSRF-TOKEN': csrfToken || (document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''),
+        'Accept': 'application/json'
       },
       body: formData
     });
 
+    let data = {};
+    try {
+      data = await res.json();
+    } catch (parseErr) {
+      // Non-JSON response
+    }
+
     if (res.ok) {
-      const data = await res.json();
       toast.success(data.message || t('hist.toast.import_success'));
       showImportModal.value = false;
-      fileInput.value.value = '';
-      if (listRef.value) {
-        listRef.value.fetchPreviousProposals();
-      }
+      if (fileInput.value) fileInput.value.value = '';
+      listRef.value?.fetchPreviousProposals?.();
     } else {
-      const data = await res.json();
-      toast.error(data.message || t('hist.toast.import_failed'));
+      const errMsg = data.message || (data.errors ? Object.values(data.errors).flat().join(', ') : null) || t('hist.toast.import_failed');
+      toast.error(errMsg);
     }
   } catch (err) {
-    toast.error(t('hist.toast.import_error'));
+    toast.error(err.message || t('hist.toast.import_error'));
   }
 }
 

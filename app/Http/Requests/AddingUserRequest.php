@@ -62,7 +62,7 @@ class AddingUserRequest extends FormRequest
                         if (!preg_match('/^[A-Za-z0-9._%+-]+@cctt\.edu\.ly$/', $value)) {
                             $fail(__('validation.custom.email.student_format'));
                         }
-                    } else if ($this->role === 'department_member' && !preg_match('/^[A-Za-z0-9._%+-]+@cctt\.edu\.ly$/', $value)) {
+                    } else if (in_array($this->role, ['department_member', 'department_head']) && !preg_match('/^[A-Za-z0-9._%+-]+@cctt\.edu\.ly$/', $value)) {
                         $fail(__('validation.custom.email.member_format'));
                     }
                 }
