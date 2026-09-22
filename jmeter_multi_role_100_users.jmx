@@ -1,0 +1,366 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Graduation System - 100 Users Multi-Role Load Test" enabled="true">
+      <stringProp name="TestPlan.comments">100 Concurrent Users: Admin (20), Dept Head (40), Dept Member (40)</stringProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="HOST" elementType="Argument">
+            <stringProp name="Argument.name">HOST</stringProp>
+            <stringProp name="Argument.value">${__P(host,localhost)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="PORT" elementType="Argument">
+            <stringProp name="Argument.name">PORT</stringProp>
+            <stringProp name="Argument.value">${__P(port,8000)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="PROTOCOL" elementType="Argument">
+            <stringProp name="Argument.name">PROTOCOL</stringProp>
+            <stringProp name="Argument.value">${__P(protocol,http)}</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+        </collectionProp>
+      </elementProp>
+    </TestPlan>
+    <hashTree>
+      <!-- Cookie Manager & Header Manager -->
+      <CookieManager guiclass="CookiePanel" testclass="CookieManager" testname="HTTP Cookie Manager" enabled="true">
+        <collectionProp name="CookieManager.cookies"/>
+        <boolProp name="CookieManager.clearEachIteration">false</boolProp>
+        <boolProp name="CookieManager.controlledByThreadGroup">false</boolProp>
+      </CookieManager>
+      <hashTree/>
+
+      <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Global Header Manager" enabled="true">
+        <collectionProp name="HeaderManager.headers">
+          <elementProp name="" elementType="Header">
+            <stringProp name="Header.name">Accept</stringProp>
+            <stringProp name="Header.value">application/json</stringProp>
+          </elementProp>
+          <elementProp name="" elementType="Header">
+            <stringProp name="Header.name">Content-Type</stringProp>
+            <stringProp name="Header.value">application/json</stringProp>
+          </elementProp>
+        </collectionProp>
+      </HeaderManager>
+      <hashTree/>
+
+      <!-- ============================================== -->
+      <!-- THREAD GROUP 1: ADMIN (20 CONCURRENT USERS)   -->
+      <!-- ============================================== -->
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Admin Users (20 Threads)" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">${__P(admin_loops,5)}</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">${__P(admin_threads,20)}</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">${__P(admin_rampup,15)}</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+      </ThreadGroup>
+      <hashTree>
+        <!-- Admin Login -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Admin - POST /login" enabled="true">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">{&quot;email&quot;:&quot;testadmin@example.com&quot;,&quot;password&quot;:&quot;password123&quot;}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
+          <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
+          <stringProp name="HTTPSampler.path">/login</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert 200 OK" enabled="true">
+            <collectionProp name="Assertion.test_strings"><stringProp name="49586">200</stringProp></collectionProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <intProp name="Assertion.test_type">8</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+        </hashTree>
+
+        <!-- Admin Stats -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Admin - GET /admin/stats" enabled="true">
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
+          <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
+          <stringProp name="HTTPSampler.path">/admin/stats</stringProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+
+        <!-- Admin Users List -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Admin - GET /admin/users" enabled="true">
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
+          <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
+          <stringProp name="HTTPSampler.path">/admin/users</stringProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+
+        <!-- Admin Departments -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Admin - GET /admin/departments" enabled="true">
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
+          <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
+          <stringProp name="HTTPSampler.path">/admin/departments</stringProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+
+        <!-- Admin Activity Logs -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Admin - GET /admin/activity-logs" enabled="true">
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
+          <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
+          <stringProp name="HTTPSampler.path">/admin/activity-logs</stringProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+      </hashTree>
+
+      <!-- ======================================================= -->
+      <!-- THREAD GROUP 2: DEPT HEAD (40 CONCURRENT USERS)        -->
+      <!-- ======================================================= -->
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Dept Head Users (40 Threads)" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">${__P(head_loops,5)}</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">${__P(head_threads,40)}</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">${__P(head_rampup,20)}</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+      </ThreadGroup>
+      <hashTree>
+        <!-- Head Login -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Dept Head - POST /login" enabled="true">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">{&quot;email&quot;:&quot;testhead@example.com&quot;,&quot;password&quot;:&quot;password123&quot;}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
+          <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
+          <stringProp name="HTTPSampler.path">/login</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert 200 OK" enabled="true">
+            <collectionProp name="Assertion.test_strings"><stringProp name="49586">200</stringProp></collectionProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <intProp name="Assertion.test_type">8</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+        </hashTree>
+
+        <!-- Head Stats -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Dept Head - GET /department/stats" enabled="true">
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
+          <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
+          <stringProp name="HTTPSampler.path">/department/stats</stringProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+
+        <!-- Head Proposals -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Dept Head - GET /department/proposals" enabled="true">
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
+          <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
+          <stringProp name="HTTPSampler.path">/department/proposals</stringProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+
+        <!-- Head Students -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Dept Head - GET /department/students" enabled="true">
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
+          <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
+          <stringProp name="HTTPSampler.path">/department/students</stringProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+
+        <!-- Head Members -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Dept Head - GET /department/members" enabled="true">
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
+          <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
+          <stringProp name="HTTPSampler.path">/department/members</stringProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+
+        <!-- Head Committees -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Dept Head - GET /department/committees" enabled="true">
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
+          <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
+          <stringProp name="HTTPSampler.path">/department/committees</stringProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+      </hashTree>
+
+      <!-- ======================================================= -->
+      <!-- THREAD GROUP 3: DEPT MEMBER (40 CONCURRENT USERS)      -->
+      <!-- ======================================================= -->
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Dept Member Users (40 Threads)" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <stringProp name="LoopController.loops">${__P(member_loops,5)}</stringProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">${__P(member_threads,40)}</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">${__P(member_rampup,20)}</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+      </ThreadGroup>
+      <hashTree>
+        <!-- Member Login -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Dept Member - POST /login" enabled="true">
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">{&quot;email&quot;:&quot;testmember@example.com&quot;,&quot;password&quot;:&quot;password123&quot;}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
+          <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
+          <stringProp name="HTTPSampler.path">/login</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert 200 OK" enabled="true">
+            <collectionProp name="Assertion.test_strings"><stringProp name="49586">200</stringProp></collectionProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <intProp name="Assertion.test_type">8</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+        </hashTree>
+
+        <!-- Member Stats -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Dept Member - GET /department/stats" enabled="true">
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
+          <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
+          <stringProp name="HTTPSampler.path">/department/stats</stringProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+
+        <!-- Member Proposals -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Dept Member - GET /department/proposals" enabled="true">
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
+          <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
+          <stringProp name="HTTPSampler.path">/department/proposals</stringProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+
+        <!-- Member Repository -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Dept Member - GET /repository" enabled="true">
+          <stringProp name="HTTPSampler.domain">${HOST}</stringProp>
+          <stringProp name="HTTPSampler.port">${PORT}</stringProp>
+          <stringProp name="HTTPSampler.protocol">${PROTOCOL}</stringProp>
+          <stringProp name="HTTPSampler.path">/repository</stringProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+      </hashTree>
+
+      <!-- Global Summary Listener -->
+      <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="true">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>true</assertions>
+            <subresults>true</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+            <sentBytes>true</sentBytes>
+            <url>true</url>
+            <threadCounts>true</threadCounts>
+            <idleTime>true</idleTime>
+            <connectTime>true</connectTime>
+          </value>
+        </objProp>
+        <stringProp name="filename">multi_role_100_users_results.jtl</stringProp>
+      </ResultCollector>
+      <hashTree/>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>
