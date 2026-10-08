@@ -16,7 +16,7 @@
           {{ $t('hist.add_single') }}
         </button>
         <button
-          @click="showImportModal = true"
+          @click="importResult = null; showImportModal = true"
           class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 transition-colors"
         >
           <svg class="me-2 -ms-1 h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -336,14 +336,35 @@
                       {{ $t('hist.expected_columns') }} <br>
                       <code class="text-xs bg-slate-100 p-1 rounded">Title, Tags, Problem, Solution, Objectives, Functions, Technologies, Date(YYYY-MM-DD), DeptID(Admin only)</code>
                     </p>
-                    <input type="file" ref="fileInput" accept=".csv" class="block w-full text-sm text-slate-500 file:me-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100" />
+                    <p class="text-xs text-slate-400 mb-4">{{ $t('hist.import_header_hint') }}</p>
+                    <div v-if="isAdmin" class="mb-4">
+                      <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('hist.import_default_dept') }}</label>
+                      <select v-model="importDepartmentId" class="block w-full rounded-lg border-slate-300 text-sm focus:border-teal-500 focus:ring-teal-500">
+                        <option value="">{{ $t('hist.import_default_dept_none') }}</option>
+                        <option v-for="d in departments" :key="d.department_id" :value="d.department_id">{{ d.department_name }} (ID {{ d.department_id }})</option>
+                      </select>
+                      <p class="text-xs text-slate-400 mt-1">{{ $t('hist.import_default_dept_hint') }}</p>
+                    </div>
+                    <input type="file" ref="fileInput" accept=".csv" @change="importResult = null" class="block w-full text-sm text-slate-500 file:me-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100" />
+
+                    <div v-if="importResult" class="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+                      <p class="font-semibold">{{ importResult.summary }}</p>
+                      <ul v-if="importResult.rows.length" class="mt-2 max-h-56 overflow-y-auto space-y-1 text-xs">
+                        <li v-for="(e, i) in importResult.rows" :key="i">
+                          <span class="font-semibold">{{ $t('hist.import_errors.row', { row: e.row }) }}</span>
+                          <span v-if="e.title" class="text-red-600"> ({{ e.title }})</span>:
+                          {{ rowErrorText(e) }}
+                        </li>
+                      </ul>
+                      <p v-if="importResult.more > 0" class="mt-2 text-xs">{{ $t('hist.import_errors.more', { count: importResult.more }) }}</p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
             <div class="bg-slate-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-              <button @click="submitImport" type="button" class="inline-flex w-full justify-center rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 sm:ms-3 sm:w-auto">
-                {{ $t('hist.upload') }}
+              <button @click="submitImport" :disabled="importing" type="button" class="inline-flex w-full justify-center rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-700 disabled:opacity-60 sm:ms-3 sm:w-auto">
+                {{ importing ? $t('hist.uploading') : $t('hist.upload') }}
               </button>
               <button @click="showImportModal = false" type="button" class="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto">
                 {{ $t('common.cancel') }}
@@ -375,6 +396,9 @@ const showAddModal = ref(false);
 const showImportModal = ref(false);
 const fileInput = ref(null);
 const submitting = ref(false);
+const importing = ref(false);
+const importDepartmentId = ref('');
+const importResult = ref(null);
 const departments = ref([]);
 
 const form = ref({
@@ -615,18 +639,40 @@ async function submitAdd() {
   }
 }
 
+// Translate a row error returned by the import endpoint (falls back to the server's English text)
+function rowErrorText(e) {
+  const key = `hist.import_errors.codes.${e.code}`;
+  const txt = t(key, e.params || {});
+  return txt === key ? e.message : txt;
+}
+
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+
 async function submitImport() {
   const file = fileInput.value?.files[0];
+  importResult.value = null;
   if (!file) {
     toast.error(t('hist.toast.select_file'));
+    return;
+  }
+  if (!/\.(csv|txt)$/i.test(file.name)) {
+    importResult.value = { summary: t('hist.import_errors.bad_extension'), rows: [], more: 0 };
+    return;
+  }
+  if (file.size > MAX_UPLOAD_BYTES) {
+    importResult.value = { summary: t('hist.import_errors.too_large', { size: (file.size / 1048576).toFixed(1) }), rows: [], more: 0 };
     return;
   }
 
   const formData = new FormData();
   formData.append('file', file);
+  if (isAdmin.value && importDepartmentId.value) {
+    formData.append('department_id', importDepartmentId.value);
+  }
 
   const endpoint = isAdmin.value ? '/admin/previous-proposals/import' : '/department/previous-proposals/import';
 
+  importing.value = true;
   try {
     const res = await fetch(endpoint, {
       method: 'POST',
@@ -641,20 +687,45 @@ async function submitImport() {
     try {
       data = await res.json();
     } catch (parseErr) {
-      // Non-JSON response
+      // Non-JSON response (e.g. server/PHP error page)
     }
 
     if (res.ok) {
-      toast.success(data.message || t('hist.toast.import_success'));
+      toast.success(data.imported != null ? t('hist.toast.import_count', { count: data.imported }) : (data.message || t('hist.toast.import_success')));
       showImportModal.value = false;
+      importResult.value = null;
       if (fileInput.value) fileInput.value.value = '';
       listRef.value?.fetchPreviousProposals?.();
-    } else {
-      const errMsg = data.message || (data.errors ? Object.values(data.errors).flat().join(', ') : null) || t('hist.toast.import_failed');
-      toast.error(errMsg);
+      return;
     }
+
+    let summary;
+    let rows = [];
+    let more = 0;
+    if (data.code === 'invalid_rows') {
+      summary = t('hist.import_errors.summary', { errors: data.error_count, rows: data.invalid_rows, total: data.total_rows });
+      rows = data.row_errors || [];
+      more = Math.max(0, (data.error_count || 0) - rows.length);
+    } else if (data.code) {
+      const key = `hist.import_errors.codes.${data.code}`;
+      summary = t(key) === key ? data.message : t(key);
+    } else if (data.errors) {
+      // Laravel validation errors (file missing / too large / wrong type)
+      summary = Object.values(data.errors).flat().join(' ');
+    } else if (res.status === 413) {
+      summary = t('hist.import_errors.too_large', { size: (file.size / 1048576).toFixed(1) });
+    } else if (res.status === 419) {
+      summary = t('hist.import_errors.session_expired');
+    } else {
+      summary = data.message || t('hist.import_errors.http', { status: res.status });
+    }
+    importResult.value = { summary, rows, more };
+    toast.error(t('hist.toast.import_failed'));
   } catch (err) {
-    toast.error(err.message || t('hist.toast.import_error'));
+    importResult.value = { summary: t('hist.import_errors.network', { error: err.message }), rows: [], more: 0 };
+    toast.error(t('hist.toast.import_error'));
+  } finally {
+    importing.value = false;
   }
 }
 

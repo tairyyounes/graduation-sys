@@ -42,10 +42,21 @@ class Proposal extends Model
         return $this->belongsTo(ReviewCommittee::class, 'review_committee_id');
     }
 
+    /** Team members who are actually on the team (invitation accepted). */
     public function students()
     {
         return $this->belongsToMany(Student::class, 'project_members', 'proposal_id', 'student_id')
                     ->withPivot('member_role', 'invitation_status', 'joined_at')
+                    ->wherePivot('invitation_status', 'accepted')
+                    ->withTimestamps();
+    }
+
+    /** Students invited to the team who have not answered yet. */
+    public function pendingInvitees()
+    {
+        return $this->belongsToMany(Student::class, 'project_members', 'proposal_id', 'student_id')
+                    ->withPivot('member_role', 'invitation_status', 'joined_at')
+                    ->wherePivot('invitation_status', 'pending')
                     ->withTimestamps();
     }
 

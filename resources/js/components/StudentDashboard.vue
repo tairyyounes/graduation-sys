@@ -44,6 +44,10 @@
               >
                 <span :class="[currentView === item.name ? 'text-teal-600' : 'text-slate-400 group-hover:text-slate-600']" v-html="item.icon"></span>
                 <span>{{ viewLabel(item.name) }}</span>
+                <span
+                  v-if="item.name === 'Project Team' && teamInvitations.length"
+                  class="ms-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-[11px] font-bold text-white"
+                >{{ teamInvitations.length }}</span>
               </a>
             </li>
           </ul>
@@ -142,7 +146,13 @@
           <StudentTeamSection
             v-else-if="currentView === 'Project Team'"
             :team-members="teamMembers"
+            :max-size="teamMaxSize"
+            :team-request="teamRequest"
+            :invitations="teamInvitations"
             @open-invite="openInviteModal"
+            @cancel-request="cancelTeamRequest"
+            @accept-invitation="respondToInvitation($event, 'accept')"
+            @reject-invitation="respondToInvitation($event, 'reject')"
           />
 
           <StudentSimilaritySection
@@ -351,12 +361,19 @@ const activeProposal = ref(null);
 const similarityProposal = ref(null);
 const archivedIdeas = ref([]);
 const teamMembers = ref([]);
+const teamMaxSize = ref(2);
+const teamRequest = ref(null);     // latest request sent from this team (pending / rejected)
+const teamInvitations = ref([]);   // requests received, waiting for this student's answer
 // The proposal the team belongs to: the submitted one if any, otherwise the
+// draft that already has a teammate or a pending request, otherwise the
 // newest draft — so a team can be built before submitting.
 const teamProposal = computed(() => {
   if (activeProposal.value) return activeProposal.value;
   if (!draftIdeas.value?.length) return null;
-  return [...draftIdeas.value].sort((a, b) => b.id - a.id)[0];
+  const drafts = [...draftIdeas.value].sort((a, b) => b.id - a.id);
+  return drafts.find(d => d.team_size > 1)
+    ?? drafts.find(d => d.has_pending_request)
+    ?? drafts[0];
 });
 const topMatches = ref([]);
 const similaritySummary = ref(null);   // AI breakdown summary for top card
@@ -399,7 +416,48 @@ async function fetchTeam(proposalId) {
   if (res.ok) {
     const data = await res.json();
     teamMembers.value = data.members;
+    teamMaxSize.value = data.max_size ?? 2;
+    teamRequest.value = data.request ?? null;
   }
+}
+
+async function fetchInvitations() {
+  const res = await fetch('/student/invitations', { headers: { 'Accept': 'application/json' } });
+  if (res.ok) {
+    const data = await res.json();
+    teamInvitations.value = data.invitations || [];
+  }
+}
+
+async function respondToInvitation(invitation, action) {
+  const res = await fetch(`/student/invitations/${invitation.proposal_id}/${action}`, {
+    method: 'POST',
+    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.ok) {
+    toast.success(data.message || t(action === 'accept' ? 'student.toast.invitation_accepted' : 'student.toast.invitation_declined'));
+  } else {
+    toast.error(data.message || t('student.toast.invite_error'));
+  }
+  await Promise.all([fetchInvitations(), fetchProposals()]);
+  if (teamProposal.value) fetchTeam(teamProposal.value.id);
+}
+
+async function cancelTeamRequest() {
+  if (!teamProposal.value) return;
+  const res = await fetch(`/student/proposals/${teamProposal.value.id}/invite`, {
+    method: 'DELETE',
+    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.ok) {
+    toast.success(data.message || t('student.toast.request_cancelled'));
+  } else {
+    toast.error(data.message || t('student.toast.invite_error'));
+  }
+  await fetchProposals();
+  if (teamProposal.value) fetchTeam(teamProposal.value.id);
 }
 
 async function fetchVersions(proposalId) {
@@ -754,9 +812,12 @@ async function sendInvitation() {
     body: JSON.stringify({ reg_number: inviteRegNumber.value })
   });
   if (res.ok) {
-    toast.success(t('student.toast.member_added'));
+    const data = await res.json().catch(() => ({}));
+    toast.success(data.message || t('student.toast.request_sent'));
     closeInviteModal();
-    fetchTeam(teamProposal.value.id);
+    const proposalId = teamProposal.value.id;
+    await fetchProposals();
+    fetchTeam(proposalId);
   } else {
     const data = await res.json();
     inviteError.value = data.message || t('student.toast.invite_error');
@@ -807,8 +868,9 @@ watch(currentView, (newView) => {
     similarityProposal.value = null;
   }
 
-  if (newView === 'Project Team' && teamProposal.value) {
-    fetchTeam(teamProposal.value.id);
+  if (newView === 'Project Team') {
+    fetchInvitations();
+    if (teamProposal.value) fetchTeam(teamProposal.value.id);
   }
   if (newView === 'Version History' && activeProposal.value) {
     fetchVersions(activeProposal.value.id);
@@ -829,6 +891,7 @@ watch(currentView, (newView) => {
 onMounted(async () => {
   await fetchStudentData();
   await fetchProposals();
+  fetchInvitations();
 
   if (currentView.value === 'Project Team' && teamProposal.value) {
     fetchTeam(teamProposal.value.id);

@@ -7,6 +7,7 @@ use App\Models\Proposal;
 use App\Models\Decision;
 use App\Models\SimilarityResult;
 use App\Jobs\CheckProposalSimilarity;
+use App\Jobs\SyncAiCorpus;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -250,6 +251,8 @@ class DepartmentProposalController extends Controller
                         ->log("proposal unanimously accepted by all {$totalMembers} committee members");
 
                     $allApproved = true;
+                    // Accepted proposals join the comparison corpus
+                    SyncAiCorpus::dispatch();
                     $message = "تم قبول المقترح بنجاح بعد موافقة جميع أعضاء اللجنة ({$acceptedCount}/{$totalMembers}).";
                 } else {
                     $proposal->update([

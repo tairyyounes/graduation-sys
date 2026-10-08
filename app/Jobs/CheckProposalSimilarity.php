@@ -60,6 +60,15 @@ class CheckProposalSimilarity implements ShouldQueue
         // ── 1. Mark existing results as pending (clean slate) ──────────────
         SimilarityResult::where('proposal_version_id', $versionId)->update(['ai_status' => 'pending']);
 
+        // If the AI engine has never received this system's proposals (fresh
+        // install / cache wiped), start a sync so later checks compare against
+        // them. This check itself still runs against the fallback corpus.
+        $status = $service->corpusStatus();
+        if ($status !== null && ($status['system_projects'] ?? 0) === 0 && empty($status['syncing'])
+            && AiSimilarityService::corpusQuery()->exists()) {
+            SyncAiCorpus::dispatch();
+        }
+
         try {
             // ── 2. Call the AI API ─────────────────────────────────────────
             // Pass the current proposal_id as excludeId so the AI engine
@@ -92,7 +101,7 @@ class CheckProposalSimilarity implements ShouldQueue
                     // dataset, not this application's own proposals — most
                     // matches have no real proposal_versions row to point
                     // to, so this is null unless a genuine one is found.
-                    'compared_version_id'   => $this->resolveComparedVersionId($match['project_id'] ?? null),
+                    'compared_version_id'   => $this->resolveComparedVersionId($match),
                     'ai_status'             => 'success',
 
                     // Legacy field — store final score × 100 for backwards-compat
@@ -172,27 +181,21 @@ class CheckProposalSimilarity implements ShouldQueue
     }
 
     /**
-     * Resolve the compared ProposalVersion for an AI match, if one genuinely
-     * exists in this system.
+     * Resolve the compared ProposalVersion for an AI match.
      *
-     * VERIFIED (see AI similarity investigation): the AI engine's comparison
-     * corpus is loaded entirely from static research CSVs (data_prep.py /
-     * load_all()) — it never contains this application's own proposals. Its
-     * project_id is an independent sequence (1..~3000) that numerically
-     * collides with real Laravel proposal_id values purely by coincidence
-     * (confirmed empirically: 3 of 10 matches in one real test resolved to
-     * an unrelated real proposal this way). Matching on project_id ==
-     * proposal_id would therefore attribute a synthetic corpus entry's
-     * similarity to a real, unrelated proposal and display its title.
-     *
-     * Until the AI engine can tag a match as "this really is one of our own
-     * proposals" (e.g. a dedicated external_id column it doesn't currently
-     * have), there is no reliable way to distinguish a genuine match from a
-     * coincidental ID collision — so this always returns null, and the
-     * frontend correctly falls back to the AI engine's own raw title/domain.
+     * Only matches tagged source = "system" come from this application's own
+     * proposals (synced via /corpus/sync), so their project_id IS a real
+     * proposal_id. Matches from the fallback CSV corpus use an unrelated ID
+     * sequence and must never be resolved (an ID collision would show an
+     * unrelated proposal); those keep the AI engine's own content instead.
      */
-    private function resolveComparedVersionId(?string $aiProjectId): ?int
+    private function resolveComparedVersionId(array $match): ?int
     {
-        return null;
+        if (($match['source'] ?? 'csv') !== 'system' || empty($match['project_id'])) {
+            return null;
+        }
+
+        $proposal = Proposal::with('latestVersion')->find((int) $match['project_id']);
+        return optional(optional($proposal)->latestVersion)->version_id;
     }
 }

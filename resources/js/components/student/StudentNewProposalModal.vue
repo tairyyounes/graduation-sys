@@ -231,19 +231,6 @@
               </p>
               <p v-else class="mt-1 text-[11px] text-slate-400">{{ $t('student.form.tech_hint') }}</p>
             </div>
-
-            <!-- Team members (new proposals only; existing ones use the Team page) -->
-            <div v-if="!isEditing">
-              <label class="block text-sm font-medium text-slate-700 mb-1">{{ $t('student.form.team') }}</label>
-              <input
-                v-model="form.team"
-                type="text"
-                inputmode="numeric"
-                class="w-full rounded-lg sm:text-sm px-4 py-2.5 border border-slate-300 transition-all duration-200"
-                :placeholder="$t('student.form.team_ph')"
-              >
-              <p class="mt-1 text-[11px] text-slate-400">{{ $t('student.form.team_hint') }}</p>
-            </div>
           </div>
         </div>
 

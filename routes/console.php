@@ -59,3 +59,12 @@ Artisan::command('ai:check', function () {
 
     $this->info("AI connection check completed.");
 })->purpose('Test connection to the external FastAPI AI server');
+
+
+Artisan::command('ai:sync-corpus', function (\App\Services\AiSimilarityService $service) {
+    $count = \App\Services\AiSimilarityService::corpusQuery()->count();
+    $this->info("Sending {$count} archived/accepted proposals to the AI engine...");
+    $result = $service->syncCorpus();
+    $this->info('Started: ' . json_encode($result));
+    $this->comment('Encoding runs in the background on the AI server; check progress with GET /corpus/status.');
+})->purpose('Sync the system proposals into the AI comparison corpus');

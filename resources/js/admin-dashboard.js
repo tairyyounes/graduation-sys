@@ -10,6 +10,7 @@ const adminRoot = document.getElementById('admin-dashboard')
 if (adminRoot) {
     const app = createApp(AdminDashboard)
     app.use(router)
+    app.use(i18n)
     app.use(Toast, {
       position: 'top-right',
       timeout: 3000,

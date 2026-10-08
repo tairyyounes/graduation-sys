@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Proposal;
 use App\Models\ProposalVersion;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
@@ -69,6 +70,73 @@ class AiSimilarityService
         }
 
         return $response->json();
+    }
+
+    /**
+     * Proposals the AI engine compares new submissions against: historical
+     * imports (archived) and accepted proposals stored in this system.
+     */
+    public static function corpusQuery()
+    {
+        return Proposal::query()
+            ->with(['latestVersion', 'department'])
+            ->where(function ($q) {
+                $q->where('submission_status', 'archived')
+                  ->orWhere('review_status', 'accepted');
+            });
+    }
+
+    /**
+     * Push the system's proposals to the AI engine so it compares against
+     * them (and returns their real proposal_id). The engine encodes in the
+     * background and only re-encodes new or changed proposals.
+     */
+    public function syncCorpus(): array
+    {
+        $baseUrl = rtrim(config('services.dense_api.url', env('DENSE_API_URL', 'http://127.0.0.1:8000')), '/');
+
+        $proposals = [];
+        self::corpusQuery()->chunkById(500, function ($chunk) use (&$proposals) {
+            foreach ($chunk as $p) {
+                $v = $p->latestVersion;
+                if (!$v) {
+                    continue;
+                }
+                $proposals[] = [
+                    'project_id'        => $p->proposal_id,
+                    'title'             => $v->title ?? '',
+                    'problem'           => $v->problem ?? '',
+                    'solution'          => $v->solution ?? '',
+                    'objectives'        => $v->objectives ?? '',
+                    'functions'         => $v->functions ?? '',
+                    'tags'              => $v->tags ?? '',
+                    'technologies_used' => $v->technologies_used ?? '',
+                    'domain'            => optional($p->department)->department_name ?? '',
+                ];
+            }
+        }, 'proposal_id');
+
+        $response = Http::timeout(60)->post("{$baseUrl}/corpus/sync", ['proposals' => $proposals]);
+        if ($response->failed()) {
+            throw new \RuntimeException("AI corpus sync failed: HTTP {$response->status()} {$response->body()}");
+        }
+
+        Log::info('AiSimilarityService: corpus sync started', ['proposals' => count($proposals)]);
+        return $response->json();
+    }
+
+    /**
+     * Returns the AI engine's corpus status, or null if unreachable.
+     */
+    public function corpusStatus(): ?array
+    {
+        $baseUrl = rtrim(config('services.dense_api.url', env('DENSE_API_URL', 'http://127.0.0.1:8000')), '/');
+        try {
+            $response = Http::timeout(5)->get("{$baseUrl}/corpus/status");
+            return $response->successful() ? $response->json() : null;
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     /**

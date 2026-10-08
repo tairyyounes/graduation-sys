@@ -76,6 +76,14 @@ Route::middleware(['auth'])->group(function () {
             
             Route::get('/{proposal}/team', [\App\Http\Controllers\Student\StudentTeamController::class, 'getTeam']);
             Route::post('/{proposal}/invite', [\App\Http\Controllers\Student\StudentTeamController::class, 'invite']);
+            Route::delete('/{proposal}/invite', [\App\Http\Controllers\Student\StudentTeamController::class, 'cancelInvite']);
+        });
+
+        // Team requests received by the logged-in student
+        Route::prefix('/student/invitations')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Student\StudentTeamController::class, 'invitations']);
+            Route::post('/{proposal}/accept', [\App\Http\Controllers\Student\StudentTeamController::class, 'accept']);
+            Route::post('/{proposal}/reject', [\App\Http\Controllers\Student\StudentTeamController::class, 'reject']);
         });
     });
 

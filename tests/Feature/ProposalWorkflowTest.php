@@ -165,7 +165,7 @@ it('validates team member invitations', function () {
         'reg_number' => '123456',
     ]);
     $response->assertStatus(422);
-    expect($response->json('message'))->toBe('This student is already added to this team.');
+    expect($response->json('message'))->toBe('You cannot send a request to yourself.');
 });
 
 it('provides shared proposal repository functionality', function () {

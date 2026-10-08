@@ -680,6 +680,8 @@ class StudentProposalController extends Controller
             'date' => $proposal->updated_at->format('Y-m-d'),
             'version' => $v->version_number ?? 1,
             'similarity' => $similarity,
+            'team_size' => $proposal->students()->count(),
+            'has_pending_request' => $proposal->pendingInvitees()->exists(),
             // New flags for front‑end UI
             'can_edit' => $proposal->review_status === 'revision_requested',
             'approval_pdf_url' => $proposal->approval_pdf_path ? \Illuminate\Support\Facades\Storage::url($proposal->approval_pdf_path) : null,

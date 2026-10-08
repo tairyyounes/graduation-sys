@@ -50,7 +50,7 @@
     "original_date": "Original Date *",
     "save": "Save Proposal",
     "import_title": "Import via CSV",
-    "expected_columns": "Expected columns (no header):",
+    "expected_columns": "Expected columns (in this order, header row optional):",
     "upload": "Upload CSV",
     "list_subtitle": "Explore accepted proposals from past semesters to guide your own work.",
     "search_ph": "Search proposals…",
@@ -70,7 +70,38 @@
       "select_file": "Please select a CSV file.",
       "import_success": "Import successful.",
       "import_failed": "Failed to import CSV.",
-      "import_error": "An error occurred during import."
+      "import_error": "An error occurred during import.",
+      "import_count": "{count} proposals imported successfully."
+    },
+    "import_header_hint": "A header row is optional. If your first row contains column names (Title, Tags, …), they are used to match columns in any order.",
+    "import_default_dept": "Default department",
+    "import_default_dept_none": "— Use the DeptID column —",
+    "import_default_dept_hint": "Used for rows whose DeptID column is empty.",
+    "uploading": "Uploading…",
+    "import_errors": {
+      "summary": "Nothing was imported. {errors} problem(s) in {rows} of {total} rows. Fix them and upload again.",
+      "row": "Row {row}",
+      "more": "…and {count} more problem(s) not shown.",
+      "bad_extension": "The file must be a .csv or .txt file.",
+      "too_large": "The file is {size} MB, larger than the 10 MB limit.",
+      "session_expired": "Your session expired. Refresh the page and try again.",
+      "http": "The server returned an error (HTTP {status}).",
+      "network": "Could not reach the server: {error}",
+      "codes": {
+        "not_utf8": "The file is not UTF-8. In Excel use “Save As → CSV UTF-8 (Comma delimited)” and upload again.",
+        "empty": "The uploaded file is empty.",
+        "no_rows": "The file only contains a header row, no proposals.",
+        "header_no_title": "The header row has no “Title” column.",
+        "read_failed": "The server could not read the uploaded file.",
+        "db_error": "A database error occurred while saving. Nothing was imported.",
+        "column_count": "expected at least {expected} columns but found {got} (missing commas, or text containing commas that is not in quotes).",
+        "title_missing": "Title is empty.",
+        "title_too_long": "Title is {got} characters (max {max}).",
+        "invalid_date": "Date “{value}” is not valid. Use YYYY-MM-DD.",
+        "future_date": "Date “{value}” is in the future.",
+        "dept_not_found": "Department “{value}” does not exist.",
+        "dept_missing": "no department. The DeptID column is empty and no default department was selected above."
+      }
     }
   },
   "welcome": {
@@ -504,21 +535,37 @@
       "enter_reg_number": "Please enter a registration number.",
       "need_active_proposal": "You need an active proposal to invite team members.",
       "member_added": "Member added.",
-      "invite_error": "Error inviting member."
+      "invite_error": "Error inviting member.",
+      "request_sent": "Team request sent.",
+      "request_cancelled": "Team request cancelled.",
+      "invitation_accepted": "You joined the team.",
+      "invitation_declined": "Team request declined."
     },
     "team": {
       "title": "Team Members",
-      "invite_member": "Invite Member",
-      "max_reached": "Maximum team size reached (3/3)",
+      "invite_member": "Send Team Request",
+      "complete": "Team complete ({max}/{max})",
+      "max_reached": "Team complete (2/2)",
       "name": "Name",
       "reg_number": "Registration Number",
-      "role": "Role"
+      "role": "Role",
+      "status_pending": "Pending",
+      "status_rejected": "Declined",
+      "request_pending": "Waiting for {name} ({number}) to accept your team request.",
+      "request_rejected": "{name} ({number}) declined your team request. You can send a new one.",
+      "cancel_request": "Cancel Request",
+      "incoming_title": "Team Requests",
+      "incoming_desc": "A classmate wants you to join their project team. You can only be in one team.",
+      "incoming_from": "{name} ({number}) wants you as a teammate",
+      "incoming_project": "Project: {title}",
+      "accept": "Accept",
+      "decline": "Decline"
     },
     "invite": {
-      "title": "Invite Team Member",
-      "description": "Enter the registration number of the student you wish to invite to your project team.",
+      "title": "Send Team Request",
+      "description": "Enter your teammate's registration number. A team has 2 students, and your teammate joins only after accepting the request.",
       "reg_placeholder": "e.g. 2023055",
-      "send": "Send Invitation"
+      "send": "Send Request"
     },
     "feedback": {
       "title": "Review Decisions",
