@@ -23,7 +23,6 @@
             <tr>
               <th class="py-4 ps-6 pe-3 text-start text-sm font-semibold text-slate-900">{{ $t('student.team.name') }}</th>
               <th class="px-3 py-4 text-start text-sm font-semibold text-slate-900">{{ $t('student.team.reg_number') }}</th>
-              <th class="px-3 py-4 text-start text-sm font-semibold text-slate-900">{{ $t('student.team.role') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100 bg-white">
@@ -37,14 +36,6 @@
                 </div>
               </td>
               <td class="whitespace-nowrap px-3 py-4 text-sm text-slate-600">{{ member.regNumber }}</td>
-              <td class="whitespace-nowrap px-3 py-4 text-sm text-slate-600">
-                <span :class="[
-                  member.role === 'Owner' ? 'bg-teal-50 text-teal-700 ring-teal-600/20' : 'bg-slate-100 text-slate-700 ring-slate-500/10',
-                  'inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium ring-1 ring-inset'
-                ]">
-                  {{ member.role }}
-                </span>
-              </td>
             </tr>
           </tbody>
         </table>

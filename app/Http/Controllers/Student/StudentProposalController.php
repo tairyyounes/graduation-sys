@@ -133,6 +133,22 @@ class StudentProposalController extends Controller
             return response()->json(['message' => 'You already have an active submitted proposal.'], 422);
         }
 
+        // Submitting makes this the active proposal of EVERY team member, so
+        // none of them may already have a different submitted proposal.
+        if ($proposal->submission_status !== 'submitted') {
+            $busyMember = $proposal->students()
+                ->where('students.student_id', '!=', $student->student_id)
+                ->whereHas('proposals', fn ($q) => $q
+                    ->where('submission_status', 'submitted')
+                    ->where('proposals.proposal_id', '!=', $proposal->proposal_id))
+                ->first();
+            if ($busyMember) {
+                return response()->json([
+                    'message' => "Team member {$busyMember->full_name} already has another active submitted proposal.",
+                ], 422);
+            }
+        }
+
         // Strict validation of the latest version of the proposal before allowing final submission
         $latestVersion = $proposal->latestVersion;
         if (!$latestVersion) {
@@ -226,8 +242,13 @@ class StudentProposalController extends Controller
         // Dispatch AI similarity check — runs synchronously if QUEUE_CONNECTION=sync,
         // or in the background when using a real queue driver. This is a secondary
         // step: if the AI service is down it must not fail the submission itself.
+        // Skip the (slow) AI call when this exact version was already checked
+        // successfully as a draft — the stored results are still valid.
         $latestVersion = $proposal->latestVersion;
-        if ($latestVersion) {
+        $alreadyChecked = $latestVersion && SimilarityResult::where('proposal_version_id', $latestVersion->version_id)
+            ->where('ai_status', 'success')
+            ->exists();
+        if ($latestVersion && !$alreadyChecked) {
             try {
                 CheckProposalSimilarity::dispatch($proposal->load('department'), $latestVersion);
             } catch (\Throwable $e) {
@@ -303,14 +324,66 @@ class StudentProposalController extends Controller
         return response()->json(['message' => 'Proposal deleted successfully.']);
     }
 
-    public function versions(Proposal $proposal): JsonResponse
+    /**
+     * Whether the authenticated student is a member of this proposal's team.
+     */
+    private function isMember(Request $request, Proposal $proposal): bool
     {
-        $versions = $proposal->versions()->orderBy('version_number', 'desc')->get();
-        return response()->json(['versions' => $versions]);
+        $student = $request->user()->student;
+
+        return $student !== null
+            && $proposal->students()->where('project_members.student_id', $student->student_id)->exists();
     }
 
-    public function decision(Proposal $proposal): JsonResponse
+    public function versions(Request $request, Proposal $proposal): JsonResponse
     {
+        if (!$this->isMember($request, $proposal)) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $fields = ['title', 'problem', 'solution', 'functions', 'objectives', 'tags', 'technologies_used'];
+
+        $versions = $proposal->versions()
+            ->withMax('similarityResults', 'final_score')
+            ->orderBy('version_number')
+            ->get();
+
+        // Walk oldest → newest so each version can be diffed against its predecessor.
+        $previous = null;
+        $timeline = $versions->map(function ($version) use (&$previous, $fields) {
+            $changed = $previous === null
+                ? []
+                : array_values(array_filter($fields, fn($f) => trim((string) $version->$f) !== trim((string) $previous->$f)));
+
+            $topScore = $version->similarity_results_max_final_score;
+
+            $entry = [
+                'id'             => $version->version_id,
+                'version_number' => $version->version_number,
+                'title'          => $version->title,
+                'created_at'     => $version->created_at?->toIso8601String(),
+                'is_initial'     => $previous === null,
+                'changed_fields' => $changed,
+                'similarity'     => $topScore !== null ? round($topScore * 100, 1) : null,
+                'content'        => collect($fields)->mapWithKeys(fn($f) => [$f => $version->$f])->all(),
+            ];
+
+            $previous = $version;
+            return $entry;
+        })->reverse()->values();
+
+        return response()->json([
+            'versions'  => $timeline,
+            'max_edits' => $proposal->maxEdits(),
+        ]);
+    }
+
+    public function decision(Request $request, Proposal $proposal): JsonResponse
+    {
+        if (!$this->isMember($request, $proposal)) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
         $decision = $proposal->decisions()->with('reviewer')->latest()->first();
 
         if (!$decision) {
@@ -329,6 +402,10 @@ class StudentProposalController extends Controller
 
     public function similarity(Request $request, Proposal $proposal): JsonResponse
     {
+        if (!$this->isMember($request, $proposal)) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
         $latestVersion = $proposal->latestVersion;
 
         if (!$latestVersion) {

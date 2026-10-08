@@ -36,7 +36,6 @@
             <li v-for="item in navItems" :key="item.name">
               <a
                 href="#"
-<<<<<<< Updated upstream
                 @click.prevent="currentView = item.name; sidebarOpen = false"
                 class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
                 :class="currentView === item.name
@@ -45,16 +44,6 @@
               >
                 <span :class="[currentView === item.name ? 'text-teal-600' : 'text-slate-400 group-hover:text-slate-600']" v-html="item.icon"></span>
                 <span>{{ viewLabel(item.name) }}</span>
-=======
-                @click.prevent="currentView = item.id; sidebarOpen = false"
-                class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
-                :class="currentView === item.id
-                  ? 'bg-teal-50 text-teal-800 shadow-sm ring-1 ring-teal-500/10'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
-              >
-                <span :class="[currentView === item.id ? 'text-teal-600' : 'text-slate-400 group-hover:text-slate-600']" v-html="item.icon"></span>
-                <span>{{ item.name }}</span>
->>>>>>> Stashed changes
               </a>
             </li>
           </ul>
@@ -79,11 +68,7 @@
                 <button
                   type="submit"
                   class="rounded-md p-1.5 text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400"
-<<<<<<< Updated upstream
                   :title="$t('common.logout')"
-=======
-                  :title="$t('layout.logout')"
->>>>>>> Stashed changes
                 >
                   <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1m0-10V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2v-1" />
@@ -108,16 +93,11 @@
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
-<<<<<<< Updated upstream
             {{ $t('common.menu') }}
-=======
-            {{ $t('layout.menu') }}
->>>>>>> Stashed changes
           </button>
 
           <div class="hidden lg:block text-2xl font-bold text-slate-900 tracking-tight">{{ viewLabel(currentView) }}</div>
 
-<<<<<<< Updated upstream
           <div class="ms-auto flex items-center gap-4">
             <LangToggle />
             <a
@@ -130,38 +110,6 @@
               {{ $t('common.back_to_home') }}
             </a>
           </div>
-=======
-          <a
-            v-if="currentLocale === 'ar'"
-            href="/lang/en"
-            class="ml-auto inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors mr-4"
-          >
-            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path>
-            </svg>
-            {{ $t('layout.english') }}
-          </a>
-          <a
-            v-else
-            href="/lang/ar"
-            class="ml-auto inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors mr-4"
-          >
-            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path>
-            </svg>
-            {{ $t('layout.arabic') }}
-          </a>
-
-          <a
-            href="/"
-            class="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
-          >
-            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            {{ $t('layout.back_to_home') }}
-          </a>
->>>>>>> Stashed changes
         </div>
 
         <div class="lg:hidden text-2xl font-bold text-slate-900 tracking-tight mb-6">{{ viewLabel(currentView) }}</div>
@@ -213,6 +161,7 @@
           <StudentVersionHistorySection
             v-else-if="currentView === 'Version History'"
             :version-history="versionHistory"
+            :max-edits="maxEdits"
           />
 
           <StudentFeedbackSection
@@ -278,12 +227,8 @@
 </template>
 
 <script setup>
-<<<<<<< Updated upstream
-import { ref, onMounted, watch } from 'vue';
-import LanguageSwitcher from './common/LanguageSwitcher.vue';
-=======
 import { ref, computed, onMounted, watch } from 'vue';
->>>>>>> Stashed changes
+import LanguageSwitcher from './common/LanguageSwitcher.vue';
 import StudentOverviewSection from './student/StudentOverviewSection.vue';
 import StudentWorkspaceSection from './student/StudentWorkspaceSection.vue';
 import StudentTeamSection from './student/StudentTeamSection.vue';
@@ -299,9 +244,7 @@ import LangToggle from './common/LangToggle.vue';
 import { useToast } from "vue-toastification";
 import { useI18n } from 'vue-i18n';
 
-const { t } = useI18n();
 const toast = useToast();
-<<<<<<< Updated upstream
 const { t } = useI18n();
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 const sidebarOpen = ref(false);
@@ -331,20 +274,6 @@ const navItems = [
   { name: 'Domain Feedback', icon: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>' },
   { name: 'Proposal Repository', icon: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20"/></svg>' },
 ];
-=======
-const currentLocale = ref(document.documentElement.lang || 'en');
-const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-const sidebarOpen = ref(false);
-
-const navItems = computed(() => [
-  { name: t('student.nav.overview'), icon: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>', id: 'Overview' },
-  { name: t('student.nav.workspace'), icon: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>', id: 'Project Workspace' },
-  { name: t('student.nav.team'), icon: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>', id: 'Project Team' },
-  { name: t('student.nav.similarity'), icon: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>', id: 'Similarity Report' },
-  { name: t('student.nav.version_history'), icon: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>', id: 'Version History' },
-  { name: t('student.nav.domain_feedback'), icon: '<svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>', id: 'Domain Feedback' },
-]);
->>>>>>> Stashed changes
 
 const savedView = localStorage.getItem('student_current_view');
 const currentView = ref(savedView && VIEW_KEYS[savedView] ? savedView : 'Overview');
@@ -382,9 +311,36 @@ const emptyProposal = {
   functions: '',
   tags: '',
   tech: '',
+  team: '',
   similarity: null,
   date: ''
 };
+
+// Proposal fields only — the optional team list is sent separately via /invite.
+function proposalPayload() {
+  const { team, ...fields } = newProposal.value;
+  return JSON.stringify(fields);
+}
+
+// Adds the student numbers typed in the new-proposal form to the team.
+// Returns false (after showing the reason) if any of them could not be added.
+async function addTeamFromForm(proposalId, team) {
+  const numbers = [...new Set((team || '').split(/[\s,،]+/).filter(Boolean))];
+  let ok = true;
+  for (const number of numbers) {
+    const res = await fetch(`/student/proposals/${proposalId}/invite`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+      body: JSON.stringify({ reg_number: number })
+    });
+    if (!res.ok) {
+      ok = false;
+      const data = await res.json().catch(() => ({}));
+      toast.error(t('student.toast.team_add_failed', { number, error: data.message || '' }));
+    }
+  }
+  return ok;
+}
 
 const newProposal = ref({ ...emptyProposal });
 const proposalErrors = ref({});
@@ -395,6 +351,13 @@ const activeProposal = ref(null);
 const similarityProposal = ref(null);
 const archivedIdeas = ref([]);
 const teamMembers = ref([]);
+// The proposal the team belongs to: the submitted one if any, otherwise the
+// newest draft — so a team can be built before submitting.
+const teamProposal = computed(() => {
+  if (activeProposal.value) return activeProposal.value;
+  if (!draftIdeas.value?.length) return null;
+  return [...draftIdeas.value].sort((a, b) => b.id - a.id)[0];
+});
 const topMatches = ref([]);
 const similaritySummary = ref(null);   // AI breakdown summary for top card
 const similarityAiStatus = ref('none'); // 'pending' | 'success' | 'failed' | 'none'
@@ -402,6 +365,7 @@ const similarityRecommendations = ref([]);
 const similarityAnalyzedAt = ref(null); // ISO timestamp of last analysis run
 const isFetchingSimilarity = ref(false); // guards against duplicate concurrent AI checks
 const versionHistory = ref([]);
+const maxEdits = ref(2);
 const domainFeedback = ref(null);
 const compareProposalId = ref(null);
 
@@ -444,6 +408,7 @@ async function fetchVersions(proposalId) {
   if (res.ok) {
     const data = await res.json();
     versionHistory.value = data.versions;
+    maxEdits.value = data.max_edits ?? 2;
   }
 }
 
@@ -497,9 +462,13 @@ async function saveAsDraft() {
         'X-CSRF-TOKEN': csrfToken || (document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''),
         'Accept': 'application/json'
       },
-      body: JSON.stringify(newProposal.value)
+      body: proposalPayload()
     });
     if (res.ok) {
+      const saved = await res.json();
+      if (saved.proposal?.id) {
+        await addTeamFromForm(saved.proposal.id, newProposal.value.team);
+      }
       toast.success(t('student.toast.draft_saved'));
       showNewProposalForm.value = false;
       newProposal.value = { ...emptyProposal };
@@ -530,7 +499,7 @@ async function saveAndConfirmProposal() {
         'X-CSRF-TOKEN': csrfToken || (document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''),
         'Accept': 'application/json'
       },
-      body: JSON.stringify(newProposal.value)
+      body: proposalPayload()
     });
 
     if (!res.ok) {
@@ -547,6 +516,18 @@ async function saveAndConfirmProposal() {
 
     if (!proposalId) {
       toast.error(t('student.toast.save_error'));
+      return;
+    }
+
+    // Add teammates BEFORE submitting so the whole team is on the submission.
+    // If someone can't be added, keep it as a draft instead of submitting
+    // with the wrong team.
+    if (!(await addTeamFromForm(proposalId, newProposal.value.team))) {
+      showNewProposalForm.value = false;
+      newProposal.value = { ...emptyProposal };
+      await fetchProposals();
+      currentView.value = 'Project Workspace';
+      workspaceTab.value = 'Draft Ideas';
       return;
     }
     
@@ -763,11 +744,11 @@ async function sendInvitation() {
     inviteError.value = t('student.toast.enter_reg_number');
     return;
   }
-  if (!activeProposal.value) {
+  if (!teamProposal.value) {
     toast.error(t('student.toast.need_active_proposal'));
     return;
   }
-  const res = await fetch(`/student/proposals/${activeProposal.value.id}/invite`, {
+  const res = await fetch(`/student/proposals/${teamProposal.value.id}/invite`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
     body: JSON.stringify({ reg_number: inviteRegNumber.value })
@@ -775,7 +756,7 @@ async function sendInvitation() {
   if (res.ok) {
     toast.success(t('student.toast.member_added'));
     closeInviteModal();
-    fetchTeam(activeProposal.value.id);
+    fetchTeam(teamProposal.value.id);
   } else {
     const data = await res.json();
     inviteError.value = data.message || t('student.toast.invite_error');
@@ -826,8 +807,8 @@ watch(currentView, (newView) => {
     similarityProposal.value = null;
   }
 
-  if (newView === 'Project Team' && activeProposal.value) {
-    fetchTeam(activeProposal.value.id);
+  if (newView === 'Project Team' && teamProposal.value) {
+    fetchTeam(teamProposal.value.id);
   }
   if (newView === 'Version History' && activeProposal.value) {
     fetchVersions(activeProposal.value.id);
@@ -849,8 +830,8 @@ onMounted(async () => {
   await fetchStudentData();
   await fetchProposals();
 
-  if (currentView.value === 'Project Team' && activeProposal.value) {
-    fetchTeam(activeProposal.value.id);
+  if (currentView.value === 'Project Team' && teamProposal.value) {
+    fetchTeam(teamProposal.value.id);
   }
   if (currentView.value === 'Version History' && activeProposal.value) {
     fetchVersions(activeProposal.value.id);

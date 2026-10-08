@@ -3,17 +3,12 @@ import AdminDashboard from './components/AdminDashboard.vue'
 import router from './router/admin'
 import Toast from 'vue-toastification'
 import 'vue-toastification/dist/index.css'
-<<<<<<< Updated upstream
 import { i18n } from './i18n'
-=======
-import i18n from './i18n'
->>>>>>> Stashed changes
 
 const adminRoot = document.getElementById('admin-dashboard')
 
 if (adminRoot) {
     const app = createApp(AdminDashboard)
-    app.use(i18n)
     app.use(router)
     app.use(i18n)
     app.use(Toast, {

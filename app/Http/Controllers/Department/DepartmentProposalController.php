@@ -274,31 +274,10 @@ class DepartmentProposalController extends Controller
                 ];
             })->values();
 
-        // AI Recommendations
-        $recommendations = [];
-        if ($aiStatus === 'success') {
-            $recResults = app(\App\Services\AiSimilarityService::class)->getRecommendations(
-                version:        $latestVersion,
-                departmentName: $proposal->department->department_name ?? 'General',
-                excludeId:      (string) $proposal->proposal_id
-            );
-
-            foreach ($recResults as $rec) {
-                $sim = $rec['similarity'] ?? [];
-                $recommendations[] = [
-                    'title'       => $rec['title'] ?? 'Alternative Project',
-                    'domain'      => $rec['domain'] ?? 'N/A',
-                    'explanation' => $rec['explanation'] ?? '',
-                    'relevance'   => round(($sim['final_similarity'] ?? 0) * 100, 1) . '%',
-                ];
-            }
-        }
-
         return response()->json([
             'ai_status' => $aiStatus,
             'summary'   => $summary,
             'results'   => $results,
-            'recommendations' => $recommendations,
         ]);
     }
 
@@ -309,12 +288,14 @@ class DepartmentProposalController extends Controller
     {
         $v          = $proposal->latestVersion;
         $similarity = $this->resolveDisplaySimilarity($proposal);
+        $team       = $proposal->students->sortBy(fn ($s) => $s->pivot->member_role === 'owner' ? 0 : 1)->values();
 
         return [
             'id'               => $proposal->proposal_id,
             'title'            => $v->title ?? 'No Title',
-            'author'           => $proposal->students->first()->full_name ?? 'Unknown',
-            'author_email'     => $proposal->students->first()->official_email ?? '',
+            // Whole team, owner first — reviewers must see every member.
+            'author'           => $team->pluck('full_name')->filter()->implode('، ') ?: 'Unknown',
+            'author_email'     => $team->pluck('official_email')->filter()->implode(' · '),
             'department'       => $proposal->department->department_name ?? 'N/A',
             'problem'          => $v->problem ?? '',
             'solution'         => $v->solution ?? '',

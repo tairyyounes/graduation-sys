@@ -77,7 +77,7 @@
       </div>
       <h2 class="text-lg font-semibold text-slate-900">{{ $t('dept.proposal.closest_matches') }}</h2>
       <div class="mt-3 space-y-3">
-        <div v-for="match in closestMatches" :key="match.title" class="flex flex-col gap-2 border-t border-slate-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
+        <div v-for="(match, index) in closestMatches" :key="index" class="flex flex-col gap-2 border-t border-slate-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p class="text-sm font-medium text-slate-900">{{ match.title }}</p>
             <p class="text-xs text-slate-500">{{ match.domain ?? $t('common.not_available') }} · {{ match.year }}</p>
@@ -85,9 +85,8 @@
           <div class="flex items-center gap-2">
             <span :class="verdictBadgeClass(match.verdict)" class="rounded-full px-2.5 py-1 text-xs font-semibold border">{{ match.score }}</span>
             <span v-if="match.verdict" :class="verdictBadgeClass(match.verdict)" class="rounded-full px-2 py-0.5 text-xs border hidden sm:inline-block">{{ match.verdict }}</span>
-            <router-link 
-              v-if="match.id"
-              :to="{ name: 'DepartmentCompare', params: { id: match.id } }"
+            <router-link
+              :to="{ name: 'DepartmentCompare', params: { id: route.params.id, match: index } }"
               class="rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition"
             >
               {{ $t('dept.proposal.compare') }}
@@ -101,34 +100,6 @@
         </div>
       </div>
     </article>
-
-    <!-- ── AI Recommendations ──────────────────────────────────────── -->
-    <div v-if="recommendations && recommendations.length > 0" class="rounded-xl border border-teal-200 bg-teal-50/20 p-6 shadow-sm text-start">
-      <div class="flex items-start gap-4 mb-4">
-        <div class="text-teal-600 shrink-0">
-          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-          </svg>
-        </div>
-        <div>
-          <h4 class="text-sm font-bold text-teal-900 mb-1">{{ $t('dept.proposal.recommendations_title') }}</h4>
-          <p class="text-xs text-teal-700">{{ $t('dept.proposal.recommendations_desc') }}</p>
-        </div>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div v-for="rec in recommendations" :key="rec.title" class="bg-white p-4 rounded-xl border border-teal-100 shadow-sm flex flex-col justify-between">
-          <div>
-            <h5 class="text-sm font-semibold text-slate-900 leading-snug">{{ rec.title }}</h5>
-            <p class="text-[10px] font-bold text-slate-400 mt-1">{{ $t('fields.domain') }}: {{ rec.domain }}</p>
-            <p class="text-xs text-slate-600 mt-2 leading-normal line-clamp-3">{{ rec.explanation }}</p>
-          </div>
-          <div class="mt-3 pt-3 border-t border-slate-50 flex justify-between items-center text-xs">
-            <span class="text-slate-500 font-medium">{{ $t('dept.proposal.relevance') }}: {{ rec.relevance }}</span>
-            <span class="text-teal-600 font-semibold">{{ $t('dept.proposal.unique_option') }}</span>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <article v-if="selectedProposal.status === 'pending' || selectedProposal.status === 'revision_requested'" class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div class="flex justify-between items-center mb-3">
@@ -211,7 +182,6 @@ const selectedProposal = ref({
 })
 
 const closestMatches = ref([])
-const recommendations = ref([])
 const aiStatus = ref('none')       // 'pending' | 'success' | 'failed' | 'none'
 const aiSummary = ref(null)        // breakdown summary from /similarity endpoint
 
@@ -229,7 +199,6 @@ const fetchProposal = async () => {
     aiStatus.value  = simRes.data.ai_status  ?? 'none'
     aiSummary.value = simRes.data.summary     ?? null
     closestMatches.value = simRes.data.results ?? []
-    recommendations.value = simRes.data.recommendations ?? []
   } catch (error) {
     console.error('Error fetching proposal details:', error)
     toast.error(t('dept.proposal.toast.load_failed'))

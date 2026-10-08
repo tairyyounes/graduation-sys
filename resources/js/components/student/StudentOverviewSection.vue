@@ -40,9 +40,9 @@
 
     <div class="mt-8 bg-gradient-to-r from-teal-600 to-cyan-600 rounded-2xl p-8 text-white shadow-lg relative overflow-hidden">
       <div class="relative z-10">
-        <h2 class="text-2xl font-bold mb-2">{{ $t('student.overview.welcome_back', { name: 'Tayri' }) }}</h2>
+        <h2 class="text-2xl font-bold mb-2">{{ $t('student.overview.cta_title') }}</h2>
         <p class="text-teal-100 max-w-2xl text-sm leading-relaxed">
-          {{ $t('student.overview.welcome_body') }}
+          {{ $t('student.overview.cta_body') }}
         </p>
         <button @click="$emit('navigate', 'Project Workspace')" class="mt-6 bg-white text-teal-700 px-5 py-2.5 rounded-lg text-sm font-semibold shadow-sm hover:bg-slate-50 transition-colors">
           {{ $t('student.overview.go_to_workspace') }}

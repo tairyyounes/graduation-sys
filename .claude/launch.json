@@ -9,6 +9,20 @@
         "dev"
       ],
       "port": 5173
+    },
+    {
+      "name": "ai",
+      "runtimeExecutable": "py",
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "server_dense:app",
+        "--port",
+        "8002",
+        "--app-dir",
+        "C:/Users/User/Desktop/dense_api"
+      ],
+      "port": 8002
     }
   ]
 }

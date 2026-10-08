@@ -1,4 +1,3 @@
-<<<<<<< Updated upstream
 import { createI18n } from 'vue-i18n'
 import en from './locales/en.json'
 import ar from './locales/ar.json'
@@ -56,20 +55,3 @@ export function setLocale(locale) {
 
 // نطبّقو الاتجاه أول ما يتحمّل الملف (قبل أي تفاعل)
 applyDirection(initialLocale)
-=======
-import { createI18n } from 'vue-i18n';
-import en from './locales/en.json';
-import ar from './locales/ar.json';
-
-const i18n = createI18n({
-  legacy: false, // Use Composition API
-  locale: document.documentElement.lang || 'en', // Set locale from HTML tag
-  fallbackLocale: 'en',
-  messages: {
-    en,
-    ar
-  }
-});
-
-export default i18n;
->>>>>>> Stashed changes

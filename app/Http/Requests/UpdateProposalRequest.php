@@ -27,10 +27,10 @@ class UpdateProposalRequest extends FormRequest
         $canUpdate = $proposal->submission_status === 'draft' || $proposal->review_status === 'revision_requested';
         if (! $canUpdate) return false;
 
-        // Enforce update limit (max 3 updates = 4 versions total) before validation runs
-        if ($proposal->versions()->count() >= 4) {
+        // Enforce update limit (initial version + maxEdits() updates) before validation runs
+        if ($proposal->versions()->count() > $proposal->maxEdits()) {
             abort(response()->json([
-                'message' => 'You can only update your proposal three times.'
+                'message' => "You can only update your proposal {$proposal->maxEdits()} times."
             ], 422));
         }
 

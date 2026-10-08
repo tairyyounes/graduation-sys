@@ -1,5 +1,4 @@
 {
-<<<<<<< Updated upstream
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -345,11 +344,10 @@
       "title": "Compare Proposals",
       "subtitle": "Detailed side-by-side view to identify matching content.",
       "current": "Current Submission",
-      "abstract": "Abstract / Description",
       "keywords": "Keywords",
       "historical_match": "Historical Match ({year})",
       "done": "Done comparing",
-      "flag": "Flag as Plagiarized"
+      "not_found": "No comparison data found for this match."
     },
     "proposal": {
       "back": "Back to queue",
@@ -458,9 +456,9 @@
       "status": "Status",
       "similarity_score": "Similarity Score",
       "team_size": "Team Size",
-      "welcome_back": "Welcome back, {name}!",
-      "welcome_body": "Your graduation proposal journey is looking good. Use ProposalGuard AI to check your drafts against previous projects to ensure originality and a smooth approval process from your domain reviewers.",
-      "go_to_workspace": "Go to Workspace"
+      "go_to_workspace": "Go to Workspace",
+      "cta_title": "Continue working on your proposal",
+      "cta_body": "Everything about your proposal in one place: edit it, manage your team, and check the similarity report."
     },
     "confirm": {
       "high_similarity": "Warning: High similarity detected with an approved project. The project details are hidden for privacy reasons. Please consider adjusting your project scope or selecting a different direction.\n\nDo you still want to submit this proposal anyway?",
@@ -470,6 +468,7 @@
     },
     "toast": {
       "draft_saved": "Draft saved successfully.",
+      "team_add_failed": "Could not add {number}: {error}",
       "draft_save_error": "Error saving draft.",
       "running_presubmission": "Running pre-submission similarity analysis…",
       "saved_draft_review": "Saved as draft. You can review the Similarity Report in your workspace.",
@@ -505,10 +504,36 @@
       "send": "Send Invitation"
     },
     "feedback": {
-      "title": "Review Decisions"
+      "title": "Review Decisions",
+      "loading": "Loading…",
+      "empty_title": "No feedback yet",
+      "empty_body": "The department has not reviewed your proposal yet.",
+      "no_note": "The reviewer left no note."
     },
     "version": {
-      "title": "Proposal Timeline"
+      "title": "Proposal Timeline",
+      "current": "Current",
+      "initial": "Initial submission",
+      "no_changes": "No content changes",
+      "empty_title": "No versions yet",
+      "empty_desc": "Submit a proposal to start its version history.",
+      "fields": {
+        "title": "Title",
+        "problem": "Problem",
+        "solution": "Solution",
+        "functions": "Functions",
+        "objectives": "Objectives",
+        "tags": "Tags",
+        "technologies_used": "Technologies"
+      },
+      "total": "Total versions",
+      "updates_left": "Edits remaining",
+      "last_updated": "Last updated",
+      "version_n": "Version {n}",
+      "similarity": "{percent}% similarity",
+      "changed": "Changed:",
+      "show": "Show details",
+      "hide": "Hide details"
     },
     "card": {
       "archived": "Archived",
@@ -595,6 +620,9 @@
       "tech": "Technologies Used",
       "tech_ph": "e.g. Vue.js, Laravel, Python, Tailwind",
       "tech_hint": "Enter comma-separated technologies (2 to 12 items).",
+      "team": "Team members (optional)",
+      "team_ph": "e.g. 222071, 222072",
+      "team_hint": "Student numbers of your teammates, separated by commas (up to 2).",
       "update": "Update Proposal",
       "save_draft": "Save as Draft",
       "confirm": "Confirm Proposal",
@@ -662,7 +690,6 @@
       "suggestions_desc": "Angles in your domain that are less likely to overlap with existing work.",
       "relevance": "Relevance",
       "back_workspace": "Back to Workspace",
-
       "overall_title": "Overall Similarity",
       "overall_desc_very_high": "Very high similarity was detected with an existing proposal.",
       "overall_desc_high": "Significant similarity was detected with existing proposals.",
@@ -713,64 +740,6 @@
       "step_extracting": "Step 1/3: Extracting textual & semantic features...",
       "step_embedding": "Step 2/3: Computing vector embeddings & similarity matrix...",
       "step_analyzing": "Step 3/3: Evaluating cross-repository overlap & recommendations..."
-=======
-  "layout": {
-    "logout": "Logout",
-    "back_to_home": "Back to Home",
-    "menu": "Menu",
-    "english": "English",
-    "arabic": "العربية"
-  },
-  "welcome": {
-    "brand_title": "ProposalGuard AI",
-    "brand_subtitle": "College of Computer Technology — Tripoli",
-    "nav_home": "Home",
-    "nav_features": "Features",
-    "nav_how_it_works": "How it works",
-    "login": "Login",
-    "dashboard": "Dashboard",
-    "logout": "Logout",
-    "hero_title_1": "Detect proposal similarity",
-    "hero_title_2": "before approval.",
-    "hero_desc": "An academic platform that helps students submit proposals and helps departments make confident accept, reject, or revise decisions — backed by semantic AI.",
-    "submit_proposal": "Submit a proposal",
-    "go_to_dashboard": "Go to Dashboard",
-    "stats_proposals": "Proposals analyzed",
-    "stats_accuracy": "Semantic accuracy",
-    "stats_departments": "Departments",
-    "stats_review_time": "Avg. review time"
-  },
-  "admin": {
-    "nav": {
-      "title": "Admin dashboard",
-      "overview": "Overview",
-      "users": "Users",
-      "departments": "Departments",
-      "activity_logs": "Activity logs",
-      "previous_proposals": "Previous Proposals"
-    }
-  },
-  "department": {
-    "nav": {
-      "title": "Dashboard",
-      "overview": "Overview",
-      "queue": "Review queue",
-      "decisions": "Decisions",
-      "students": "Students",
-      "members": "Department Members",
-      "committees": "Review Committees",
-      "previous_proposals": "Previous Proposals"
-    }
-  },
-  "student": {
-    "nav": {
-      "overview": "Overview",
-      "workspace": "Project Workspace",
-      "team": "Project Team",
-      "similarity": "Similarity Report",
-      "version_history": "Version History",
-      "domain_feedback": "Domain Feedback"
->>>>>>> Stashed changes
     }
   }
 }

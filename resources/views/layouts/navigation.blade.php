@@ -20,15 +20,6 @@
 
             <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
-                <!-- Language Switcher -->
-                <div class="me-4 flex items-center">
-                    @if(app()->getLocale() == 'ar')
-                        <a href="{{ route('lang.switch', 'en') }}" class="text-sm text-gray-500 hover:text-gray-700">English</a>
-                    @else
-                        <a href="{{ route('lang.switch', 'ar') }}" class="text-sm text-gray-500 hover:text-gray-700 font-bold">عربي</a>
-                    @endif
-                </div>
-
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
@@ -92,16 +83,6 @@
                 <x-responsive-nav-link :href="route('profile.edit')">
                     {{ __('Profile') }}
                 </x-responsive-nav-link>
-
-                @if(app()->getLocale() == 'ar')
-                    <x-responsive-nav-link :href="route('lang.switch', 'en')">
-                        English
-                    </x-responsive-nav-link>
-                @else
-                    <x-responsive-nav-link :href="route('lang.switch', 'ar')">
-                        عربي
-                    </x-responsive-nav-link>
-                @endif
 
                 <!-- Authentication -->
                 <form method="POST" action="{{ route('logout') }}">

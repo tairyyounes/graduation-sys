@@ -44,6 +44,12 @@ class CheckProposalSimilarity implements ShouldQueue
      */
     public function handle(AiSimilarityService $service): void
     {
+        // With QUEUE_CONNECTION=sync this runs inside the web request, and the
+        // AI engine can take longer than PHP's default 30s (especially the
+        // first call after it starts). Without this, PHP kills the request
+        // mid-check and the result row is left stuck at 'pending'.
+        set_time_limit(300);
+
         $departmentName = optional($this->proposal->department)->department_name ?? 'General';
         $versionId      = $this->version->version_id;
         $currentProposalId = $this->proposal->proposal_id;

@@ -10,7 +10,6 @@
           </svg>
         </div>
         <div>
-<<<<<<< Updated upstream
           <div class="font-bold text-[#0f2130] text-lg leading-tight">ProposalGuard AI</div>
           <div class="text-[11px] text-gray-500 font-medium tracking-wide">{{ $t('common.college') }}</div>
         </div>
@@ -30,36 +29,6 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>
           <span>{{ locale === 'ar' ? 'English' : 'العربية' }}</span>
         </button>
-=======
-          <div class="font-bold text-[#0f2130] text-lg leading-tight">{{ $t('welcome.brand_title') }}</div>
-          <div class="text-[11px] text-gray-500 font-medium tracking-wide">{{ $t('welcome.brand_subtitle') }}</div>
-        </div>
-      </div>
-
-      <div class="hidden md:flex space-x-8 text-sm font-semibold text-gray-500">
-        <a href="#" class="text-gray-800 transition-colors">{{ $t('welcome.nav_home') }}</a>
-        <a href="#" class="hover:text-gray-800 transition-colors">{{ $t('welcome.nav_features') }}</a>
-        <a href="#" class="hover:text-gray-800 transition-colors">{{ $t('welcome.nav_how_it_works') }}</a>
-      </div>
-
-      <div class="flex items-center space-x-4">
-        <a
-          v-if="currentLocale === 'ar'"
-          href="/lang/en"
-          class="flex items-center space-x-1.5 text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>
-          <span>English</span>
-        </a>
-        <a
-          v-else
-          href="/lang/ar"
-          class="flex items-center space-x-1.5 text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>
-          <span>العربية</span>
-        </a>
->>>>>>> Stashed changes
 
         <a
           v-if="!isAuthenticated"
@@ -74,11 +43,7 @@
             href="/dashboard"
             class="px-5 py-2.5 text-sm font-semibold text-[#193652] bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
           >
-<<<<<<< Updated upstream
             {{ $t('common.dashboard') }}
-=======
-            {{ $t('welcome.dashboard') }}
->>>>>>> Stashed changes
           </a>
           <form :action="logoutUrl" method="POST" class="m-0 p-0">
             <input type="hidden" name="_token" :value="csrfToken" />
@@ -86,11 +51,7 @@
               type="submit"
               class="px-5 py-2.5 text-sm font-semibold text-white bg-[#193652] rounded-lg hover:bg-[#0f2130] transition-colors shadow-sm"
             >
-<<<<<<< Updated upstream
               {{ $t('common.logout') }}
-=======
-              {{ $t('welcome.logout') }}
->>>>>>> Stashed changes
             </button>
           </form>
         </div>
@@ -101,13 +62,8 @@
     <main class="max-w-[1000px] mx-auto px-6 pt-24 pb-20 text-center relative z-10">
 
       <h1 class="text-[3.5rem] md:text-[4rem] font-[800] text-[#0a1827] tracking-tight leading-[1.1] mb-6">
-<<<<<<< Updated upstream
         {{ $t('welcome.hero_1') }} <br />
         <span class="text-[#0d7f95]">{{ $t('welcome.hero_2') }}</span>
-=======
-        {{ $t('welcome.hero_title_1') }} <br />
-        <span class="text-[#0d7f95]">{{ $t('welcome.hero_title_2') }}</span>
->>>>>>> Stashed changes
       </h1>
 
       <p class="text-lg md:text-[1.15rem] text-gray-500 max-w-[800px] mx-auto mb-12 leading-relaxed font-medium">
@@ -118,22 +74,13 @@
         <template v-if="!isAuthenticated">
           <a href="#" class="px-6 py-3.5 bg-[#193652] text-white text-[15px] font-semibold rounded-xl hover:bg-[#0f2130] transition-colors flex items-center shadow-lg shadow-[#193652]/20">
             <span>{{ $t('welcome.submit_proposal') }}</span>
-<<<<<<< Updated upstream
             <svg class="w-4 h-4 ms-2 rtl:-scale-x-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-=======
-            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
->>>>>>> Stashed changes
           </a>
         </template>
         <template v-else>
           <a href="/dashboard" class="px-6 py-3.5 bg-[#193652] text-white text-[15px] font-semibold rounded-xl hover:bg-[#0f2130] transition-colors flex items-center shadow-lg shadow-[#193652]/20">
-<<<<<<< Updated upstream
             <span>{{ $t('welcome.go_dashboard') }}</span>
             <svg class="w-4 h-4 ms-2 rtl:-scale-x-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-=======
-            <span>{{ $t('welcome.go_to_dashboard') }}</span>
-            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
->>>>>>> Stashed changes
           </a>
         </template>
       </div>
@@ -142,7 +89,6 @@
       <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
         <div class="bg-white rounded-2xl py-8 px-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 flex flex-col items-center justify-center hover:-translate-y-1 transition-transform duration-300">
           <div class="text-[2rem] font-[800] text-[#0a1827] mb-1">1,240+</div>
-<<<<<<< Updated upstream
           <div class="text-[13px] text-gray-500 font-semibold">{{ $t('welcome.stat_analyzed') }}</div>
         </div>
         <div class="bg-white rounded-2xl py-8 px-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 flex flex-col items-center justify-center hover:-translate-y-1 transition-transform duration-300">
@@ -156,21 +102,6 @@
         <div class="bg-white rounded-2xl py-8 px-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 flex flex-col items-center justify-center hover:-translate-y-1 transition-transform duration-300">
           <div class="text-[2rem] font-[800] text-[#0a1827] mb-1">&lt; 30s</div>
           <div class="text-[13px] text-gray-500 font-semibold">{{ $t('welcome.stat_review_time') }}</div>
-=======
-          <div class="text-[13px] text-gray-500 font-semibold">{{ $t('welcome.stats_proposals') }}</div>
-        </div>
-        <div class="bg-white rounded-2xl py-8 px-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 flex flex-col items-center justify-center hover:-translate-y-1 transition-transform duration-300">
-          <div class="text-[2rem] font-[800] text-[#0a1827] mb-1">94%</div>
-          <div class="text-[13px] text-gray-500 font-semibold">{{ $t('welcome.stats_accuracy') }}</div>
-        </div>
-        <div class="bg-white rounded-2xl py-8 px-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 flex flex-col items-center justify-center hover:-translate-y-1 transition-transform duration-300">
-          <div class="text-[2rem] font-[800] text-[#0a1827] mb-1">3</div>
-          <div class="text-[13px] text-gray-500 font-semibold">{{ $t('welcome.stats_departments') }}</div>
-        </div>
-        <div class="bg-white rounded-2xl py-8 px-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 flex flex-col items-center justify-center hover:-translate-y-1 transition-transform duration-300">
-          <div class="text-[2rem] font-[800] text-[#0a1827] mb-1">&lt; 30s</div>
-          <div class="text-[13px] text-gray-500 font-semibold">{{ $t('welcome.stats_review_time') }}</div>
->>>>>>> Stashed changes
         </div>
       </div>
     </main>
@@ -190,7 +121,6 @@ function toggleLang() {
 
 const appRoot = document.getElementById('app')
 const isAuthenticated = ref(appRoot?.dataset.authenticated === '1')
-const currentLocale = ref(document.documentElement.lang || 'en')
 const loginUrl = ref(appRoot?.dataset.loginUrl || '/login')
 const logoutUrl = ref(appRoot?.dataset.logoutUrl || '/logout')
 const csrfToken = ref(document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '')

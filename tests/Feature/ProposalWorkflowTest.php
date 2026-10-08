@@ -59,7 +59,7 @@ it('allows draft creation with only title but validates word counts if fields ar
     $response->assertJsonValidationErrors(['problem']);
 });
 
-it('blocks updating a proposal more than 3 times', function () {
+it('blocks updating a proposal more than 2 times', function () {
     actingAs($this->user);
 
     $proposal = Proposal::create([
@@ -68,8 +68,8 @@ it('blocks updating a proposal more than 3 times', function () {
         'review_status' => 'pending',
     ]);
 
-    // Create 4 versions (initial version + 3 updates)
-    for ($i = 1; $i <= 4; $i++) {
+    // Create 3 versions (initial version + 2 updates)
+    for ($i = 1; $i <= 3; $i++) {
         ProposalVersion::create([
             'proposal_id' => $proposal->proposal_id,
             'version_number' => $i,
@@ -83,14 +83,14 @@ it('blocks updating a proposal more than 3 times', function () {
         'joined_at' => now(),
     ]);
 
-    // The 4th update (which would create the 5th version) should be blocked
+    // The 3rd update (which would create the 4th version) should be blocked
     $response = putJson('/student/proposals/' . $proposal->proposal_id, [
-        'title' => 'Proposal Title 5',
+        'title' => 'Proposal Title 4',
     ]);
 
     $response->assertStatus(422);
     $response->assertJson([
-        'message' => 'You can only update your proposal three times.'
+        'message' => 'You can only update your proposal 2 times.'
     ]);
 });
 

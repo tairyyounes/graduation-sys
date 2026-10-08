@@ -10,8 +10,13 @@ use Illuminate\Http\Request;
 
 class StudentTeamController extends Controller
 {
-    public function getTeam(Proposal $proposal): JsonResponse
+    public function getTeam(Request $request, Proposal $proposal): JsonResponse
     {
+        $student = $request->user()->student;
+        if (!$student || !$proposal->students()->where('project_members.student_id', $student->student_id)->exists()) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
         $members = $proposal->students()->select([
             'students.student_id',
             'students.full_name as name',
@@ -30,6 +35,15 @@ class StudentTeamController extends Controller
 
     public function invite(Request $request, Proposal $proposal): JsonResponse
     {
+        // Only a member of this team may add people to it (draft or submitted).
+        $inviter = $request->user()->student;
+        if (!$inviter || !$proposal->students()->where('project_members.student_id', $inviter->student_id)->exists()) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+        if ($proposal->is_locked || $proposal->review_status === 'accepted' || $proposal->submission_status === 'archived') {
+            return response()->json(['message' => 'This proposal can no longer be changed.'], 422);
+        }
+
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'reg_number' => [
                 'required',

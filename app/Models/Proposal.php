@@ -43,6 +43,12 @@ class Proposal extends Model
                     ->withTimestamps();
     }
 
+    /** Edits allowed after the initial submission: 2 by default, plus any extras granted by the department. */
+    public function maxEdits(): int
+    {
+        return 2 + (int) $this->extra_revisions_allowed;
+    }
+
     public function versions(): HasMany
     {
         return $this->hasMany(ProposalVersion::class, 'proposal_id', 'proposal_id');
