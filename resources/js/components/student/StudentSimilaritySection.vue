@@ -333,22 +333,33 @@
 
               <div>
                 <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{{ $t('fields.problem_statement') }}</h5>
-                <p class="text-xs leading-relaxed text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100">{{ activeProposal?.problem || 'Not specified' }}</p>
+                <p class="text-xs leading-relaxed text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100">{{ activeProposal?.problem || $t('common.not_specified') }}</p>
               </div>
 
               <div>
                 <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{{ $t('fields.proposed_solution') }}</h5>
-                <p class="text-xs leading-relaxed text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100">{{ activeProposal?.solution || 'Not specified' }}</p>
+                <p class="text-xs leading-relaxed text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100">{{ activeProposal?.solution || $t('common.not_specified') }}</p>
               </div>
 
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{{ $t('fields.objectives') }}</h5>
+                  <p class="text-xs leading-relaxed text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 whitespace-pre-wrap">{{ activeProposal?.objectives || $t('common.not_specified') }}</p>
+                </div>
+                <div>
+                  <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{{ $t('fields.core_functions') }}</h5>
+                  <p class="text-xs leading-relaxed text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 whitespace-pre-wrap">{{ activeProposal?.functions || $t('common.not_specified') }}</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
                 <div>
                   <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{{ $t('fields.tags') }}</h5>
-                  <p class="text-xs text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100">{{ activeProposal?.tags || 'None' }}</p>
+                  <p class="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100">{{ activeProposal?.tags || $t('common.none') }}</p>
                 </div>
                 <div>
                   <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{{ $t('fields.technologies') }}</h5>
-                  <p class="text-xs text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100">{{ activeProposal?.tech || 'None' }}</p>
+                  <p class="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100">{{ activeProposal?.tech || $t('common.none') }}</p>
                 </div>
               </div>
             </div>
@@ -370,22 +381,33 @@
 
               <div>
                 <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{{ $t('fields.problem_statement') }}</h5>
-                <p class="text-xs leading-relaxed text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100">{{ selectedCompareMatch.problem || selectedCompareMatch.description || 'Details unavailable' }}</p>
+                <p class="text-xs leading-relaxed text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100">{{ selectedCompareMatch.problem || selectedCompareMatch.description || $t('common.not_available') }}</p>
               </div>
 
               <div>
                 <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{{ $t('fields.proposed_solution') }}</h5>
-                <p class="text-xs leading-relaxed text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100">{{ selectedCompareMatch.solution || 'Details unavailable' }}</p>
+                <p class="text-xs leading-relaxed text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100">{{ selectedCompareMatch.solution || $t('common.not_available') }}</p>
               </div>
 
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{{ $t('fields.objectives') }}</h5>
+                  <p class="text-xs leading-relaxed text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 whitespace-pre-wrap">{{ selectedCompareMatch.objectives || $t('common.not_available') }}</p>
+                </div>
+                <div>
+                  <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{{ $t('fields.core_functions') }}</h5>
+                  <p class="text-xs leading-relaxed text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 whitespace-pre-wrap">{{ selectedCompareMatch.functions || $t('common.not_available') }}</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
                 <div>
                   <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{{ $t('fields.tags') }}</h5>
-                  <p class="text-xs text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100">{{ selectedCompareMatch.tags || 'None' }}</p>
+                  <p class="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100">{{ selectedCompareMatch.tags || $t('common.none') }}</p>
                 </div>
                 <div>
                   <h5 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">{{ $t('fields.technologies') }}</h5>
-                  <p class="text-xs text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100">{{ selectedCompareMatch.tech || selectedCompareMatch.technologies || 'None' }}</p>
+                  <p class="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100">{{ selectedCompareMatch.tech || selectedCompareMatch.technologies || $t('common.none') }}</p>
                 </div>
               </div>
             </div>

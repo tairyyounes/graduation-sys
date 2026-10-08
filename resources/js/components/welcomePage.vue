@@ -23,6 +23,7 @@
 
       <div class="flex items-center space-x-4 rtl:space-x-reverse">
         <button
+          type="button"
           class="flex items-center space-x-1.5 rtl:space-x-reverse text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors"
           @click="toggleLang"
         >
@@ -72,7 +73,7 @@
 
       <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 sm:rtl:space-x-reverse mb-24">
         <template v-if="!isAuthenticated">
-          <a href="#" class="px-6 py-3.5 bg-[#193652] text-white text-[15px] font-semibold rounded-xl hover:bg-[#0f2130] transition-colors flex items-center shadow-lg shadow-[#193652]/20">
+          <a :href="loginUrl" class="px-6 py-3.5 bg-[#193652] text-white text-[15px] font-semibold rounded-xl hover:bg-[#0f2130] transition-colors flex items-center shadow-lg shadow-[#193652]/20">
             <span>{{ $t('welcome.submit_proposal') }}</span>
             <svg class="w-4 h-4 ms-2 rtl:-scale-x-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
           </a>

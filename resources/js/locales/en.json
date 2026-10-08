@@ -374,14 +374,31 @@
       "request_revision": "Request revision",
       "max_revisions_title": "Maximum revisions reached",
       "reject": "Reject",
-      "accept": "Accept",
+      "accept": "Approve / Accept",
+      "committee_status_title": "Review Committee Approval Status",
+      "committee_status_desc": "According to department policy, ALL review committee members must approve the proposal for it to be accepted.",
+      "committee_approvals": "Approvals: {approved} of {total} members",
+      "committee_all_approved": "All committee members have approved and the proposal is accepted!",
+      "committee_pending_notice": "Waiting for approval from remaining committee members ({approved}/{total}) to finalize acceptance.",
+      "committee_members_heading": "Committee Members & Decisions",
+      "member_decision_accepted": "Approved",
+      "member_decision_rejected": "Rejected",
+      "member_decision_revision": "Revision Requested",
+      "member_decision_pending": "Pending Decision",
+      "your_decision": "Your recorded decision for this version:",
+      "no_committee_assigned": "No review committee members have been assigned for this department yet.",
       "toast": {
         "load_failed": "Failed to load proposal details.",
-        "review_done": "Proposal {status} successfully.",
+        "review_done": "Review decision recorded successfully.",
         "review_failed": "Failed to submit review.",
         "revision_granted": "Extra revision granted successfully.",
         "revision_failed": "Failed to grant extra revision."
       }
+    },
+    "queue": {
+      "not_in_committee_title": "You are not in a review committee",
+      "not_in_committee_desc": "Submitted proposals only appear to faculty members who belong to a review committee. Please contact the department head to be assigned to a committee.",
+      "approvals_col": "Committee Approvals"
     },
     "committee_modal": {
       "edit": "Edit review committee",
@@ -741,5 +758,15 @@
       "step_embedding": "Step 2/3: Computing vector embeddings & similarity matrix...",
       "step_analyzing": "Step 3/3: Evaluating cross-repository overlap & recommendations..."
     }
+<<<<<<< Updated upstream
+=======
+  },
+  "layout": {
+    "logout": "Logout",
+    "back_to_home": "Back to Home",
+    "menu": "Menu",
+    "english": "English",
+    "arabic": "العربية"
+>>>>>>> Stashed changes
   }
 }

@@ -55,3 +55,8 @@ export function setLocale(locale) {
 
 // نطبّقو الاتجاه أول ما يتحمّل الملف (قبل أي تفاعل)
 applyDirection(initialLocale)
+<<<<<<< Updated upstream
+=======
+
+export default i18n
+>>>>>>> Stashed changes

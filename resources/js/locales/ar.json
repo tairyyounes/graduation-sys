@@ -374,14 +374,31 @@
       "request_revision": "طلب مراجعة",
       "max_revisions_title": "تم بلوغ الحد الأقصى للتعديلات",
       "reject": "رفض",
-      "accept": "قبول",
+      "accept": "موافقة / قبول",
+      "committee_status_title": "حالة موافقة أعضاء لجنة المراجعة",
+      "committee_status_desc": "وفقاً لسياسة القسم، يلزم موافقة جميع أعضاء لجنة المراجعة ليتم قبول المقترح بشكل نهائي.",
+      "committee_approvals": "الموافقات: {approved} من {total} أعضاء",
+      "committee_all_approved": "تمت موافقة جميع أعضاء اللجنة وتم قبول المقترح نهائياً.",
+      "committee_pending_notice": "بانتظار موافقة بقية أعضاء اللجنة ({approved}/{total}) لاعتماد المقترح.",
+      "committee_members_heading": "أعضاء اللجنة والقرارات المسجلة",
+      "member_decision_accepted": "موافق",
+      "member_decision_rejected": "رفض",
+      "member_decision_revision": "طلب تعديل",
+      "member_decision_pending": "بانتظار القرار",
+      "your_decision": "قرارك المسجل لهذه النسخة:",
+      "no_committee_assigned": "لم يتم تعيين أي أعضاء في لجنة المراجعة لهذا القسم بعد.",
       "toast": {
         "load_failed": "تعذّر تحميل تفاصيل المقترح.",
-        "review_done": "تم تحديد المقترح كـ«{status}» بنجاح.",
+        "review_done": "تم تسجيل قرار المراجعة بنجاح.",
         "review_failed": "تعذّر إرسال المراجعة.",
         "revision_granted": "تم منح تعديل إضافي بنجاح.",
         "revision_failed": "تعذّر منح تعديل إضافي."
       }
+    },
+    "queue": {
+      "not_in_committee_title": "لست عضواً في لجنة المراجعة",
+      "not_in_committee_desc": "تظهر المقترحات المقدمة لأعضاء هيئة التدريس المعينين ضمن لجان المراجعة فقط. يرجى التواصل مع رئيس القسم لإضافتك إلى لجنة مراجعة.",
+      "approvals_col": "موافقات اللجنة"
     },
     "committee_modal": {
       "edit": "تعديل لجنة المراجعة",
@@ -741,5 +758,15 @@
       "step_embedding": "الخطوة 2/3: حوسبة المتجهات المصفوفية ونسب التداخل...",
       "step_analyzing": "الخطوة 3/3: تقييم التداخل وصياغة التوجيهات البديلة..."
     }
+<<<<<<< Updated upstream
+=======
+  },
+  "layout": {
+    "logout": "تسجيل الخروج",
+    "back_to_home": "العودة للرئيسية",
+    "menu": "القائمة",
+    "english": "English",
+    "arabic": "العربية"
+>>>>>>> Stashed changes
   }
 }

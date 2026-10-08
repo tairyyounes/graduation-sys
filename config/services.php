@@ -36,11 +36,15 @@ return [
     ],
 
     'dense_api' => [
+<<<<<<< Updated upstream
         'url' => env('DENSE_API_URL', env('AI_API_URL', 'http://127.0.0.1:8000')),
         // Local auto-start: if the AI server is down, Laravel launches it
         // from this folder. Leave AI_SERVER_DIR empty to disable.
         'server_dir' => env('AI_SERVER_DIR'),
         'python' => env('AI_PYTHON', 'py'),
+=======
+        'url' => env('DENSE_API_URL', env('AI_API_URL', 'http://127.0.0.1:8002')),
+>>>>>>> Stashed changes
     ],
 
 ];

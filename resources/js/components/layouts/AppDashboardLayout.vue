@@ -19,14 +19,14 @@
               </svg>
             </div>
             <div>
-              <p class="text-lg font-bold tracking-tight text-slate-900">{{ $t(brandTitle) }}</p>
-              <p class="mt-1 text-xs leading-4 text-slate-500">{{ $t(brandSubtitle) }}</p>
+              <p class="text-lg font-bold tracking-tight text-slate-900">{{ brandTitle }}</p>
+              <p class="mt-1 text-xs leading-4 text-slate-500">{{ brandSubtitle }}</p>
             </div>
           </div>
         </div>
 
         <nav class="flex-1 px-4 py-6 overflow-y-auto">
-          <p class="mb-4 px-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{{ $t(navTitle) }}</p>
+          <p class="mb-4 px-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{{ navTitle }}</p>
           <ul class="space-y-1.5">
             <li v-for="item in navItems" :key="item.key">
               <router-link
@@ -38,7 +38,7 @@
                 @click="sidebarOpen = false"
               >
                 <span :class="[$route.name === item.routeName ? 'text-teal-600' : 'text-slate-400 group-hover:text-slate-600']" v-html="item.icon"></span>
-                <span>{{ $t(item.label) }}</span>
+                <span>{{ item.label }}</span>
               </router-link>
             </li>
           </ul>
@@ -103,7 +103,7 @@
           </div>
         </div>
 
-        <div class="lg:hidden text-2xl font-bold text-slate-900 tracking-tight mb-6">{{ $t(currentTitle) }}</div>
+        <div class="lg:hidden text-2xl font-bold text-slate-900 tracking-tight mb-6">{{ currentTitle }}</div>
 
         <slot name="alerts" />
         <router-view v-slot="{ Component }">
@@ -132,6 +132,7 @@
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import LangToggle from '../common/LangToggle.vue'
+import LanguageSwitcher from '../common/LanguageSwitcher.vue'
 
 const props = defineProps({
   navItems: {
@@ -163,5 +164,9 @@ const currentTitle = computed(() => {
 })
 
 const sidebarOpen = ref(false)
+<<<<<<< Updated upstream
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+=======
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+>>>>>>> Stashed changes
 </script>

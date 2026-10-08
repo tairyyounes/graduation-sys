@@ -101,6 +101,138 @@
       </div>
     </article>
 
+<<<<<<< Updated upstream
+=======
+    <!-- ── AI Recommendations ──────────────────────────────────────── -->
+    <div v-if="recommendations && recommendations.length > 0" class="rounded-xl border border-teal-200 bg-teal-50/20 p-6 shadow-sm text-start">
+      <div class="flex items-start gap-4 mb-4">
+        <div class="text-teal-600 shrink-0">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
+        </div>
+        <div>
+          <h4 class="text-sm font-bold text-teal-900 mb-1">{{ $t('dept.proposal.recommendations_title') }}</h4>
+          <p class="text-xs text-teal-700">{{ $t('dept.proposal.recommendations_desc') }}</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div v-for="rec in recommendations" :key="rec.title" class="bg-white p-4 rounded-xl border border-teal-100 shadow-sm flex flex-col justify-between">
+          <div>
+            <h5 class="text-sm font-semibold text-slate-900 leading-snug">{{ rec.title }}</h5>
+            <p class="text-[10px] font-bold text-slate-400 mt-1">{{ $t('fields.domain') }}: {{ rec.domain }}</p>
+            <p class="text-xs text-slate-600 mt-2 leading-normal line-clamp-3">{{ rec.explanation }}</p>
+          </div>
+          <div class="mt-3 pt-3 border-t border-slate-50 flex justify-between items-center text-xs">
+            <span class="text-slate-500 font-medium">{{ $t('dept.proposal.relevance') }}: {{ rec.relevance }}</span>
+            <span class="text-teal-600 font-semibold">{{ $t('dept.proposal.unique_option') }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Committee Review Consensus Status Card ──────────────────────── -->
+    <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+      <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-100 text-teal-700">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <h2 class="text-lg font-semibold text-slate-900">{{ $t('dept.proposal.committee_status_title') }}</h2>
+          </div>
+          <p class="mt-1 text-xs text-slate-500">{{ $t('dept.proposal.committee_status_desc') }}</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span 
+            :class="committeeReview.all_approved ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-amber-50 text-amber-800 border-amber-200'"
+            class="rounded-full px-3 py-1 text-xs font-semibold border flex items-center gap-1.5"
+          >
+            <span v-if="committeeReview.all_approved">✓</span>
+            <span v-else>⏳</span>
+            {{ $t('dept.proposal.committee_approvals', { approved: committeeReview.approvals_count, total: committeeReview.total_members }) }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="space-y-1">
+        <div class="h-2 w-full overflow-hidden rounded-full bg-slate-100">
+          <div 
+            class="h-full transition-all duration-500 rounded-full"
+            :class="committeeReview.all_approved ? 'bg-emerald-500' : 'bg-teal-500'"
+            :style="{ width: committeeProgressPercent + '%' }"
+          ></div>
+        </div>
+      </div>
+
+      <!-- Notice Banner -->
+      <div v-if="committeeReview.all_approved" class="rounded-lg bg-emerald-50 p-3 text-xs font-medium text-emerald-800 border border-emerald-200 flex items-center gap-2">
+        <svg class="h-4 w-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>{{ $t('dept.proposal.committee_all_approved') }}</span>
+      </div>
+      <div v-else-if="committeeReview.total_members > 0" class="rounded-lg bg-amber-50/70 p-3 text-xs text-amber-800 border border-amber-200/60 flex items-center gap-2">
+        <svg class="h-4 w-4 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>{{ $t('dept.proposal.committee_pending_notice', { approved: committeeReview.approvals_count, total: committeeReview.total_members }) }}</span>
+      </div>
+      <div v-else class="rounded-lg bg-slate-50 p-3 text-xs text-slate-500 border border-slate-200">
+        {{ $t('dept.proposal.no_committee_assigned') }}
+      </div>
+
+      <!-- Committee Members Status Grid -->
+      <div v-if="committeeReview.members && committeeReview.members.length > 0" class="pt-2">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">{{ $t('dept.proposal.committee_members_heading') }}</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div 
+            v-for="member in committeeReview.members" 
+            :key="member.id"
+            class="rounded-xl border p-3 flex flex-col justify-between transition"
+            :class="memberCardClass(member.decision)"
+          >
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2.5">
+                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700">
+                  {{ getInitials(member.full_name) }}
+                </div>
+                <div>
+                  <p class="text-xs font-semibold text-slate-900 leading-snug">{{ member.full_name }}</p>
+                  <p class="text-[10px] text-slate-500">{{ member.email }}</p>
+                </div>
+              </div>
+              <span :class="memberDecisionBadge(member.decision)" class="rounded-full px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap">
+                {{ formatMemberDecision(member.decision) }}
+              </span>
+            </div>
+            <div v-if="member.decision_note" class="mt-2 text-[11px] text-slate-600 bg-white/80 p-2 rounded-lg border border-slate-100">
+              <span class="font-medium text-slate-700">«{{ member.decision_note }}»</span>
+            </div>
+            <p v-if="member.decision_date" class="mt-2 text-[10px] text-slate-400">
+              {{ formatDate(member.decision_date) }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logged-in user previous decision indicator -->
+      <div v-if="committeeReview.current_user_decision" class="rounded-lg border border-teal-200 bg-teal-50/50 p-3 text-xs text-teal-900 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="font-semibold">{{ $t('dept.proposal.your_decision') }}</span>
+          <span :class="memberDecisionBadge(committeeReview.current_user_decision.type)" class="rounded-full px-2 py-0.5 text-[10px] font-bold">
+            {{ formatMemberDecision(committeeReview.current_user_decision.type) }}
+          </span>
+          <span v-if="committeeReview.current_user_decision.note" class="text-slate-600 italic">
+            — "{{ committeeReview.current_user_decision.note }}"
+          </span>
+        </div>
+        <span v-if="committeeReview.current_user_decision.date" class="text-[10px] text-teal-700">
+          {{ formatDate(committeeReview.current_user_decision.date) }}
+        </span>
+      </div>
+    </article>
+
+>>>>>>> Stashed changes
     <article v-if="selectedProposal.status === 'pending' || selectedProposal.status === 'revision_requested'" class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div class="flex justify-between items-center mb-3">
         <h2 class="text-lg font-semibold text-slate-900">{{ $t('dept.proposal.reviewer_note') }}</h2>
@@ -141,8 +273,9 @@
         <button
           @click="submitReview('accepted')"
           :disabled="isSubmitting"
-          class="rounded-lg bg-blue-900 px-4 py-2 text-sm font-medium text-white hover:bg-blue-950 disabled:opacity-50"
+          class="rounded-lg bg-blue-900 px-4 py-2 text-sm font-medium text-white hover:bg-blue-950 disabled:opacity-50 flex items-center gap-1.5"
         >
+          <span>✓</span>
           {{ $t('dept.proposal.accept') }}
         </button>
       </div>
@@ -160,7 +293,7 @@ import { useI18n } from 'vue-i18n'
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 const authUser = window.authUser || {}
 const isDepartmentHead = authUser.role === 'department_head'
@@ -181,6 +314,14 @@ const selectedProposal = ref({
   max_revisions: 2
 })
 
+const committeeReview = ref({
+  total_members: 0,
+  approvals_count: 0,
+  all_approved: false,
+  members: [],
+  current_user_decision: null
+})
+
 const closestMatches = ref([])
 const aiStatus = ref('none')       // 'pending' | 'success' | 'failed' | 'none'
 const aiSummary = ref(null)        // breakdown summary from /similarity endpoint
@@ -196,6 +337,13 @@ const fetchProposal = async () => {
       axios.get(`/department/proposals/${route.params.id}/similarity`)
     ])
     selectedProposal.value = propRes.data.proposal
+    committeeReview.value = propRes.data.committee_review || {
+      total_members: 0,
+      approvals_count: 0,
+      all_approved: false,
+      members: [],
+      current_user_decision: null
+    }
     aiStatus.value  = simRes.data.ai_status  ?? 'none'
     aiSummary.value = simRes.data.summary     ?? null
     closestMatches.value = simRes.data.results ?? []
@@ -206,6 +354,11 @@ const fetchProposal = async () => {
 }
 
 // ── Computed ────────────────────────────────────────────────────────────────
+
+const committeeProgressPercent = computed(() => {
+  if (!committeeReview.value.total_members) return 0
+  return Math.min(100, Math.round((committeeReview.value.approvals_count / committeeReview.value.total_members) * 100))
+})
 
 /** Parse the similarity string (e.g. "34.5%") to a number for the progress bar */
 const overallScoreNum = computed(() => {
@@ -224,6 +377,39 @@ const breakdownDimensions = computed(() => [
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
+const getInitials = (name) => {
+  if (!name) return 'U'
+  return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+}
+
+const formatDate = (dateString) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  const loc = locale.value === 'ar' ? 'ar' : 'en-US'
+  return new Intl.DateTimeFormat(loc, { month: 'short', day: 'numeric', year: 'numeric' }).format(date)
+}
+
+function memberCardClass(decision) {
+  if (decision === 'accepted') return 'border-emerald-200 bg-emerald-50/40'
+  if (decision === 'rejected') return 'border-red-200 bg-red-50/40'
+  if (decision === 'revision_requested') return 'border-cyan-200 bg-cyan-50/40'
+  return 'border-slate-200 bg-slate-50/40'
+}
+
+function memberDecisionBadge(decision) {
+  if (decision === 'accepted') return 'bg-emerald-100 text-emerald-800'
+  if (decision === 'rejected') return 'bg-red-100 text-red-800'
+  if (decision === 'revision_requested') return 'bg-cyan-100 text-cyan-800'
+  return 'bg-slate-100 text-slate-600'
+}
+
+function formatMemberDecision(decision) {
+  if (decision === 'accepted') return t('dept.proposal.member_decision_accepted')
+  if (decision === 'rejected') return t('dept.proposal.member_decision_rejected')
+  if (decision === 'revision_requested') return t('dept.proposal.member_decision_revision')
+  return t('dept.proposal.member_decision_pending')
+}
+
 function verdictBadgeClass(verdict) {
   if (!verdict) return 'bg-slate-100 text-slate-600 border-slate-200'
   const v = verdict.toLowerCase()
@@ -241,15 +427,22 @@ const submitReview = async (decision) => {
   
   isSubmitting.value = true
   try {
-    await axios.post(`/department/proposals/${route.params.id}/review`, {
+    const res = await axios.post(`/department/proposals/${route.params.id}/review`, {
       decision: decision,
       note: reviewerNote.value
     })
-    toast.success(t('dept.proposal.toast.review_done', { status: t(`status.${decision}`) }))
-    router.push({ name: 'DepartmentQueue' })
+    
+    toast.success(res.data.message || t('dept.proposal.toast.review_done'))
+    await fetchProposal()
+    reviewerNote.value = ''
+    
+    if (res.data.all_approved || decision === 'rejected') {
+      router.push({ name: 'DepartmentQueue' })
+    }
   } catch (error) {
     console.error('Error submitting review:', error)
-    toast.error(t('dept.proposal.toast.review_failed'))
+    const errMessage = error.response?.data?.message || t('dept.proposal.toast.review_failed')
+    toast.error(errMessage)
   } finally {
     isSubmitting.value = false
   }

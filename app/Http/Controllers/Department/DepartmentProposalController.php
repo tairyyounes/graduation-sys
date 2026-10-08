@@ -21,20 +21,44 @@ class DepartmentProposalController extends Controller
         $user = $request->user();
         $departmentId = $user->department_id;
 
-        if (!$departmentId) {
+        if (!$departmentId && $user->role !== 'admin') {
             return response()->json(['message' => 'User not assigned to any department.'], 403);
+        }
+
+        // Check if user is a member of the review committee (or admin)
+        $isCommitteeMember = $user->isInReviewCommittee($departmentId);
+        if (!$isCommitteeMember && $user->role !== 'admin') {
+            return response()->json([
+                'proposals' => [],
+                'is_committee_member' => false,
+                'message' => 'You are not assigned to any review committee in this department.',
+            ]);
         }
 
         $status = $request->query('status', 'submitted');
 
-        $proposals = Proposal::where('department_id', $departmentId)
-            ->where('submission_status', $status)
-            ->with(['latestVersion', 'students'])
+        $query = Proposal::query();
+        if ($departmentId) {
+            $query->where('department_id', $departmentId);
+        }
+
+        $query->where('submission_status', $status);
+
+        if ($user->role !== 'admin') {
+            $userCommitteeIds = $user->committees()->where('department_id', $departmentId)->pluck('review_committees.id');
+            $query->where(function ($sub) use ($userCommitteeIds) {
+                $sub->whereNull('review_committee_id')
+                    ->orWhereIn('review_committee_id', $userCommitteeIds);
+            });
+        }
+
+        $proposals = $query->with(['latestVersion', 'students', 'reviewCommittee'])
             ->latest()
             ->get();
 
         return response()->json([
             'proposals' => $proposals->map(fn($p) => $this->transformProposal($p)),
+            'is_committee_member' => true,
         ]);
     }
 
@@ -43,17 +67,44 @@ class DepartmentProposalController extends Controller
      */
     public function stats(Request $request): JsonResponse
     {
-        $departmentId = $request->user()->department_id;
+        $user = $request->user();
+        $departmentId = $user->department_id;
+
+        if (!$user->isInReviewCommittee($departmentId) && $user->role !== 'admin') {
+            return response()->json([
+                'stats' => [
+                    'total' => 0,
+                    'pending' => 0,
+                    'accepted' => 0,
+                    'rejected' => 0,
+                    'revision' => 0,
+                ],
+                'is_committee_member' => false,
+            ]);
+        }
+
+        $query = Proposal::query();
+        if ($departmentId) {
+            $query->where('department_id', $departmentId);
+        }
+
+        if ($user->role !== 'admin') {
+            $userCommitteeIds = $user->committees()->where('department_id', $departmentId)->pluck('review_committees.id');
+            $query->where(function ($sub) use ($userCommitteeIds) {
+                $sub->whereNull('review_committee_id')
+                    ->orWhereIn('review_committee_id', $userCommitteeIds);
+            });
+        }
 
         $stats = [
-            'total' => Proposal::where('department_id', $departmentId)->count(),
-            'pending' => Proposal::where('department_id', $departmentId)->where('review_status', 'pending')->count(),
-            'accepted' => Proposal::where('department_id', $departmentId)->where('review_status', 'accepted')->count(),
-            'rejected' => Proposal::where('department_id', $departmentId)->where('review_status', 'rejected')->count(),
-            'revision' => Proposal::where('department_id', $departmentId)->where('review_status', 'revision_requested')->count(),
+            'total' => (clone $query)->count(),
+            'pending' => (clone $query)->where('review_status', 'pending')->count(),
+            'accepted' => (clone $query)->where('review_status', 'accepted')->count(),
+            'rejected' => (clone $query)->where('review_status', 'rejected')->count(),
+            'revision' => (clone $query)->where('review_status', 'revision_requested')->count(),
         ];
 
-        return response()->json(['stats' => $stats]);
+        return response()->json(['stats' => $stats, 'is_committee_member' => true]);
     }
 
     /**
@@ -61,17 +112,63 @@ class DepartmentProposalController extends Controller
      */
     public function show(Request $request, Proposal $proposal): JsonResponse
     {
-        // Security: Check if proposal belongs to user's department
-        if ($proposal->department_id !== $request->user()->department_id) {
+        $user = $request->user();
+
+        // Security: Check if proposal belongs to user's department (unless admin)
+        if ($user->role !== 'admin' && $proposal->department_id !== $user->department_id) {
             return response()->json(['message' => 'Unauthorized access to this department\'s data.'], 403);
         }
 
-        $proposal->load(['latestVersion', 'students', 'versions', 'decisions.reviewer']);
+        // Security: Only committee members may view proposals for review
+        if (!$proposal->isUserInReviewCommittee($user)) {
+            return response()->json(['message' => 'Unauthorized. Only review committee members can view this proposal.'], 403);
+        }
+
+        $proposal->load(['latestVersion', 'students', 'versions', 'decisions.reviewer', 'reviewCommittee']);
+
+        $latestVersion = $proposal->latestVersion;
+        $committeeMembers = $proposal->getReviewCommitteeMembers();
+        $totalMembers = $committeeMembers->count();
+
+        $memberDecisions = collect();
+        if ($latestVersion) {
+            $memberDecisions = Decision::where('proposal_id', $proposal->proposal_id)
+                ->where('version_id', $latestVersion->version_id)
+                ->whereIn('reviewer_id', $committeeMembers->pluck('id'))
+                ->get()
+                ->keyBy('reviewer_id');
+        }
+
+        $committeeStatus = $committeeMembers->map(function ($member) use ($memberDecisions) {
+            $dec = $memberDecisions->get($member->id);
+            return [
+                'id' => $member->id,
+                'full_name' => $member->full_name,
+                'email' => $member->email,
+                'decision' => $dec ? $dec->decision_type : 'pending',
+                'decision_note' => $dec ? $dec->decision_note : null,
+                'decision_date' => $dec ? $dec->decision_date : null,
+            ];
+        });
+
+        $approvalsCount = $committeeStatus->where('decision', 'accepted')->count();
+        $currentUserDecision = $latestVersion ? $memberDecisions->get($user->id) : null;
 
         return response()->json([
             'proposal' => $this->transformProposal($proposal),
             'history' => $proposal->versions,
             'decisions' => $proposal->decisions,
+            'committee_review' => [
+                'total_members' => $totalMembers,
+                'approvals_count' => $approvalsCount,
+                'all_approved' => ($totalMembers > 0 && $approvalsCount >= $totalMembers),
+                'members' => $committeeStatus,
+                'current_user_decision' => $currentUserDecision ? [
+                    'type' => $currentUserDecision->decision_type,
+                    'note' => $currentUserDecision->decision_note,
+                    'date' => $currentUserDecision->decision_date,
+                ] : null,
+            ],
         ]);
     }
 
@@ -82,14 +179,13 @@ class DepartmentProposalController extends Controller
     {
         $user = $request->user();
 
-        if ($proposal->department_id !== $user->department_id) {
+        if ($user->role !== 'admin' && $proposal->department_id !== $user->department_id) {
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
-        // Department heads, department members, and admins may all review proposals.
-        $allowedRoles = ['department_head', 'department_member', 'admin'];
-        if (!in_array($user->role, $allowedRoles)) {
-            return response()->json(['message' => 'You do not have permission to review proposals.'], 403);
+        // Only committee members (or admin) can review
+        if (!$proposal->isUserInReviewCommittee($user)) {
+            return response()->json(['message' => 'Unauthorized. Only review committee members can review this proposal.'], 403);
         }
 
         $request->validate([
@@ -110,29 +206,95 @@ class DepartmentProposalController extends Controller
             return response()->json(['message' => 'Proposal has no versions.'], 422);
         }
 
-        return DB::transaction(function () use ($request, $proposal, $latestVersion) {
-            $decision = Decision::create([
-                'proposal_id' => $proposal->proposal_id,
-                'version_id' => $latestVersion->version_id,
-                'reviewer_id' => $request->user()->id,
-                'decision_type' => $request->decision,
-                'decision_note' => $request->note,
-                'decision_date' => now(),
-            ]);
+        $committeeMembers = $proposal->getReviewCommitteeMembers();
+        $totalMembers = $committeeMembers->count();
+        if ($totalMembers === 0) {
+            return response()->json(['message' => 'No review committee members have been assigned for this department. Please configure a review committee first.'], 422);
+        }
 
-            $proposal->update([
-                'review_status' => $request->decision,
-                'is_locked' => ($request->decision === 'accepted'),
-            ]);
+        return DB::transaction(function () use ($request, $proposal, $latestVersion, $user, $committeeMembers, $totalMembers) {
+            $decision = Decision::updateOrCreate(
+                [
+                    'proposal_id' => $proposal->proposal_id,
+                    'version_id' => $latestVersion->version_id,
+                    'reviewer_id' => $user->id,
+                ],
+                [
+                    'decision_type' => $request->decision,
+                    'decision_note' => $request->note,
+                    'decision_date' => now(),
+                ]
+            );
 
-            activity()
-                ->performedOn($proposal)
-                ->causedBy($request->user())
-                ->log("proposal marked as {$request->decision}");
+            $message = '';
+            $allApproved = false;
+
+            if ($request->decision === 'accepted') {
+                $memberIds = $committeeMembers->pluck('id');
+                $acceptedCount = Decision::where('proposal_id', $proposal->proposal_id)
+                    ->where('version_id', $latestVersion->version_id)
+                    ->whereIn('reviewer_id', $memberIds)
+                    ->where('decision_type', 'accepted')
+                    ->distinct('reviewer_id')
+                    ->count('reviewer_id');
+
+                if ($acceptedCount >= $totalMembers) {
+                    $proposal->update([
+                        'review_status' => 'accepted',
+                        'is_locked' => true,
+                    ]);
+
+                    activity()
+                        ->performedOn($proposal)
+                        ->causedBy($user)
+                        ->log("proposal unanimously accepted by all {$totalMembers} committee members");
+
+                    $allApproved = true;
+                    $message = "تم قبول المقترح بنجاح بعد موافقة جميع أعضاء اللجنة ({$acceptedCount}/{$totalMembers}).";
+                } else {
+                    $proposal->update([
+                        'review_status' => 'pending',
+                        'is_locked' => false,
+                    ]);
+
+                    activity()
+                        ->performedOn($proposal)
+                        ->causedBy($user)
+                        ->log("committee member {$user->full_name} approved proposal ({$acceptedCount}/{$totalMembers})");
+
+                    $message = "تم تسجيل موافقتك بنجاح ({$acceptedCount}/{$totalMembers} موافقات). بانتظار موافقة باقي أعضاء اللجنة.";
+                }
+            } elseif ($request->decision === 'revision_requested') {
+                $proposal->update([
+                    'review_status' => 'revision_requested',
+                    'is_locked' => false,
+                ]);
+
+                activity()
+                    ->performedOn($proposal)
+                    ->causedBy($user)
+                    ->log("revision requested by {$user->full_name}");
+
+                $message = "تم طلب تعديل للمقترح بنجاح.";
+            } elseif ($request->decision === 'rejected') {
+                $proposal->update([
+                    'review_status' => 'rejected',
+                    'is_locked' => false,
+                ]);
+
+                activity()
+                    ->performedOn($proposal)
+                    ->causedBy($user)
+                    ->log("proposal rejected by {$user->full_name}");
+
+                $message = "تم رفض المقترح.";
+            }
 
             return response()->json([
-                'message' => 'Review submitted successfully.',
+                'message' => $message,
                 'decision' => $decision,
+                'review_status' => $proposal->review_status,
+                'all_approved' => $allApproved,
             ]);
         });
     }
@@ -290,6 +452,20 @@ class DepartmentProposalController extends Controller
         $similarity = $this->resolveDisplaySimilarity($proposal);
         $team       = $proposal->students->sortBy(fn ($s) => $s->pivot->member_role === 'owner' ? 0 : 1)->values();
 
+        $committeeMembers = $proposal->getReviewCommitteeMembers();
+        $totalMembers = $committeeMembers->count();
+        $approvedCount = 0;
+
+        if ($v && $totalMembers > 0) {
+            $memberIds = $committeeMembers->pluck('id');
+            $approvedCount = Decision::where('proposal_id', $proposal->proposal_id)
+                ->where('version_id', $v->version_id)
+                ->whereIn('reviewer_id', $memberIds)
+                ->where('decision_type', 'accepted')
+                ->distinct('reviewer_id')
+                ->count('reviewer_id');
+        }
+
         return [
             'id'               => $proposal->proposal_id,
             'title'            => $v->title ?? 'No Title',
@@ -310,6 +486,11 @@ class DepartmentProposalController extends Controller
             'max_revisions'     => 2 + $proposal->extra_revisions_allowed,
             'date'              => $proposal->updated_at->format('Y-m-d'),
             'similarity'        => $similarity,
+            'committee_approvals' => [
+                'approved' => $approvedCount,
+                'total' => $totalMembers,
+                'all_approved' => ($totalMembers > 0 && $approvedCount >= $totalMembers),
+            ],
         ];
     }
 

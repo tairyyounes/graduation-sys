@@ -90,4 +90,21 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(ReviewCommittee::class, 'committee_user');
     }
+
+    /**
+     * Check if user is a member of any review committee in the specified department (or overall).
+     */
+    public function isInReviewCommittee(?int $departmentId = null): bool
+    {
+        if ($this->role === 'admin') {
+            return true;
+        }
+
+        $query = $this->committees();
+        if ($departmentId) {
+            $query->where('review_committees.department_id', $departmentId);
+        }
+
+        return $query->exists();
+    }
 }
