@@ -67,18 +67,30 @@
           <div class="mt-4">
             <div class="flex items-center justify-between gap-2">
               <LanguageSwitcher />
-              <form method="POST" action="/logout">
-                <input type="hidden" name="_token" :value="csrfToken">
+              <div class="flex items-center gap-1">
                 <button
-                  type="submit"
-                  class="rounded-md p-1.5 text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400"
-                  :title="$t('common.logout')"
+                  type="button"
+                  class="rounded-md p-1.5 text-slate-600 transition hover:bg-slate-100 hover:text-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                  :title="$t('profile.change_password')"
+                  @click="isPasswordModalOpen = true"
                 >
                   <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1m0-10V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2v-1" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                   </svg>
                 </button>
-              </form>
+                <form method="POST" action="/logout">
+                  <input type="hidden" name="_token" :value="csrfToken">
+                  <button
+                    type="submit"
+                    class="rounded-md p-1.5 text-slate-600 transition hover:bg-slate-100 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-slate-400 cursor-pointer"
+                    :title="$t('common.logout')"
+                  >
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1m0-10V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2h6a2 2 0 002-2v-1" />
+                    </svg>
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
         </div>
@@ -233,12 +245,19 @@
       @update:reg-number="inviteRegNumber = $event"
     />
 
+    <!-- Change Password Modal -->
+    <ChangePasswordModal
+      :is-open="isPasswordModalOpen"
+      @close="isPasswordModalOpen = false"
+    />
+
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import LanguageSwitcher from './common/LanguageSwitcher.vue';
+import ChangePasswordModal from './common/ChangePasswordModal.vue';
 import StudentOverviewSection from './student/StudentOverviewSection.vue';
 import StudentWorkspaceSection from './student/StudentWorkspaceSection.vue';
 import StudentTeamSection from './student/StudentTeamSection.vue';
@@ -258,6 +277,7 @@ const toast = useToast();
 const { t } = useI18n();
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 const sidebarOpen = ref(false);
+const isPasswordModalOpen = ref(false);
 
 // خريطة الاسم الداخلي (مفتاح منطقي إنجليزي) -> مفتاح الترجمة المعروض
 const VIEW_KEYS = {

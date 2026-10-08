@@ -56,16 +56,31 @@
           <p v-if="errors.email" class="mt-1 text-xs text-red-600">{{ errors.email[0] }}</p>
         </div>
 
+        <div>
+          <label class="mb-1.5 flex flex-wrap items-center justify-between text-sm font-medium text-slate-700">
+            <span>{{ $t('fields.password') }}</span>
+            <span v-if="!isEditing" class="text-xs text-slate-400 font-normal">({{ $t('dept.student_modal.password_hint') }})</span>
+            <span v-else class="text-xs text-slate-400 font-normal">({{ $t('dept.student_modal.password_leave_blank') }})</span>
+          </label>
+          <input
+            v-model="form.password"
+            type="text"
+            class="w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm outline-none transition focus:ring-2"
+            :class="errors.password ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-500/20'"
+            :placeholder="isEditing ? '••••••••' : (form.student_number || '123456')"
+          />
+          <p v-if="errors.password" class="mt-1 text-xs text-red-600">{{ errors.password[0] }}</p>
+        </div>
+
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('dept.students.semester') }}</label>
             <input
               v-model="form.semester"
               type="number"
-              min="8"
+              min="1"
               max="8"
-              readonly
-              class="w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm outline-none transition focus:ring-2 bg-slate-50"
+              class="w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm outline-none transition focus:ring-2"
               :class="errors.semester ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-500/20'"
               required
             />

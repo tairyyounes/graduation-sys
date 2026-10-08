@@ -64,6 +64,7 @@
                 <th class="px-4 py-3 font-semibold">{{ $t('dept.students.student_number') }}</th>
                 <th class="px-4 py-3 font-semibold">{{ $t('dept.students.full_name') }}</th>
                 <th class="px-4 py-3 font-semibold">{{ $t('dept.students.email') }}</th>
+                <th class="px-4 py-3 font-semibold">{{ $t('fields.password') }}</th>
                 <th class="px-4 py-3 font-semibold text-center">{{ $t('fields.actions') }}</th>
               </tr>
             </thead>
@@ -84,6 +85,10 @@
                 <td class="px-4 py-3">
                   <input v-if="!student.exists" v-model="student.email" type="email" class="w-full rounded border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500" />
                   <span v-else class="text-slate-500 line-through">{{ student.email }}</span>
+                </td>
+                <td class="px-4 py-3">
+                  <input v-if="!student.exists" v-model="student.password" type="text" class="w-28 rounded border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500" />
+                  <span v-else class="text-slate-400 text-xs">—</span>
                 </td>
                 <td class="px-4 py-3 text-center">
                   <button @click="stagedStudents.splice(index, 1)" class="text-red-500 hover:text-red-700 transition" :title="$t('dept.students.remove_row')">
@@ -287,6 +292,7 @@ const studentForm = reactive({
   student_number: '',
   full_name: '',
   email: '',
+  password: '',
   semester: 8,
   is_active: true,
 })
@@ -411,6 +417,7 @@ const clearStudentForm = () => {
   studentForm.student_number = ''
   studentForm.full_name = ''
   studentForm.email = ''
+  studentForm.password = ''
   studentForm.semester = 8
   studentForm.is_active = true
 }
@@ -430,6 +437,7 @@ const openEditModal = (student) => {
   studentForm.student_number = student.student_number
   studentForm.full_name = student.full_name
   studentForm.email = student.official_email
+  studentForm.password = ''
   studentForm.semester = student.semester
   studentForm.is_active = student.is_active
   isStudentModalOpen.value = true
@@ -447,7 +455,11 @@ const submitStudentForm = async () => {
   const payload = {
       ...studentForm,
       role: 'student',
-      password: studentForm.student_number // Use student number as default password
+      password: studentForm.password ? studentForm.password : (isEditingStudent.value ? undefined : studentForm.student_number)
+  }
+
+  if (isEditingStudent.value && !studentForm.password) {
+      delete payload.password
   }
 
   try {

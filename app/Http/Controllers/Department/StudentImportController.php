@@ -156,7 +156,7 @@ class StudentImportController extends Controller
             'Content-Disposition' => 'attachment; filename="students_template.csv"',
         ];
 
-        $columns = ['student_number', 'full_name', 'email', 'semester', 'is_active'];
+        $columns = ['student_number', 'full_name', 'email', 'semester', 'password', 'is_active'];
 
         $callback = function () use ($columns) {
             $file = fopen('php://output', 'w');
@@ -168,11 +168,20 @@ class StudentImportController extends Controller
     }
 
     /**
+     * Column header aliases for CSV import (English & Arabic).
+     */
+    private const STUDENT_HEADER_ALIASES = [
+        'student_number' => ['student_number', 'student_id', 'student number', 'student no', 'student_no', 'std_no', 'رقم القيد', 'رقم_القيد', 'القيد', 'رقم قيد الطالب', 'رقم الطالب', 'رقم_طالب', 'قيد'],
+        'full_name'      => ['full_name', 'name', 'student_name', 'student name', 'الاسم', 'اسم الطالب', 'الاسم الكامل', 'اسم_الطالب', 'الاسم_الرباعي', 'الاسم الثلاثي', 'اسم الطالب ثلاثي', 'اسم الطالب رباعي', 'اسم'],
+        'email'          => ['email', 'official_email', 'student_email', 'البريد', 'البريد الالكتروني', 'البريد_الالكتروني', 'الإيميل', 'الايميل'],
+        'semester'       => ['semester', 'term', 'الفصل', 'الفصل الدراسي', 'الفصل_الدراسي', 'السمستر', 'المستوى', 'السداسي'],
+        'password'       => ['password', 'pass', 'كلمة المرور', 'كلمة_المرور', 'الرمز السري', 'الباسوورد', 'باسوورد', 'الرمز', 'رمز المرور'],
+        'is_active'      => ['is_active', 'status', 'active', 'الحالة', 'مفعل', 'نشط'],
+    ];
+
+    /**
      * Bulk parse students via a CSV or TXT file.
      * Reads the file and returns a staged array of students, marking those that already exist.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function import(Request $request): JsonResponse
     {
@@ -183,72 +192,151 @@ class StudentImportController extends Controller
         }
 
         $request->validate([
-            'file' => ['required', 'file', 'mimes:csv,txt', 'max:2048'],
+            'file' => [
+                'required',
+                'file',
+                'max:10240',
+                function ($attribute, $value, $fail) {
+                    $ext = strtolower($value->getClientOriginalExtension());
+                    if (!in_array($ext, ['csv', 'txt'])) {
+                        $fail('The file must be a CSV or TXT file.');
+                    }
+                },
+            ],
         ]);
 
         $file = $request->file('file');
-        $handle = fopen($file->getRealPath(), 'r');
-
-        if ($handle === false) {
-            return response()->json(['message' => 'Unable to read uploaded file.'], 422);
+        $raw = file_get_contents($file->getRealPath());
+        if ($raw === false || trim($raw) === '') {
+            return response()->json(['message' => 'The uploaded file is empty or unreadable.'], 422);
         }
 
-        $header = fgetcsv($handle);
-        if (!$header) {
+        // Strip UTF-8 BOM
+        $raw = preg_replace('/^\xEF\xBB\xBF/', '', $raw);
+
+        // Check UTF-16
+        if (str_starts_with($raw, "\xFF\xFE") || str_starts_with($raw, "\xFE\xFF")) {
+            $raw = mb_convert_encoding($raw, 'UTF-8', 'UTF-16');
+        } elseif (!mb_check_encoding($raw, 'UTF-8')) {
+            $raw = mb_convert_encoding($raw, 'UTF-8', 'ISO-8859-1');
+        }
+
+        // Detect delimiter: comma, semicolon, tab
+        $firstLine = strtok($raw, "\r\n");
+        $delimiter = ',';
+        if ($firstLine !== false) {
+            $semicolons = substr_count($firstLine, ';');
+            $commas = substr_count($firstLine, ',');
+            $tabs = substr_count($firstLine, "\t");
+            if ($semicolons > $commas && $semicolons > $tabs) {
+                $delimiter = ';';
+            } elseif ($tabs > $commas && $tabs > $semicolons) {
+                $delimiter = "\t";
+            }
+        }
+
+        // Parse lines
+        $handle = fopen('php://temp', 'r+');
+        fwrite($handle, $raw);
+        rewind($handle);
+
+        $firstRow = fgetcsv($handle, 0, $delimiter, '"', '');
+        if (!$firstRow) {
             fclose($handle);
             return response()->json(['message' => 'CSV file is empty.'], 422);
         }
 
-        $normalizedHeader = array_map(fn ($value) => strtolower(trim((string) $value)), $header);
+        // Match headers
+        $mappedIndexes = [];
+        $isHeaderRow = false;
 
-        // We mapped official_email to email in the template
-        $requiredColumns = ['student_number', 'full_name', 'email', 'semester'];
-        foreach ($requiredColumns as $column) {
-            if (!in_array($column, $normalizedHeader, true) && !($column === 'email' && in_array('official_email', $normalizedHeader, true))) {
-                fclose($handle);
-                return response()->json([
-                    'message' => "Missing required column: {$column}",
-                ], 422);
+        foreach ($firstRow as $idx => $cell) {
+            $cleaned = strtolower(trim((string)$cell));
+            $cleaned = preg_replace('/[\x00-\x1F\x7F\xEF\xBB\xBF]/u', '', $cleaned);
+            $cleaned = trim($cleaned);
+
+            foreach (self::STUDENT_HEADER_ALIASES as $key => $aliases) {
+                if (in_array($cleaned, $aliases, true)) {
+                    $mappedIndexes[$key] = $idx;
+                    $isHeaderRow = true;
+                    break;
+                }
             }
         }
-
-        $columnIndexes = array_flip($normalizedHeader);
-        $emailIndex = $columnIndexes['email'] ?? $columnIndexes['official_email'];
 
         $rows = [];
         $emailsToCheck = [];
         $studentNumbersToCheck = [];
 
-        while (($data = fgetcsv($handle)) !== false) {
-            if (count(array_filter($data, fn ($value) => trim((string) $value) !== '')) === 0) {
+        // If first line wasn't header, rewind to include it as a data row
+        if (!$isHeaderRow) {
+            rewind($handle);
+            // Default positional mapping: 0 => student_number, 1 => full_name, 2 => email, 3 => semester, 4 => password
+            $mappedIndexes = [
+                'student_number' => 0,
+                'full_name'      => 1,
+                'email'          => 2,
+                'semester'       => 3,
+                'password'       => 4,
+            ];
+        }
+
+        while (($data = fgetcsv($handle, 0, $delimiter, '"', '')) !== false) {
+            if ($data === [null] || implode('', array_map('trim', $data)) === '') {
                 continue;
             }
 
-            $email = trim((string) ($data[$emailIndex] ?? ''));
-            $studentNumber = trim((string) ($data[$columnIndexes['student_number']] ?? ''));
+            $studentNumber = isset($mappedIndexes['student_number']) ? trim((string)($data[$mappedIndexes['student_number']] ?? '')) : '';
+            $fullName = isset($mappedIndexes['full_name']) ? trim((string)($data[$mappedIndexes['full_name']] ?? '')) : '';
+            
+            // Clean student number (keep digits only if formatted)
+            $studentNumber = preg_replace('/[^\d]/', '', $studentNumber);
+
+            if ($studentNumber === '' && $fullName === '') {
+                continue;
+            }
+
+            $email = isset($mappedIndexes['email']) ? strtolower(trim((string)($data[$mappedIndexes['email']] ?? ''))) : '';
+            if ($email === '' && $studentNumber !== '') {
+                $email = "{$studentNumber}@cctt.edu.ly";
+            }
+
+            $semester = isset($mappedIndexes['semester']) ? (int)trim((string)($data[$mappedIndexes['semester']] ?? '')) : 8;
+            if ($semester < 1 || $semester > 8) {
+                $semester = 8;
+            }
+
+            $password = isset($mappedIndexes['password']) ? trim((string)($data[$mappedIndexes['password']] ?? '')) : '';
+            if ($password === '') {
+                $password = $studentNumber;
+            }
+
+            $isActive = true;
+            if (isset($mappedIndexes['is_active'])) {
+                $isActiveVal = strtolower(trim((string)($data[$mappedIndexes['is_active']] ?? '')));
+                if (in_array($isActiveVal, ['0', 'false', 'no', 'inactive', 'معطل', 'غير مفعل'], true)) {
+                    $isActive = false;
+                }
+            }
 
             $row = [
                 'student_number' => $studentNumber,
-                'full_name' => trim((string) ($data[$columnIndexes['full_name']] ?? '')),
-                'email' => $email,
-                'semester' => (int) trim((string) ($data[$columnIndexes['semester']] ?? '')),
-                'is_active' => true,
-                'exists' => false, // Will be updated
+                'full_name'      => $fullName,
+                'email'          => $email,
+                'semester'       => $semester,
+                'password'       => $password,
+                'is_active'      => $isActive,
+                'exists'         => false,
             ];
 
-            if (array_key_exists('is_active', $columnIndexes)) {
-                $isActiveValue = strtolower(trim((string) ($data[$columnIndexes['is_active']] ?? '')));
-                $row['is_active'] = in_array($isActiveValue, ['1', 'true', 'yes', 'active'], true);
-            }
-
             $rows[] = $row;
-            if ($email) $emailsToCheck[] = $email;
-            if ($studentNumber) $studentNumbersToCheck[] = $studentNumber;
+            if ($email !== '') $emailsToCheck[] = $email;
+            if ($studentNumber !== '') $studentNumbersToCheck[] = $studentNumber;
         }
         fclose($handle);
 
         if (empty($rows)) {
-            return response()->json(['message' => 'No valid rows found in CSV.'], 422);
+            return response()->json(['message' => 'No valid student rows found in the CSV file.'], 422);
         }
 
         // Check for existing users/students in bulk (excluding soft-deleted)
@@ -256,7 +344,7 @@ class StudentImportController extends Controller
         $existingNumbers = DB::table('students')->whereNull('deleted_at')->whereIn('student_number', $studentNumbersToCheck)->pluck('student_number')->toArray();
 
         foreach ($rows as &$row) {
-            if (in_array($row['email'], $existingEmails) || in_array($row['student_number'], $existingNumbers)) {
+            if (in_array($row['email'], $existingEmails, true) || in_array($row['student_number'], $existingNumbers, true)) {
                 $row['exists'] = true;
             }
         }
@@ -269,10 +357,6 @@ class StudentImportController extends Controller
 
     /**
      * Confirm and bulk insert the staged students.
-     * Uses AddingUserRequest logic via manual validation.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function confirmImport(Request $request): JsonResponse
     {
@@ -282,34 +366,54 @@ class StudentImportController extends Controller
         }
 
         $students = $request->input('students', []);
-        
-        // We will validate using the rules from AddingUserRequest
-
-        // Ensure we pass the required role for validation closures to work properly
-        foreach ($students as &$student) {
-            $student['role'] = 'student';
-            $student['password'] = $student['student_number'] ?? 'password'; // Password required by AddingUserRequest
+        if (empty($students)) {
+            return response()->json(['message' => 'No students to import.'], 422);
         }
-        $request->merge(['students' => $students]);
 
-        // Manually instantiate the request with the data so the closure logic in AddingUserRequest works
-        $addingRequest = new \App\Http\Requests\AddingUserRequest();
-        $addingRequest->merge(['role' => 'student']);
-        $rules = $addingRequest->rules();
-        
-        // Remove rules for fields we handle automatically
-        unset($rules['password'], $rules['department_id']);
-
-        // Since the array validation is complex, we will validate row by row using the validator
         $validStudents = [];
         $errors = [];
 
         foreach ($students as $index => $student) {
-            $validator = Validator::make($student, $rules);
-            if ($validator->fails()) {
-                $errors["row_$index"] = $validator->errors();
+            $studentNumber = preg_replace('/[^\d]/', '', trim((string)($student['student_number'] ?? '')));
+            $fullName = trim((string)($student['full_name'] ?? ''));
+            $email = strtolower(trim((string)($student['email'] ?? '')));
+            $semester = (int)($student['semester'] ?? 8);
+            if ($semester < 1 || $semester > 8) $semester = 8;
+            $password = trim((string)($student['password'] ?? ''));
+            if ($password === '') {
+                $password = $studentNumber;
+            }
+            $isActive = (bool)($student['is_active'] ?? true);
+
+            if ($email === '' && $studentNumber !== '') {
+                $email = "{$studentNumber}@cctt.edu.ly";
+            }
+
+            $rowErrors = [];
+            if ($studentNumber === '' || strlen($studentNumber) !== 6) {
+                $rowErrors[] = 'Student number must be exactly 6 digits.';
+            }
+            if ($fullName === '') {
+                $rowErrors[] = 'Full name is required.';
+            }
+            if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $rowErrors[] = 'Valid email is required.';
+            }
+            if (strlen($password) < 6) {
+                $rowErrors[] = 'Password must be at least 6 characters.';
+            }
+
+            if (!empty($rowErrors)) {
+                $errors["row_$index"] = $rowErrors;
             } else {
-                $validStudents[] = $student;
+                $validStudents[] = [
+                    'student_number' => $studentNumber,
+                    'full_name'      => $fullName,
+                    'email'          => $email,
+                    'semester'       => $semester,
+                    'password'       => $password,
+                    'is_active'      => $isActive,
+                ];
             }
         }
 
@@ -321,33 +425,7 @@ class StudentImportController extends Controller
         }
 
         if (empty($validStudents)) {
-            return response()->json(['message' => 'No students to import.'], 422);
-        }
-
-        $studentRows = [];
-        $userRows = [];
-        $now = now();
-
-        foreach ($validStudents as $student) {
-            $studentRows[] = [
-                'student_number' => $student['student_number'],
-                'full_name' => $student['full_name'],
-                'official_email' => $student['email'],
-                'department_id' => $departmentId,
-                'semester' => $student['semester'],
-                'is_active' => $student['is_active'],
-            ];
-
-            $userRows[] = [
-                'full_name' => $student['full_name'],
-                'email' => $student['email'],
-                'password' => Hash::make($student['password']),
-                'role' => 'student',
-                'department_id' => $departmentId,
-                'is_active' => $student['is_active'],
-                'created_at' => $now,
-                'updated_at' => $now,
-            ];
+            return response()->json(['message' => 'No valid students to import.'], 422);
         }
 
         DB::beginTransaction();
@@ -355,11 +433,11 @@ class StudentImportController extends Controller
             foreach ($validStudents as $student) {
                 $studentData = [
                     'student_number' => $student['student_number'],
-                    'full_name' => $student['full_name'],
+                    'full_name'      => $student['full_name'],
                     'official_email' => $student['email'],
-                    'department_id' => $departmentId,
-                    'semester' => $student['semester'],
-                    'is_active' => $student['is_active'],
+                    'department_id'  => $departmentId,
+                    'semester'       => $student['semester'],
+                    'is_active'      => $student['is_active'],
                 ];
 
                 $existStudent = \App\Models\Student::withTrashed()
@@ -381,20 +459,20 @@ class StudentImportController extends Controller
                 if ($existUser) {
                     $existUser->restore();
                     $existUser->update([
-                        'full_name' => $student['full_name'],
-                        'password' => Hash::make($student['password']),
-                        'role' => 'student',
+                        'full_name'     => $student['full_name'],
+                        'password'      => Hash::make($student['password']),
+                        'role'          => 'student',
                         'department_id' => $departmentId,
-                        'is_active' => $student['is_active'],
+                        'is_active'     => $student['is_active'],
                     ]);
                 } else {
                     \App\Models\User::create([
-                        'full_name' => $student['full_name'],
-                        'email' => $student['email'],
-                        'password' => Hash::make($student['password']),
-                        'role' => 'student',
+                        'full_name'     => $student['full_name'],
+                        'email'         => $student['email'],
+                        'password'      => Hash::make($student['password']),
+                        'role'          => 'student',
                         'department_id' => $departmentId,
-                        'is_active' => $student['is_active'],
+                        'is_active'     => $student['is_active'],
                     ]);
                 }
             }
@@ -402,7 +480,7 @@ class StudentImportController extends Controller
             activity()
                 ->causedBy($request->user())
                 ->log('Confirmed import of ' . count($validStudents) . ' students via CSV');
-            
+
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
@@ -411,7 +489,7 @@ class StudentImportController extends Controller
 
         return response()->json([
             'message' => 'Students imported successfully.',
-            'imported_count' => count($studentRows),
+            'imported_count' => count($validStudents),
         ]);
     }
 

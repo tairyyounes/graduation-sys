@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 class HistoricalProposalController extends Controller
 {
     /**
-     * Get a list of previous accepted and rejected proposals.
+     * Get a list of previous accepted and rejected proposals with high-performance pagination.
      * Excludes proposals from the current semester.
      */
     public function index(Request $request): JsonResponse
@@ -28,46 +28,86 @@ class HistoricalProposalController extends Controller
             $semesterStart = now()->setDate($currentYear, 7, 1)->startOfDay();
         }
 
-        $proposalsQuery = Proposal::with(['department', 'latestVersion', 'students'])
-            ->where(function ($query) use ($semesterStart) {
-                $query->where('submission_status', 'archived')
-                      ->orWhere(function ($q) use ($semesterStart) {
-                          $q->where('created_at', '<', $semesterStart)
-                            ->whereIn('review_status', ['accepted', 'rejected']);
-                      });
-            })
-            ->orderBy('created_at', 'desc');
+        $search = trim((string) $request->query('search', ''));
+        $departmentId = $request->query('department_id');
+        $perPage = min(max((int) $request->query('per_page', 25), 1), 100);
 
-        // Optional: Filter by department if a student calls this and we only want to show their department's past proposals.
-        // If we want them to see all, we don't filter. The user said "so the students can see this proposals".
-        // Let's return all.
-        
-        $proposals = $proposalsQuery->get()->map(function ($proposal) {
-            $v = $proposal->latestVersion;
+        // Subquery for the latest version per proposal
+        $latestVersionSub = DB::table('proposal_versions')
+            ->select('proposal_id', DB::raw('MAX(version_id) as max_version_id'))
+            ->groupBy('proposal_id');
+
+        $query = DB::table('proposals')
+            ->joinSub($latestVersionSub, 'lv', function ($join) {
+                $join->on('proposals.proposal_id', '=', 'lv.proposal_id');
+            })
+            ->join('proposal_versions', 'proposal_versions.version_id', '=', 'lv.max_version_id')
+            ->leftJoin('departments', 'departments.department_id', '=', 'proposals.department_id')
+            ->where(function ($q) use ($semesterStart) {
+                $q->where('proposals.submission_status', 'archived')
+                  ->orWhere(function ($sub) use ($semesterStart) {
+                      $sub->where('proposals.created_at', '<', $semesterStart)
+                          ->whereIn('proposals.review_status', ['accepted', 'rejected']);
+                  });
+            });
+
+        if ($departmentId) {
+            $query->where('proposals.department_id', $departmentId);
+        }
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('proposal_versions.title', 'like', "%{$search}%")
+                  ->orWhere('proposal_versions.tags', 'like', "%{$search}%")
+                  ->orWhere('departments.department_name', 'like', "%{$search}%");
+            });
+        }
+
+        $query->orderBy('proposals.created_at', 'desc')
+              ->orderBy('proposals.proposal_id', 'desc');
+
+        $paginated = $query->select([
+            'proposals.proposal_id as id',
+            'proposals.review_status as status',
+            'proposals.created_at',
+            'departments.department_name as department',
+            'proposal_versions.title',
+            'proposal_versions.tags',
+            'proposal_versions.problem',
+            'proposal_versions.solution',
+            'proposal_versions.objectives',
+            'proposal_versions.functions',
+            'proposal_versions.technologies_used as technologies',
+        ])->paginate($perPage);
+
+        $proposals = collect($paginated->items())->map(function ($item) {
             return [
-                'id' => $proposal->proposal_id,
-                'title' => $v ? $v->title : 'Untitled',
-                'domain' => $proposal->department ? $proposal->department->department_name : 'N/A',
-                'tags' => $v ? $v->tags : '',
-                'problem' => $v ? $v->problem : '',
-                'solution' => $v ? $v->solution : '',
-                'objectives' => $v ? $v->objectives : '',
-                'functions' => $v ? $v->functions : '',
-                'technologies' => $v ? $v->technologies_used : '',
-                'department' => $proposal->department ? $proposal->department->department_name : 'Unknown',
-                'status' => $proposal->review_status,
-                'created_at' => $proposal->created_at->format('Y-m-d'),
-                'students' => $proposal->students->map(function ($student) {
-                    return [
-                        'name' => $student->full_name,
-                        'student_number' => $student->student_number
-                    ];
-                })
+                'id' => $item->id,
+                'title' => $item->title ?? 'Untitled',
+                'domain' => $item->department ?? 'N/A',
+                'tags' => $item->tags ?? '',
+                'problem' => $item->problem ?? '',
+                'solution' => $item->solution ?? '',
+                'objectives' => $item->objectives ?? '',
+                'functions' => $item->functions ?? '',
+                'technologies' => $item->technologies ?? '',
+                'department' => $item->department ?? 'Unknown',
+                'status' => $item->status,
+                'created_at' => $item->created_at ? substr((string)$item->created_at, 0, 10) : '',
+                'students' => [],
             ];
         });
 
         return response()->json([
-            'proposals' => $proposals
+            'proposals' => $proposals,
+            'pagination' => [
+                'total' => $paginated->total(),
+                'per_page' => $paginated->perPage(),
+                'current_page' => $paginated->currentPage(),
+                'last_page' => $paginated->lastPage(),
+                'from' => $paginated->firstItem(),
+                'to' => $paginated->lastItem(),
+            ],
         ]);
     }
 

@@ -367,7 +367,9 @@
       "edit": "تعديل طالب",
       "official_email": "البريد الرسمي",
       "clear": "مسح",
-      "save_changes": "حفظ التغييرات"
+      "save_changes": "حفظ التغييرات",
+      "password_hint": "اختياري - الافتراضي هو رقم القيد",
+      "password_leave_blank": "اتركه فارغاً للإبقاء على كلمة المرور الحالية"
     },
     "compare": {
       "back": "العودة إلى المقترح",
@@ -812,5 +814,16 @@
     "menu": "القائمة",
     "english": "English",
     "arabic": "العربية"
+  },
+  "profile": {
+    "change_password": "تغيير كلمة المرور",
+    "current_password": "كلمة المرور الحالية",
+    "new_password": "كلمة المرور الجديدة",
+    "confirm_new_password": "تأكيد كلمة المرور الجديدة",
+    "password_min_length": "يجب ألا تقل عن 6 أحرف/أرقام.",
+    "passwords_must_match": "كلمتا المرور غير متطابقتين.",
+    "save_password": "حفظ كلمة المرور",
+    "password_updated_success": "تم تغيير كلمة المرور بنجاح.",
+    "update_failed": "تعذر تحديث كلمة المرور، يرجى التأكد من صحة البيانات."
   }
 }

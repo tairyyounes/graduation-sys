@@ -21,6 +21,16 @@ class AddingUserRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
+        if ($this->has('full_name')) {
+            $this->merge(['full_name' => trim(preg_replace('/\s+/u', ' ', (string)$this->full_name))]);
+        }
+        if ($this->has('email')) {
+            $this->merge(['email' => strtolower(trim((string)$this->email))]);
+        }
+        if ($this->has('student_number')) {
+            $this->merge(['student_number' => trim((string)$this->student_number)]);
+        }
+
         // Auto-assign department_id when missing for non-admin users (e.g. department head creating a student/member)
         if ($this->user() && $this->user()->role !== 'admin' && empty($this->department_id)) {
             if ($this->user()->department_id) {
@@ -35,14 +45,15 @@ class AddingUserRequest extends FormRequest
      */
     public function rules(): array
     {
+        $minPasswordLength = ($this->role === 'student') ? 6 : 8;
+
         return [
             // Full name
             'full_name' => [
                 'required',
                 'string',
-                'max:50',
+                'max:100',
                 'regex:/^[\pL\s]+$/u',
-                
             ],
 
             // Role
@@ -95,7 +106,7 @@ class AddingUserRequest extends FormRequest
             'is_active' => ['required', 'boolean'],
 
             // Password
-            'password' => ['required', 'string', 'min:8', 'max:32'],
+            'password' => ['required', 'string', 'min:' . $minPasswordLength, 'max:32'],
         ];
     }
 

@@ -367,7 +367,9 @@
       "edit": "Edit student",
       "official_email": "Official Email",
       "clear": "Clear",
-      "save_changes": "Save changes"
+      "save_changes": "Save changes",
+      "password_hint": "Optional - defaults to student number",
+      "password_leave_blank": "Leave blank to keep current password"
     },
     "compare": {
       "back": "Back to proposal",
@@ -812,5 +814,16 @@
     "menu": "Menu",
     "english": "English",
     "arabic": "العربية"
+  },
+  "profile": {
+    "change_password": "Change Password",
+    "current_password": "Current Password",
+    "new_password": "New Password",
+    "confirm_new_password": "Confirm New Password",
+    "password_min_length": "Must be at least 6 characters.",
+    "passwords_must_match": "Passwords do not match.",
+    "save_password": "Save Password",
+    "password_updated_success": "Password changed successfully.",
+    "update_failed": "Failed to update password. Please check your inputs."
   }
 }
