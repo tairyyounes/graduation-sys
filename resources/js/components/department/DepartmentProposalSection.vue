@@ -101,8 +101,6 @@
       </div>
     </article>
 
-<<<<<<< Updated upstream
-=======
     <!-- ── AI Recommendations ──────────────────────────────────────── -->
     <div v-if="recommendations && recommendations.length > 0" class="rounded-xl border border-teal-200 bg-teal-50/20 p-6 shadow-sm text-start">
       <div class="flex items-start gap-4 mb-4">
@@ -232,7 +230,6 @@
       </div>
     </article>
 
->>>>>>> Stashed changes
     <article v-if="selectedProposal.status === 'pending' || selectedProposal.status === 'revision_requested'" class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <div class="flex justify-between items-center mb-3">
         <h2 class="text-lg font-semibold text-slate-900">{{ $t('dept.proposal.reviewer_note') }}</h2>
@@ -314,6 +311,7 @@ const selectedProposal = ref({
   max_revisions: 2
 })
 
+const recommendations = ref([])
 const committeeReview = ref({
   total_members: 0,
   approvals_count: 0,

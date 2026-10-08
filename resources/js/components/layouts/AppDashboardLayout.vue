@@ -164,9 +164,5 @@ const currentTitle = computed(() => {
 })
 
 const sidebarOpen = ref(false)
-<<<<<<< Updated upstream
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-=======
-const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
->>>>>>> Stashed changes
 </script>

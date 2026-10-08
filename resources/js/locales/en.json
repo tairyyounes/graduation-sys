@@ -758,8 +758,6 @@
       "step_embedding": "Step 2/3: Computing vector embeddings & similarity matrix...",
       "step_analyzing": "Step 3/3: Evaluating cross-repository overlap & recommendations..."
     }
-<<<<<<< Updated upstream
-=======
   },
   "layout": {
     "logout": "Logout",
@@ -767,6 +765,5 @@
     "menu": "Menu",
     "english": "English",
     "arabic": "العربية"
->>>>>>> Stashed changes
   }
 }

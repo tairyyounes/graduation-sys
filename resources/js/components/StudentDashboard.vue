@@ -227,11 +227,7 @@
 </template>
 
 <script setup>
-<<<<<<< Updated upstream
 import { ref, computed, onMounted, watch } from 'vue';
-=======
-import { ref, onMounted, watch } from 'vue';
->>>>>>> Stashed changes
 import LanguageSwitcher from './common/LanguageSwitcher.vue';
 import StudentOverviewSection from './student/StudentOverviewSection.vue';
 import StudentWorkspaceSection from './student/StudentWorkspaceSection.vue';
@@ -249,10 +245,7 @@ import { useToast } from "vue-toastification";
 import { useI18n } from 'vue-i18n';
 
 const toast = useToast();
-<<<<<<< Updated upstream
 const { t } = useI18n();
-=======
->>>>>>> Stashed changes
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 const sidebarOpen = ref(false);
 
