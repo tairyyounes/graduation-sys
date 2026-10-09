@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use App\Support\SupervisorApprovalRules;
 
 class StoreProposalRequest extends FormRequest
 {
@@ -22,7 +23,9 @@ class StoreProposalRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        // Supervisor details are optional while drafting; they become
+        // mandatory when the proposal is submitted.
+        return SupervisorApprovalRules::rules(strict: false) + [
             'title' => [
                 'required',
                 'string',
@@ -80,6 +83,11 @@ class StoreProposalRequest extends FormRequest
                 },
             ],
         ];
+    }
+
+    public function messages(): array
+    {
+        return SupervisorApprovalRules::messages();
     }
 
     /**

@@ -116,7 +116,7 @@ const props = defineProps({
   },
   maxSize: {
     type: Number,
-    default: 2,
+    default: 3,
   },
   teamRequest: {
     type: Object,

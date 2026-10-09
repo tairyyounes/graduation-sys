@@ -60,6 +60,7 @@ Route::middleware(['auth'])->group(function () {
 
         // Student API Routes
         Route::get('/student/data', [\App\Http\Controllers\Student\StudentDashboardController::class, 'getData']);
+        Route::get('/student/supervisor-approval-template', [\App\Http\Controllers\Student\StudentProposalController::class, 'supervisorApprovalTemplate']);
         
         Route::prefix('/student/proposals')->group(function () {
             Route::get('/', [\App\Http\Controllers\Student\StudentProposalController::class, 'index']);
@@ -73,6 +74,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{proposal}/versions', [\App\Http\Controllers\Student\StudentProposalController::class, 'versions']);
             Route::get('/{proposal}/decision', [\App\Http\Controllers\Student\StudentProposalController::class, 'decision']);
             Route::get('/{proposal}/similarity', [\App\Http\Controllers\Student\StudentProposalController::class, 'similarity']);
+            Route::get('/{proposal}/supervisor-approval', [\App\Http\Controllers\Student\StudentProposalController::class, 'supervisorApproval']);
             
             Route::get('/{proposal}/team', [\App\Http\Controllers\Student\StudentTeamController::class, 'getTeam']);
             Route::post('/{proposal}/invite', [\App\Http\Controllers\Student\StudentTeamController::class, 'invite']);
@@ -99,6 +101,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/proposals/{proposal}', [DepartmentProposalController::class, 'show']);
         Route::post('/proposals/{proposal}/review', [DepartmentProposalController::class, 'review']);
         Route::get('/proposals/{proposal}/similarity', [DepartmentProposalController::class, 'similarity']);
+        Route::get('/proposals/{proposal}/supervisor-approval', [DepartmentProposalController::class, 'supervisorApproval']);
     });
 
     // Shared Proposal Repository API Routes

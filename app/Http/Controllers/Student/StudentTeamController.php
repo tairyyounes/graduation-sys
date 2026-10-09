@@ -10,13 +10,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Teams are pairs: the proposal owner plus at most one teammate. A teammate
+ * A team has at most three students (the owner plus two teammates). A teammate
  * joins only after accepting a team request; until then the request stays
- * pending and the sender cannot send another one unless it is declined.
+ * pending and the team cannot send another one unless it is declined.
  */
 class StudentTeamController extends Controller
 {
-    private const MAX_TEAM_SIZE = 2;
+    private const MAX_TEAM_SIZE = 3;
 
     public function getTeam(Request $request, Proposal $proposal): JsonResponse
     {
@@ -98,13 +98,13 @@ class StudentTeamController extends Controller
         if ($proposal->students()->count() >= self::MAX_TEAM_SIZE) {
             return $this->fieldError(__('messages.team.team_full'));
         }
-        if ($inviter->pairedProposal()) {
+        if ($inviter->teamProposal(exceptProposalId: $proposal->proposal_id)) {
             return $this->fieldError(__('messages.team.already_paired'));
         }
         if ($inviter->proposalWithPendingRequest()) {
             return $this->fieldError(__('messages.team.request_pending'));
         }
-        if ($newStudent->pairedProposal()) {
+        if ($newStudent->teamProposal()) {
             return $this->fieldError(__('messages.team.invitee_paired'));
         }
 
@@ -203,7 +203,7 @@ class StudentTeamController extends Controller
         if ($proposal->students()->count() >= self::MAX_TEAM_SIZE) {
             return response()->json(['message' => __('messages.team.team_full')], 422);
         }
-        if ($student->pairedProposal()) {
+        if ($student->teamProposal()) {
             return response()->json(['message' => __('messages.team.accept_paired')], 422);
         }
         if ($proposal->submission_status === 'submitted') {
@@ -223,7 +223,7 @@ class StudentTeamController extends Controller
                 'updated_at' => now(),
             ]);
 
-            // Now paired: decline the other requests sent to this student...
+            // Now in a team: decline the other requests sent to this student...
             DB::table('project_members')
                 ->where('student_id', $student->student_id)
                 ->where('invitation_status', 'pending')

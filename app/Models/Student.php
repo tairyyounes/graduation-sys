@@ -52,11 +52,12 @@ class Student extends Model
                     ->withTimestamps();
     }
 
-    /** The open (non-archived) proposal where this student already has a teammate, if any. */
-    public function pairedProposal(): ?Proposal
+    /** The open (non-archived) proposal where this student already has teammates, if any. */
+    public function teamProposal(?int $exceptProposalId = null): ?Proposal
     {
         return $this->proposals()
             ->where('submission_status', '!=', 'archived')
+            ->when($exceptProposalId, fn ($q) => $q->where('proposals.proposal_id', '!=', $exceptProposalId))
             ->has('students', '>=', 2)
             ->first();
     }
