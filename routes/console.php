@@ -46,19 +46,6 @@ Artisan::command('ai:check', function () {
         return;
     }
 
-    try {
-        $this->line("2. Testing endpoint [POST] {$url}/recommend ...");
-        $recResponse = \Illuminate\Support\Facades\Http::timeout(5)->post("{$url}/recommend", $samplePayload);
-
-        if ($recResponse->successful()) {
-            $this->info("   [SUCCESS] Status {$recResponse->status()}");
-        } else {
-            $this->warn("   [WARNING] /recommend responded with HTTP {$recResponse->status()}");
-        }
-    } catch (\Throwable $e) {
-        $this->warn("   [WARNING] /recommend check: " . $e->getMessage());
-    }
-
     $this->info("AI connection check completed.");
 })->purpose('Test connection to the external FastAPI AI server');
 

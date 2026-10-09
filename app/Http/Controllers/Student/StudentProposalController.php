@@ -743,31 +743,13 @@ class StudentProposalController extends Controller
                 ];
             })->values();
 
-        // AI Recommendations
-        $recommendations = [];
-        if ($aiStatus === 'success') {
-            $recResults = app(\App\Services\AiSimilarityService::class)->getRecommendations(
-                version:        $latestVersion,
-                departmentName: $proposal->department->department_name ?? 'General',
-                excludeId:      (string) $proposal->proposal_id
-            );
-
-            foreach ($recResults as $rec) {
-                $sim = $rec['similarity'] ?? [];
-                $recommendations[] = [
-                    'title'       => $rec['title'] ?? 'Alternative Project',
-                    'domain'      => $rec['domain'] ?? 'N/A',
-                    'explanation' => $rec['explanation'] ?? '',
-                    'relevance'   => round(($sim['final_similarity'] ?? 0) * 100, 1) . '%',
-                ];
-            }
-        }
-
         return response()->json([
             'ai_status' => $aiStatus,
             'summary'   => $summary,
             'results'   => $results,
-            'recommendations' => $recommendations,
+            // The AI engine has no /recommend endpoint; kept empty so the
+            // frontend's (hidden-when-empty) recommendations section still works.
+            'recommendations' => [],
             'analyzed_at' => optional($topResult)->updated_at,
             'message'   => 'Similarity analysis retrieved successfully.',
         ]);

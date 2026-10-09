@@ -208,46 +208,4 @@ class AiSimilarityService
             return false;
         }
     }
-
-    /**
-     * Call the FastAPI recommendations engine for alternative suggestions.
-     */
-    public function getRecommendations(
-        ProposalVersion $version,
-        string $departmentName,
-        ?string $excludeId = null
-    ): array {
-        @set_time_limit(120);
-        $baseUrl = rtrim(config('services.dense_api.url', env('DENSE_API_URL', 'http://127.0.0.1:8000')), '/');
-
-        $payload = [
-            'title'            => $version->title ?? '',
-            'problem'          => $version->problem ?? '',
-            'solution'         => $version->solution ?? '',
-            'functions'        => $version->functions ?? '',
-            'objectives'       => $version->objectives ?? '',
-            'tags'             => $version->tags ?? '',
-            'technologies_used' => $version->technologies_used ?? '',
-            'department'       => $departmentName,
-            'top_k'            => 3,
-        ];
-
-        if ($excludeId !== null) {
-            $payload['exclude_project_id'] = $excludeId;
-        }
-
-        try {
-            $response = Http::timeout(120)
-                ->post("{$baseUrl}/recommend", $payload);
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            Log::error("AiSimilarityService recommendations failed: " . $e->getMessage());
-            return [];
-        }
-
-        if ($response->failed()) {
-            return [];
-        }
-
-        return $response->json()['results'] ?? [];
-    }
 }
