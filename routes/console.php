@@ -21,6 +21,8 @@ Artisan::command('ai:check', function () {
         'technologies_used' => 'Python, PHP, Vue',
         'department'        => 'General',
         'top_k'             => 3,
+        // A connectivity test must not write this sample into the AI index.
+        'add_to_index'      => false,
     ];
 
     try {

@@ -92,12 +92,14 @@ class CheckProposalSimilarity implements ShouldQueue, ShouldBeUnique
         // ── 1. Mark existing results as pending (clean slate) ──────────────
         SimilarityResult::where('proposal_version_id', $versionId)->update(['ai_status' => 'pending']);
 
-        // If the AI engine has never received this system's proposals (fresh
-        // install / cache wiped), start a sync so later checks compare against
-        // them. This check itself still runs against the fallback corpus.
+        // Keep the AI engine's copy of this system's proposals in step: when
+        // its count differs from ours (fresh install, cache wiped, proposals
+        // added or removed), start a sync. The sync only re-encodes changed
+        // proposals and drops ones no longer in the corpus. This check itself
+        // runs against whatever the engine has right now.
         $status = $service->corpusStatus();
-        if ($status !== null && ($status['system_projects'] ?? 0) === 0 && empty($status['syncing'])
-            && AiSimilarityService::corpusQuery()->exists()) {
+        if ($status !== null && empty($status['syncing'])
+            && ($status['system_projects'] ?? 0) !== AiSimilarityService::corpusQuery()->count()) {
             SyncAiCorpus::dispatch();
         }
 
