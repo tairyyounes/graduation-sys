@@ -313,6 +313,9 @@ class DepartmentProposalController extends Controller
                     ->causedBy($user)
                     ->log("proposal rejected by {$user->full_name}");
 
+                // Rejected proposals leave the comparison corpus (their data
+                // and history stay in the system).
+                SyncAiCorpus::dispatch();
                 $message = "تم رفض المقترح.";
             }
 

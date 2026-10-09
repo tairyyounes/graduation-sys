@@ -76,8 +76,14 @@ class AiSimilarityService
     }
 
     /**
-     * Proposals the AI engine compares new submissions against: historical
-     * imports (archived) and accepted proposals stored in this system.
+     * Proposals the AI engine compares new submissions against (see
+     * docs/similarity-scope-plan.md):
+     *  - accepted proposals, including historical imports (archived+accepted);
+     *  - proposals submitted and still under review (pending or revision
+     *    requested), so two students submitting the same idea close together
+     *    are caught before either is decided.
+     * Drafts, student-archived drafts and rejected proposals are left out;
+     * a rejected proposal keeps all its data, it just stops being compared.
      */
     public static function corpusQuery()
     {
@@ -85,9 +91,31 @@ class AiSimilarityService
             ->with(['latestVersion', 'department'])
             ->where('review_status', '!=', 'rejected')
             ->where(function ($q) {
-                $q->where('submission_status', 'archived')
+                $q->where('submission_status', 'submitted')
                   ->orWhere('review_status', 'accepted');
             });
+    }
+
+    /**
+     * Bring the AI engine's copy of the corpus up to date and wait for it, so
+     * the check that follows already compares against every proposal in
+     * scope (including one submitted seconds ago). The engine only
+     * re-encodes new or changed proposals, so this is usually instant.
+     */
+    public function syncCorpusAndWait(int $timeoutSeconds = 60): void
+    {
+        $status = $this->corpusStatus();
+        if ($status === null) {
+            return;
+        }
+        if (empty($status['syncing'])) {
+            $this->syncCorpus();
+        }
+        $deadline = time() + $timeoutSeconds;
+        do {
+            usleep(500_000);
+            $status = $this->corpusStatus();
+        } while ($status !== null && !empty($status['syncing']) && time() < $deadline);
     }
 
     /**
