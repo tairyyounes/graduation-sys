@@ -174,6 +174,29 @@ class DepartmentProposalController extends Controller
     }
 
     /**
+     * Preview (inline) or download (?download=1) the student's signed
+     * supervisor approval. Same access rules as viewing the proposal.
+     */
+    public function supervisorApproval(Request $request, Proposal $proposal)
+    {
+        $user = $request->user();
+
+        if ($user->role !== 'admin' && $proposal->department_id !== $user->department_id) {
+            return response()->json(['message' => 'Unauthorized access to this department\'s data.'], 403);
+        }
+
+        if (!$proposal->isUserInReviewCommittee($user)) {
+            return response()->json(['message' => 'Unauthorized. Only review committee members can view this proposal.'], 403);
+        }
+
+        if (!$proposal->hasSupervisorApproval()) {
+            return response()->json(['message' => __('messages.supervisor.approval_missing')], 404);
+        }
+
+        return $proposal->supervisorApprovalResponse($request->boolean('download'));
+    }
+
+    /**
      * Store a review decision for a proposal.
      */
     public function review(Request $request, Proposal $proposal): JsonResponse
@@ -482,6 +505,8 @@ class DepartmentProposalController extends Controller
             'objectives'       => $v->objectives ?? '',
             'tags'             => $v->tags ?? '',
             'tech'             => $v->technologies_used ?? '',
+            'supervisor_name'  => $proposal->supervisor_name,
+            'supervisor_approval' => $proposal->supervisorApprovalMeta('/department/proposals'),
             'status'           => $proposal->review_status,
             'submission_status' => $proposal->submission_status,
             'is_locked'         => $proposal->is_locked,

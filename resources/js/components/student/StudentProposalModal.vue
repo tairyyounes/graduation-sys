@@ -81,6 +81,21 @@
                 <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">{{ $t('student.modal.created_date') }}</h4>
                 <p class="text-sm text-slate-600">{{ proposal.date || $t('student.modal.today') }}</p>
               </div>
+              <div>
+                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">{{ $t('student.form.supervisor.name') }}</h4>
+                <p class="text-sm font-medium text-slate-900">{{ proposal.supervisor_name || $t('student.form.supervisor.not_provided') }}</p>
+              </div>
+              <div>
+                <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">{{ $t('student.form.supervisor.approval_doc') }}</h4>
+                <div v-if="proposal.supervisor_approval" class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                  <p class="text-sm font-medium text-slate-800 truncate" :title="proposal.supervisor_approval.name" dir="auto">{{ proposal.supervisor_approval.name }}</p>
+                  <div class="mt-2 flex gap-2">
+                    <a :href="proposal.supervisor_approval.preview_url" target="_blank" rel="noopener" class="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors">{{ $t('student.form.supervisor.preview') }}</a>
+                    <a :href="proposal.supervisor_approval.download_url" class="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors">{{ $t('student.form.supervisor.download') }}</a>
+                  </div>
+                </div>
+                <p v-else class="text-sm text-slate-500">{{ $t('student.form.supervisor.no_file') }}</p>
+              </div>
             </div>
           </div>
         </div>

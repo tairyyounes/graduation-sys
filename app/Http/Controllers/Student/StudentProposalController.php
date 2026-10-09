@@ -63,7 +63,12 @@ class StudentProposalController extends Controller
                 'department_id' => $student->department_id,
                 'submission_status' => 'draft',
                 'review_status' => 'pending',
+                'supervisor_name' => $request->supervisor_name,
             ]);
+
+            if ($request->hasFile('supervisor_approval')) {
+                $proposal->storeSupervisorApproval($request->file('supervisor_approval'));
+            }
 
             ProposalVersion::create([
                 'proposal_id' => $proposal->proposal_id,
@@ -109,11 +114,10 @@ class StudentProposalController extends Controller
         }
         return DB::transaction(function () use ($request, $proposal) {
             $latestVersion = $proposal->latestVersion;
-            
-            // Create new version
-            $newVersion = ProposalVersion::create([
-                'proposal_id' => $proposal->proposal_id,
-                'version_number' => $latestVersion->version_number + 1,
+
+            $this->syncSupervisorDetails($request, $proposal);
+
+            $content = [
                 'title' => $request->title,
                 'problem' => $request->problem,
                 'solution' => $request->solution,
@@ -121,6 +125,31 @@ class StudentProposalController extends Controller
                 'objectives' => $request->objectives,
                 'tags' => $request->tags,
                 'technologies_used' => $request->tech,
+            ];
+
+            // Changing only the supervisor details must not burn one of the
+            // limited proposal edits, so a version is created only when the
+            // proposal content itself changed.
+            $contentChanged = collect($content)->contains(
+                fn ($value, $field) => trim((string) $value) !== trim((string) $latestVersion->$field)
+            );
+
+            if (!$contentChanged) {
+                activity()
+                    ->performedOn($proposal)
+                    ->causedBy($request->user())
+                    ->log('supervisor details updated');
+
+                return response()->json([
+                    'message' => 'Supervisor details updated.',
+                    'proposal' => $this->transformProposal($proposal->load('latestVersion')),
+                ]);
+            }
+
+            // Create new version
+            $newVersion = ProposalVersion::create($content + [
+                'proposal_id' => $proposal->proposal_id,
+                'version_number' => $latestVersion->version_number + 1,
             ]);
 
             activity()
@@ -190,7 +219,11 @@ class StudentProposalController extends Controller
 
         $validator = \Illuminate\Support\Facades\Validator::make($latestVersion->toArray() + [
             'tech' => $latestVersion->technologies_used,
+            'supervisor_name' => $proposal->supervisor_name,
+            'supervisor_approval' => $proposal->hasSupervisorApproval() ? $proposal->supervisor_approval_path : null,
         ], [
+            'supervisor_name' => ['required', 'string', 'max:150'],
+            'supervisor_approval' => ['required'],
             'title' => [
                 'required',
                 'string',
@@ -253,6 +286,9 @@ class StudentProposalController extends Controller
             'tags.string' => 'The tags must be a string.',
             'tech.required' => 'Please add at least 2 technologies that will be used in the project.',
             'tech.string' => 'The technologies must be a string.',
+            'supervisor_name.required' => __('messages.supervisor.name_required'),
+            'supervisor_name.max' => __('messages.supervisor.name_max'),
+            'supervisor_approval.required' => __('messages.supervisor.approval_required'),
         ]);
 
         if ($validator->fails()) {
@@ -375,6 +411,50 @@ class StudentProposalController extends Controller
 
         return $student !== null
             && $proposal->students()->where('project_members.student_id', $student->student_id)->exists();
+    }
+
+    /**
+     * Preview (inline) or download (?download=1) the signed supervisor approval.
+     */
+    public function supervisorApproval(Request $request, Proposal $proposal)
+    {
+        if (!$this->isMember($request, $proposal)) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        if (!$proposal->hasSupervisorApproval()) {
+            return response()->json(['message' => __('messages.supervisor.approval_missing')], 404);
+        }
+
+        return $proposal->supervisorApprovalResponse($request->boolean('download'));
+    }
+
+    /**
+     * The blank, printable supervisor approval form (static A4 PDF).
+     */
+    public function supervisorApprovalTemplate()
+    {
+        return response()->download(
+            resource_path('templates/supervisor-approval-form.pdf'),
+            __('messages.supervisor.template_filename'),
+            ['Content-Type' => 'application/pdf']
+        );
+    }
+
+    /**
+     * Apply the supervisor name and approval document changes from the form.
+     */
+    private function syncSupervisorDetails(Request $request, Proposal $proposal): void
+    {
+        if ($request->exists('supervisor_name')) {
+            $proposal->update(['supervisor_name' => $request->supervisor_name]);
+        }
+
+        if ($request->hasFile('supervisor_approval')) {
+            $proposal->storeSupervisorApproval($request->file('supervisor_approval'));
+        } elseif ($request->boolean('remove_supervisor_approval')) {
+            $proposal->removeSupervisorApproval();
+        }
     }
 
     public function versions(Request $request, Proposal $proposal): JsonResponse
@@ -745,6 +825,8 @@ class StudentProposalController extends Controller
             'has_pending_request' => $proposal->pendingInvitees()->exists(),
             // New flags for front‑end UI
             'can_edit' => $proposal->review_status === 'revision_requested',
+            'supervisor_name' => $proposal->supervisor_name ?? '',
+            'supervisor_approval' => $proposal->supervisorApprovalMeta('/student/proposals'),
             'approval_pdf_url' => $proposal->approval_pdf_path ? \Illuminate\Support\Facades\Storage::url($proposal->approval_pdf_path) : null,
         ];
     }

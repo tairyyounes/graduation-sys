@@ -343,13 +343,29 @@ const emptyProposal = {
   tech: '',
   team: '',
   similarity: null,
-  date: ''
+  date: '',
+  supervisor_name: '',
+  supervisor_approval: null,        // stored document (from the API)
+  supervisor_approval_file: null,   // newly picked File, uploaded on save
+  remove_supervisor_approval: false,
 };
 
-// Proposal fields only — the optional team list is sent separately via /invite.
-function proposalPayload() {
-  const { team, ...fields } = newProposal.value;
-  return JSON.stringify(fields);
+const PROPOSAL_FIELDS = ['title', 'problem', 'solution', 'functions', 'objectives', 'tags', 'tech', 'supervisor_name'];
+
+// Proposal fields + supervisor approval as multipart form data — the optional
+// team list is sent separately via /invite.
+function proposalPayload(proposal = newProposal.value, { isUpdate = false } = {}) {
+  const body = new FormData();
+  PROPOSAL_FIELDS.forEach(field => body.append(field, proposal[field] ?? ''));
+  if (proposal.supervisor_approval_file) {
+    body.append('supervisor_approval', proposal.supervisor_approval_file);
+  }
+  if (isUpdate) {
+    // PHP only parses multipart bodies on POST, so spoof the PUT.
+    body.append('_method', 'PUT');
+    body.append('remove_supervisor_approval', proposal.remove_supervisor_approval ? '1' : '0');
+  }
+  return body;
 }
 
 // Adds the student numbers typed in the new-proposal form to the team.
@@ -381,7 +397,7 @@ const activeProposal = ref(null);
 const similarityProposal = ref(null);
 const archivedIdeas = ref([]);
 const teamMembers = ref([]);
-const teamMaxSize = ref(2);
+const teamMaxSize = ref(3);
 const teamRequest = ref(null);     // latest request sent from this team (pending / rejected)
 const teamInvitations = ref([]);   // requests received, waiting for this student's answer
 // The proposal the team belongs to: the submitted one if any, otherwise the
@@ -446,7 +462,7 @@ async function fetchTeam(proposalId) {
   if (res.ok) {
     const data = await res.json();
     teamMembers.value = data.members;
-    teamMaxSize.value = data.max_size ?? 2;
+    teamMaxSize.value = data.max_size ?? 3;
     teamRequest.value = data.request ?? null;
   }
 }
@@ -560,8 +576,7 @@ async function saveAsDraft() {
   try {
     const res = await fetch('/student/proposals', {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json', 
+      headers: {
         'X-CSRF-TOKEN': csrfToken || (document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''),
         'Accept': 'application/json'
       },
@@ -597,8 +612,7 @@ async function saveAndConfirmProposal() {
     // 1. First save as draft
     const res = await fetch('/student/proposals', {
       method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json', 
+      headers: {
         'X-CSRF-TOKEN': csrfToken || (document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''),
         'Accept': 'application/json'
       },
@@ -708,9 +722,9 @@ async function saveAndConfirmProposal() {
 async function updateProposal(proposal) {
   proposalErrors.value = {};
   const res = await fetch(`/student/proposals/${proposal.id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-    body: JSON.stringify(proposal)
+    method: 'POST',
+    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+    body: proposalPayload(proposal, { isUpdate: true })
   });
   if (res.ok) {
     toast.success(t('student.toast.updated'));
@@ -887,7 +901,12 @@ function openNewProposal() {
 
 function openEditProposalFlow(proposal) {
   isEditingProposal.value = true;
-  newProposal.value = { ...proposal };
+  newProposal.value = {
+    ...proposal,
+    supervisor_name: proposal.supervisor_name ?? '',
+    supervisor_approval_file: null,
+    remove_supervisor_approval: false,
+  };
   proposalErrors.value = {};
   showProposalModal.value = false;
   showNewProposalForm.value = true;

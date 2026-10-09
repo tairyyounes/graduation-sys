@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use App\Models\Student;
 use App\Models\ProjectMember;
+use App\Support\SupervisorApprovalRules;
 
 class UpdateProposalRequest extends FormRequest
 {
@@ -45,8 +46,16 @@ class UpdateProposalRequest extends FormRequest
         $proposal = $this->route('proposal');
         $isDraft = $proposal && $proposal->submission_status === 'draft';
 
+        // Drafts may leave the supervisor section empty; a submitted proposal
+        // under revision must keep a supervisor name and approval document.
+        $supervisorRules = SupervisorApprovalRules::rules(
+            strict: !$isDraft,
+            hasExisting: (bool) $proposal?->supervisor_approval_path,
+            removing: $this->boolean('remove_supervisor_approval'),
+        );
+
         if ($isDraft) {
-            return [
+            return $supervisorRules + [
                 'title' => [
                     'required',
                     'string',
@@ -106,7 +115,7 @@ class UpdateProposalRequest extends FormRequest
             ];
         }
 
-        return [
+        return $supervisorRules + [
             'title' => [
                 'required',
                 'string',
@@ -162,6 +171,11 @@ class UpdateProposalRequest extends FormRequest
                 }
             ],
         ];
+    }
+
+    public function messages(): array
+    {
+        return SupervisorApprovalRules::messages();
     }
 
     /**

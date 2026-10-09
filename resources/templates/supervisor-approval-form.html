@@ -1,0 +1,110 @@
+<!doctype html>
+<!--
+  Source of resources/templates/supervisor-approval-form.pdf (the static,
+  printable form students download from the proposal form). Styled after the
+  college's paper proposal form (وحدة الإشراف على المشاريع).
+  To regenerate the PDF after editing this file, run from the project root:
+    node scripts/build-supervisor-approval-form.cjs
+-->
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>نموذج موافقة المشرف الأكاديمي على مقترح مشروع التخرج</title>
+<style>
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: Arial, "Times New Roman", sans-serif;
+    font-weight: bold;
+    color: #000;
+    font-size: 12pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .page {
+    border: 1.5px solid #000;
+    height: 271mm;
+    margin: 12mm auto 0;
+    width: 184mm;
+    padding: 12mm 16mm 10mm;
+  }
+
+  .header { text-align: center; line-height: 2.1; margin-bottom: 8mm; }
+  .header .college { font-size: 15pt; }
+  .header .unit { font-size: 13pt; }
+  .header .title { font-size: 14pt; }
+
+  .dots { display: inline-block; border-bottom: 1.5px dotted #000; line-height: 1.2; vertical-align: baseline; }
+  .line { border-bottom: 1.5px dotted #000; height: 9mm; }
+
+  .meta { font-size: 11pt; line-height: 2.4; margin-bottom: 5mm; }
+
+  .bar {
+    background: #dbe5f1;
+    border: 1px solid #000;
+    text-align: center;
+    padding: 4px 0 6px;
+    margin: 7mm 0 4mm;
+    font-size: 12pt;
+  }
+
+  .students { font-size: 11pt; line-height: 2.6; padding-right: 6mm; }
+
+  .supervisor { font-size: 11pt; line-height: 2.6; margin-top: 2mm; }
+
+  .statement { font-size: 11pt; line-height: 2; text-align: justify; margin: 5mm 0 3mm; }
+
+  .signatures { display: flex; justify-content: space-between; margin-top: 9mm; font-size: 11pt; line-height: 2.6; }
+  .signatures > div { width: 44%; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="college">كلية تقنية الحاسوب ـــ طرابلس</div>
+    <div class="unit">وحدة الإشراف على المشاريع</div>
+    <div class="title">نموذج موافقة المشرف الأكاديمي على مقترح مشروع التخرج</div>
+    <div class="unit">" قســم <span class="dots" style="width:42mm">&nbsp;</span> "</div>
+  </div>
+
+  <div class="meta">
+    الفصل الدراسي / <span class="dots" style="width:45mm">&nbsp;</span>
+    &nbsp;&nbsp;&nbsp;&nbsp; العام الجامعي / <span class="dots" style="width:40mm">&nbsp;</span>
+  </div>
+
+  <div class="bar">عنوان المشروع المقترح</div>
+  <div class="line"></div>
+  <div class="line"></div>
+
+  <div class="bar">أسماء الطلبة</div>
+  <div class="students">
+    <div>1. <span class="dots" style="width:88mm">&nbsp;</span> رقم القيـد <span class="dots" style="width:34mm">&nbsp;</span></div>
+    <div>2. <span class="dots" style="width:88mm">&nbsp;</span> رقم القيـد <span class="dots" style="width:34mm">&nbsp;</span></div>
+    <div>3. <span class="dots" style="width:88mm">&nbsp;</span> رقم القيـد <span class="dots" style="width:34mm">&nbsp;</span></div>
+  </div>
+
+  <div class="bar">بيانات تعبأ من المشرف</div>
+  <div class="supervisor">
+    <div>إســم المشرف : <span class="dots" style="width:100mm">&nbsp;</span></div>
+  </div>
+
+  <div class="statement">
+    أوافق على الإشراف على مشروع التخرج المذكور أعلاه، وقد اطّلعت على المقترح وأرى أنه مناسب للتقديم إلى القسم.
+  </div>
+
+  <div class="signatures">
+    <div>
+      توقيــع المشرف<br>
+      <span class="dots" style="width:60mm">&nbsp;</span>
+    </div>
+    <div>
+      التاريخ<br>
+      <span class="dots" style="width:12mm">&nbsp;</span> / <span class="dots" style="width:12mm">&nbsp;</span> / <span class="dots" style="width:20mm">&nbsp;</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

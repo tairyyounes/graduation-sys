@@ -108,22 +108,29 @@ it('lets the sender cancel a pending request', function () {
     postJson("/student/proposals/{$this->proposal->proposal_id}/invite", ['reg_number' => '333333'])->assertOk();
 });
 
-it('does not allow a third member or inviting a student who is already paired', function () {
+it('allows up to three members and blocks inviting a student who is already in a team', function () {
+    [$hudaUser, $huda] = ($this->makeStudent)('444444');
+
+    // Ali -> Sara (accepted), then Sara (as a member) -> Omar (accepted): team of 3.
     actingAs($this->aliUser);
     postJson("/student/proposals/{$this->proposal->proposal_id}/invite", ['reg_number' => '222222'])->assertOk();
     actingAs($this->saraUser);
     postJson("/student/invitations/{$this->proposal->proposal_id}/accept")->assertOk();
+    postJson("/student/proposals/{$this->proposal->proposal_id}/invite", ['reg_number' => '333333'])->assertOk();
+    actingAs($this->omarUser);
+    postJson("/student/invitations/{$this->proposal->proposal_id}/accept")->assertOk();
+    expect($this->proposal->students()->count())->toBe(3);
 
-    // Team is full.
+    // A fourth member is refused.
     actingAs($this->aliUser);
-    postJson("/student/proposals/{$this->proposal->proposal_id}/invite", ['reg_number' => '333333'])
+    postJson("/student/proposals/{$this->proposal->proposal_id}/invite", ['reg_number' => '444444'])
         ->assertStatus(422)
         ->assertJsonPath('message', __('messages.team.team_full'));
 
-    // Omar cannot invite Sara, who is already in a pair.
-    $omarDraft = ($this->makeDraft)($this->omar);
-    actingAs($this->omarUser);
-    postJson("/student/proposals/{$omarDraft->proposal_id}/invite", ['reg_number' => '222222'])
+    // Huda cannot invite Sara, who is already in a team.
+    $hudaDraft = ($this->makeDraft)($huda);
+    actingAs($hudaUser);
+    postJson("/student/proposals/{$hudaDraft->proposal_id}/invite", ['reg_number' => '222222'])
         ->assertStatus(422)
         ->assertJsonPath('message', __('messages.team.invitee_paired'));
 });

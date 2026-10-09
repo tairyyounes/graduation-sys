@@ -23,8 +23,8 @@ return [
     'team' => [
         'locked'             => 'This proposal can no longer be changed.',
         'self_invite'        => 'You cannot send a request to yourself.',
-        'team_full'          => 'Your team is already complete (2 students).',
-        'already_paired'     => 'You already have a teammate.',
+        'team_full'          => 'Your team is already complete (3 students).',
+        'already_paired'     => 'You are already in another team.',
         'request_pending'    => 'You already have a pending team request. You can send a new one only if it is declined.',
         'invitee_paired'     => 'This student is already in a team.',
         'invitee_busy'       => 'This student already belongs to another active proposal.',
@@ -35,6 +35,17 @@ return [
         'accepted'           => 'You joined the team.',
         'declined'           => 'Team request declined.',
         'cancelled'          => 'Team request cancelled.',
+    ],
+
+    'supervisor' => [
+        'name_required'        => 'The academic supervisor name is required to submit the proposal.',
+        'name_max'             => 'The academic supervisor name cannot exceed 150 characters.',
+        'approval_required'    => 'The signed supervisor approval form must be uploaded to submit the proposal.',
+        'approval_file'        => 'The supervisor approval form must be a valid file.',
+        'approval_mimes'       => 'The supervisor approval form must be a PDF, JPG, JPEG or PNG file.',
+        'approval_max'         => 'The supervisor approval form cannot be larger than 5 MB.',
+        'approval_missing'     => 'No supervisor approval form has been uploaded for this proposal.',
+        'template_filename'    => 'supervisor-approval-form.pdf',
     ],
 
 ];
