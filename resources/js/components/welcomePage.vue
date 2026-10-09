@@ -1,124 +1,125 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-b from-[#f4fbfc] to-[#f8fcfd] font-sans text-gray-900 relative overflow-hidden">
-    <!-- Navbar -->
-    <nav class="flex items-center justify-between px-6 py-4 bg-transparent max-w-7xl mx-auto relative z-10">
-      <div class="flex items-center space-x-3 rtl:space-x-reverse">
-        <!-- Logo -->
-        <div class="w-10 h-10 bg-[#16516f] rounded-lg flex items-center justify-center text-white shrink-0 shadow-sm">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+  <div class="min-h-screen flex flex-col bg-white text-slate-800 font-['Inter','IBM_Plex_Sans_Arabic',sans-serif]">
+    <div class="w-full max-w-6xl mx-auto px-4 sm:px-8 flex flex-col flex-1">
+      <!-- Header -->
+      <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between py-6 border-b border-slate-200">
+        <a href="/" class="flex items-center gap-3" @click="show(null)">
+          <svg class="h-9 w-9 shrink-0 text-[#4a6a8f]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="M14 3v5h5M9 14h6" />
           </svg>
-        </div>
-        <div>
-          <div class="font-bold text-[#0f2130] text-lg leading-tight">ProposalGuard AI</div>
-          <div class="text-[11px] text-gray-500 font-medium tracking-wide">{{ $t('common.college') }}</div>
-        </div>
-      </div>
-
-      <div class="hidden md:flex space-x-8 rtl:space-x-reverse text-sm font-semibold text-gray-500">
-        <a href="#" class="text-gray-800 transition-colors">{{ $t('welcome.home') }}</a>
-        <a href="#" class="hover:text-gray-800 transition-colors">{{ $t('welcome.features') }}</a>
-        <a href="#" class="hover:text-gray-800 transition-colors">{{ $t('welcome.how') }}</a>
-      </div>
-
-      <div class="flex items-center space-x-4 rtl:space-x-reverse">
-        <button
-          type="button"
-          class="flex items-center space-x-1.5 rtl:space-x-reverse text-sm font-semibold text-gray-700 hover:text-gray-900 transition-colors"
-          @click="toggleLang"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path></svg>
-          <span>{{ locale === 'ar' ? 'English' : 'العربية' }}</span>
-        </button>
-
-        <a
-          v-if="!isAuthenticated"
-          :href="loginUrl"
-          class="px-5 py-2.5 text-sm font-semibold text-white bg-[#193652] rounded-lg hover:bg-[#0f2130] transition-colors shadow-sm"
-        >
-          {{ $t('welcome.login') }}
+          <span>
+            <span class="block text-2xl font-semibold leading-tight text-slate-900">{{ $t('welcome.brand') }}</span>
+            <span class="block text-sm text-slate-500">{{ $t('common.college') }}</span>
+          </span>
         </a>
 
-        <div v-else class="flex items-center space-x-3 rtl:space-x-reverse">
-          <a
-            href="/dashboard"
-            class="px-5 py-2.5 text-sm font-semibold text-[#193652] bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
-          >
-            {{ $t('common.dashboard') }}
-          </a>
-          <form :action="logoutUrl" method="POST" class="m-0 p-0">
+        <nav class="flex flex-wrap items-center gap-6 text-sm text-slate-600">
+          <a href="#about" class="hover:text-slate-900 transition-colors" @click.prevent="show('about')">{{ $t('welcome.about') }}</a>
+          <a v-if="isAuthenticated" href="/dashboard" class="hover:text-slate-900 transition-colors">{{ $t('common.dashboard') }}</a>
+          <form v-if="isAuthenticated" :action="logoutUrl" method="POST" class="m-0">
             <input type="hidden" name="_token" :value="csrfToken" />
-            <button
-              type="submit"
-              class="px-5 py-2.5 text-sm font-semibold text-white bg-[#193652] rounded-lg hover:bg-[#0f2130] transition-colors shadow-sm"
-            >
-              {{ $t('common.logout') }}
-            </button>
+            <button type="submit" class="hover:text-slate-900 transition-colors">{{ $t('common.logout') }}</button>
           </form>
-        </div>
-      </div>
-    </nav>
+          <button type="button" class="hover:text-slate-900 transition-colors" @click="toggleLang">
+            {{ locale === 'ar' ? 'English' : 'العربية' }}
+          </button>
+        </nav>
+      </header>
 
-    <!-- Hero Section -->
-    <main class="max-w-[1000px] mx-auto px-6 pt-24 pb-20 text-center relative z-10">
+      <main class="flex-1 flex flex-col justify-center py-12 sm:py-16">
+        <!-- Hero -->
+        <section v-if="!panel" class="text-center">
+          <p class="text-sm text-[#4a6a8f] mb-5">{{ $t('welcome.eyebrow') }}</p>
+          <h1 class="text-4xl sm:text-5xl font-bold text-slate-900 mb-6">{{ $t('welcome.title') }}</h1>
+          <p class="text-lg sm:text-xl text-slate-600 leading-relaxed max-w-xl mx-auto mb-10">{{ $t('welcome.desc') }}</p>
 
-      <h1 class="text-[3.5rem] md:text-[4rem] font-[800] text-[#0a1827] tracking-tight leading-[1.1] mb-6">
-        {{ $t('welcome.hero_1') }} <br />
-        <span class="text-[#0d7f95]">{{ $t('welcome.hero_2') }}</span>
-      </h1>
-
-      <p class="text-lg md:text-[1.15rem] text-gray-500 max-w-[800px] mx-auto mb-12 leading-relaxed font-medium">
-        {{ $t('welcome.hero_desc') }}
-      </p>
-
-      <div class="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 sm:rtl:space-x-reverse mb-24">
-        <template v-if="!isAuthenticated">
-          <a :href="loginUrl" class="px-6 py-3.5 bg-[#193652] text-white text-[15px] font-semibold rounded-xl hover:bg-[#0f2130] transition-colors flex items-center shadow-lg shadow-[#193652]/20">
-            <span>{{ $t('welcome.submit_proposal') }}</span>
-            <svg class="w-4 h-4 ms-2 rtl:-scale-x-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+          <a
+            :href="isAuthenticated ? '/dashboard' : loginUrl"
+            class="inline-block min-w-[14rem] px-8 py-3 rounded-md bg-[#4a6a8f] text-white text-base font-medium hover:bg-[#3d5878] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4a6a8f] focus-visible:ring-offset-2"
+          >
+            {{ isAuthenticated ? $t('welcome.go_dashboard') : $t('welcome.login') }}
           </a>
-        </template>
-        <template v-else>
-          <a href="/dashboard" class="px-6 py-3.5 bg-[#193652] text-white text-[15px] font-semibold rounded-xl hover:bg-[#0f2130] transition-colors flex items-center shadow-lg shadow-[#193652]/20">
-            <span>{{ $t('welcome.go_dashboard') }}</span>
-            <svg class="w-4 h-4 ms-2 rtl:-scale-x-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-          </a>
-        </template>
-      </div>
 
-      <!-- Stats -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
-        <div class="bg-white rounded-2xl py-8 px-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 flex flex-col items-center justify-center hover:-translate-y-1 transition-transform duration-300">
-          <div class="text-[2rem] font-[800] text-[#0a1827] mb-1">1,240+</div>
-          <div class="text-[13px] text-gray-500 font-semibold">{{ $t('welcome.stat_analyzed') }}</div>
-        </div>
-        <div class="bg-white rounded-2xl py-8 px-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 flex flex-col items-center justify-center hover:-translate-y-1 transition-transform duration-300">
-          <div class="text-[2rem] font-[800] text-[#0a1827] mb-1">94%</div>
-          <div class="text-[13px] text-gray-500 font-semibold">{{ $t('welcome.stat_accuracy') }}</div>
-        </div>
-        <div class="bg-white rounded-2xl py-8 px-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 flex flex-col items-center justify-center hover:-translate-y-1 transition-transform duration-300">
-          <div class="text-[2rem] font-[800] text-[#0a1827] mb-1">3</div>
-          <div class="text-[13px] text-gray-500 font-semibold">{{ $t('adminnav.departments') }}</div>
-        </div>
-        <div class="bg-white rounded-2xl py-8 px-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] border border-gray-100 flex flex-col items-center justify-center hover:-translate-y-1 transition-transform duration-300">
-          <div class="text-[2rem] font-[800] text-[#0a1827] mb-1">&lt; 30s</div>
-          <div class="text-[13px] text-gray-500 font-semibold">{{ $t('welcome.stat_review_time') }}</div>
-        </div>
-      </div>
-    </main>
+          <p class="mt-6">
+            <a href="#guide" class="text-[#4a6a8f] underline underline-offset-4 hover:text-[#3d5878]" @click.prevent="show('guide')">
+              {{ $t('welcome.guide_link') }}
+            </a>
+          </p>
+        </section>
+
+        <!-- About -->
+        <section v-else-if="panel === 'about'" id="about" class="max-w-2xl w-full mx-auto">
+          <h2 class="text-2xl font-semibold text-slate-900 mb-4">{{ $t('welcome.about_title') }}</h2>
+          <p class="text-slate-600 leading-relaxed mb-6">{{ $t('welcome.about_intro') }}</p>
+          <ul class="space-y-3 list-disc ps-5 text-slate-700 leading-relaxed">
+            <li v-for="(item, i) in tm('welcome.about_items')" :key="i">{{ rt(item) }}</li>
+          </ul>
+          <button type="button" class="mt-8 text-[#4a6a8f] underline underline-offset-4 hover:text-[#3d5878]" @click="show(null)">
+            {{ $t('welcome.close') }}
+          </button>
+        </section>
+
+        <!-- Guide -->
+        <section v-else-if="panel === 'guide'" id="guide" class="max-w-2xl w-full mx-auto">
+          <h2 class="text-2xl font-semibold text-slate-900 mb-6">{{ $t('welcome.guide_title') }}</h2>
+          <h3 class="font-semibold text-slate-900 mb-3">{{ $t('welcome.guide_fields_title') }}</h3>
+          <ul class="space-y-2 list-disc ps-5 text-slate-700 leading-relaxed mb-8">
+            <li v-for="(item, i) in tm('welcome.guide_fields')" :key="i">{{ rt(item) }}</li>
+          </ul>
+          <h3 class="font-semibold text-slate-900 mb-3">{{ $t('welcome.guide_steps_title') }}</h3>
+          <ol class="space-y-2 list-decimal ps-5 text-slate-700 leading-relaxed">
+            <li v-for="(item, i) in tm('welcome.guide_steps')" :key="i">{{ rt(item) }}</li>
+          </ol>
+          <button type="button" class="mt-8 text-[#4a6a8f] underline underline-offset-4 hover:text-[#3d5878]" @click="show(null)">
+            {{ $t('welcome.close') }}
+          </button>
+        </section>
+      </main>
+
+      <!-- Footer -->
+      <footer class="flex flex-col gap-2 sm:flex-row sm:justify-between py-6 text-sm text-slate-500">
+        <span>{{ $t('common.college') }}</span>
+        <span>{{ $t('welcome.brand') }} © {{ year }}</span>
+      </footer>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { setLocale } from '../i18n'
 
-const { locale } = useI18n()
+const { locale, t, tm, rt } = useI18n()
 
 function toggleLang() {
   setLocale(locale.value === 'ar' ? 'en' : 'ar')
 }
+
+const PANELS = ['about', 'guide']
+const panel = ref(null)
+
+function readHash() {
+  const hash = window.location.hash.slice(1)
+  panel.value = PANELS.includes(hash) ? hash : null
+}
+
+function show(name) {
+  panel.value = name
+  history.replaceState(null, '', name ? `#${name}` : window.location.pathname)
+  window.scrollTo({ top: 0 })
+}
+
+onMounted(() => {
+  readHash()
+  window.addEventListener('hashchange', readHash)
+})
+onBeforeUnmount(() => window.removeEventListener('hashchange', readHash))
+
+watch(locale, () => { document.title = t('welcome.brand') }, { immediate: true })
+
+const year = new Date().getFullYear()
 
 const appRoot = document.getElementById('app')
 const isAuthenticated = ref(appRoot?.dataset.authenticated === '1')

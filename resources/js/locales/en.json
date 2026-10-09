@@ -105,18 +105,41 @@
     }
   },
   "welcome": {
-    "home": "Home",
-    "features": "Features",
-    "how": "How it works",
-    "login": "Login",
-    "hero_1": "Detect proposal similarity",
-    "hero_2": "before approval.",
-    "hero_desc": "An academic platform that helps students submit proposals and helps departments make confident accept, reject, or revise decisions — backed by semantic AI.",
-    "submit_proposal": "Submit a proposal",
+    "brand": "Muqtarahi",
+    "about": "About",
+    "eyebrow": "Graduation project proposals",
+    "title": "Start with your proposal.",
+    "desc": "Submit your project proposal, see its similarity results, and follow its review — all in one place.",
+    "login": "Log in",
     "go_dashboard": "Go to Dashboard",
+    "guide_link": "Proposal submission guide",
+    "close": "Close",
+    "about_title": "About the system",
+    "about_intro": "Muqtarahi manages graduation project proposals at the College of Computer Technology – Tripoli, from the first draft to the department's decision.",
+    "about_items": [
+      "Students write a proposal, save it as a draft, and submit it once it is complete.",
+      "Each submitted proposal is compared semantically with previous proposals, and a similarity report shows the closest matches.",
+      "Department members review the proposal and approve it, reject it, or request a revision with feedback.",
+      "Students can form a team, follow version history, and see the status of their proposal at any time."
+    ],
+    "guide_title": "Proposal submission guide",
+    "guide_fields_title": "Required information",
+    "guide_fields": [
+      "Title: 5–20 words.",
+      "Problem statement and proposed solution: 30–250 words each.",
+      "System functions and project objectives: 20–200 words each.",
+      "Keywords (tags) and at least two technologies to be used.",
+      "Supervisor name and the supervisor's signed approval."
+    ],
+    "guide_steps_title": "Steps",
+    "guide_steps": [
+      "Log in with the account provided by your department.",
+      "Create a new proposal from your dashboard and fill in its fields; you can save it as a draft.",
+      "Submit the proposal once every required field is complete.",
+      "Read the similarity report, then follow the department's decision and any revision notes."
+    ],
     "stat_analyzed": "Proposals analyzed",
-    "stat_accuracy": "Semantic accuracy",
-    "stat_review_time": "Avg. review time"
+    "stat_accuracy": "Semantic accuracy"
   },
   "roles": {
     "student": "Student",
