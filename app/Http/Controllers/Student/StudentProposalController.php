@@ -24,8 +24,13 @@ class StudentProposalController extends Controller
         $proposals = $student->proposals()->with(['latestVersion', 'department'])->get();
 
         $drafts = $proposals->where('submission_status', 'draft')->map(fn($p) => $this->transformProposal($p))->values();
-        $active = $proposals->where('submission_status', 'submitted')->map(fn($p) => $this->transformProposal($p))->first();
-        $archived = $proposals->where('submission_status', 'archived')->map(fn($p) => $this->transformProposal($p))->values();
+        $active = $proposals->where('submission_status', 'submitted')
+            ->where('review_status', '!=', 'rejected')
+            ->map(fn($p) => $this->transformProposal($p))
+            ->first();
+        $archived = $proposals->where(function($p) {
+            return $p->submission_status === 'archived' || ($p->submission_status === 'submitted' && $p->review_status === 'rejected');
+        })->map(fn($p) => $this->transformProposal($p))->values();
 
         return response()->json([
             'drafts' => $drafts,
@@ -37,6 +42,21 @@ class StudentProposalController extends Controller
     public function store(StoreProposalRequest $request): JsonResponse
     {
         $student = $request->user()->student;
+
+        // Security: Student cannot create a new proposal if they already have an active pending or accepted proposal
+        $hasActiveOrAccepted = $student->proposals()
+            ->where(function ($q) {
+                $q->where(function ($sub) {
+                    $sub->where('submission_status', 'submitted')
+                        ->whereIn('review_status', ['pending', 'revision_requested']);
+                })->orWhere('review_status', 'accepted');
+            })->exists();
+
+        if ($hasActiveOrAccepted) {
+            return response()->json([
+                'message' => 'You already have an active submitted or accepted proposal and cannot create a new one.',
+            ], 422);
+        }
 
         return DB::transaction(function () use ($request, $student) {
             $proposal = Proposal::create([
@@ -127,24 +147,37 @@ class StudentProposalController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
-        // Security: Cannot submit more than one active proposal
-        $hasActive = $student->proposals()->where('submission_status', 'submitted')->exists();
-        if ($hasActive && $proposal->submission_status !== 'submitted') {
-            return response()->json(['message' => 'You already have an active submitted proposal.'], 422);
+        // Security: Cannot submit if student already has an active pending/revision or accepted proposal
+        $hasActiveOrAccepted = $student->proposals()
+            ->where(function ($q) {
+                $q->where(function ($sub) {
+                    $sub->where('submission_status', 'submitted')
+                        ->whereIn('review_status', ['pending', 'revision_requested']);
+                })->orWhere('review_status', 'accepted');
+            })
+            ->where('proposals.proposal_id', '!=', $proposal->proposal_id)
+            ->exists();
+
+        if ($hasActiveOrAccepted) {
+            return response()->json(['message' => 'You already have an active submitted or accepted proposal.'], 422);
         }
 
         // Submitting makes this the active proposal of EVERY team member, so
-        // none of them may already have a different submitted proposal.
+        // none of them may already have an active submitted or accepted proposal.
         if ($proposal->submission_status !== 'submitted') {
             $busyMember = $proposal->students()
                 ->where('students.student_id', '!=', $student->student_id)
                 ->whereHas('proposals', fn ($q) => $q
-                    ->where('submission_status', 'submitted')
+                    ->where(function ($sub) {
+                        $sub->where('submission_status', 'submitted')
+                            ->whereIn('review_status', ['pending', 'revision_requested']);
+                    })
+                    ->orWhere('review_status', 'accepted')
                     ->where('proposals.proposal_id', '!=', $proposal->proposal_id))
                 ->first();
             if ($busyMember) {
                 return response()->json([
-                    'message' => "Team member {$busyMember->full_name} already has another active submitted proposal.",
+                    'message' => "Team member {$busyMember->full_name} already has another active submitted or accepted proposal.",
                 ], 422);
             }
         }
@@ -288,10 +321,19 @@ class StudentProposalController extends Controller
             return response()->json(['message' => 'Only archived proposals can be restored.'], 422);
         }
 
-        // Prevent restore if the student already has an active submitted proposal
-        $hasActive = $student->proposals()->where('submission_status', 'submitted')->exists();
-        if ($hasActive) {
-            return response()->json(['message' => 'You already have an active submitted proposal. Archive or withdraw it before restoring another.'], 422);
+        // Prevent restore if the student already has an active submitted or accepted proposal
+        $hasActiveOrAccepted = $student->proposals()
+            ->where(function ($q) {
+                $q->where(function ($sub) {
+                    $sub->where('submission_status', 'submitted')
+                        ->whereIn('review_status', ['pending', 'revision_requested']);
+                })->orWhere('review_status', 'accepted');
+            })
+            ->where('proposals.proposal_id', '!=', $proposal->proposal_id)
+            ->exists();
+
+        if ($hasActiveOrAccepted) {
+            return response()->json(['message' => 'You already have an active submitted or accepted proposal. Archive or withdraw it before restoring another.'], 422);
         }
 
         $proposal->update([
@@ -384,19 +426,38 @@ class StudentProposalController extends Controller
             return response()->json(['message' => 'Unauthorized.'], 403);
         }
 
-        $decision = $proposal->decisions()->with('reviewer')->latest()->first();
+        $decisions = $proposal->decisions()
+            ->with('reviewer')
+            ->orderByDesc('decision_date')
+            ->get();
 
-        if (!$decision) {
-            return response()->json(['message' => 'Waiting for department review.'], 200);
+        $latestDecision = $decisions->first();
+
+        if (!$latestDecision) {
+            return response()->json([
+                'message' => 'Waiting for department review.',
+                'decision' => null,
+                'decisions' => [],
+            ], 200);
         }
+
+        $allFormatted = $decisions->map(function ($d) {
+            return [
+                'type'     => $d->decision_type,
+                'note'     => $d->decision_note,
+                'reviewer' => optional($d->reviewer)->full_name ?? 'Committee Member',
+                'date'     => $d->decision_date,
+            ];
+        })->values();
 
         return response()->json([
             'decision' => [
-                'type' => $decision->decision_type,
-                'note' => $decision->decision_note,
-                'reviewer' => $decision->reviewer->full_name,
-                'date' => $decision->decision_date,
-            ]
+                'type'     => $latestDecision->decision_type,
+                'note'     => $latestDecision->decision_note,
+                'reviewer' => optional($latestDecision->reviewer)->full_name ?? 'Committee Member',
+                'date'     => $latestDecision->decision_date,
+            ],
+            'decisions' => $allFormatted,
         ]);
     }
 

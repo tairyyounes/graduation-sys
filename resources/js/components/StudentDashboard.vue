@@ -424,9 +424,19 @@ async function fetchProposals() {
   const res = await fetch('/student/proposals');
   if (res.ok) {
     const data = await res.json();
-    draftIdeas.value = data.drafts;
-    activeProposal.value = data.active;
-    archivedIdeas.value = data.archived;
+    draftIdeas.value = data.drafts || [];
+    activeProposal.value = data.active || null;
+    archivedIdeas.value = data.archived || [];
+
+    // Pre-fetch feedback and versions immediately for active or latest proposal
+    const target = data.active || (data.drafts && data.drafts[0]) || (data.archived && data.archived[0]);
+    if (target?.id) {
+      fetchDecision(target.id);
+      fetchVersions(target.id);
+    } else {
+      domainFeedback.value = [];
+      versionHistory.value = [];
+    }
   }
 }
 
@@ -485,17 +495,32 @@ async function fetchVersions(proposalId) {
   const res = await fetch(`/student/proposals/${proposalId}/versions`);
   if (res.ok) {
     const data = await res.json();
-    versionHistory.value = data.versions;
+    versionHistory.value = data.versions || [];
     maxEdits.value = data.max_edits ?? 2;
   }
 }
 
 async function fetchDecision(proposalId) {
-  if (!proposalId) return;
-  const res = await fetch(`/student/proposals/${proposalId}/decision`);
-  if (res.ok) {
-    const data = await res.json();
-    domainFeedback.value = data.decision ? [data.decision] : [];
+  if (!proposalId) {
+    domainFeedback.value = [];
+    return;
+  }
+  try {
+    const res = await fetch(`/student/proposals/${proposalId}/decision`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.decisions && data.decisions.length > 0) {
+        domainFeedback.value = data.decisions;
+      } else if (data.decision) {
+        domainFeedback.value = [data.decision];
+      } else {
+        domainFeedback.value = [];
+      }
+    } else {
+      domainFeedback.value = [];
+    }
+  } catch (err) {
+    domainFeedback.value = [];
   }
 }
 
@@ -850,6 +875,10 @@ function closeNewProposalForm() {
 }
 
 function openNewProposal() {
+  if (activeProposal.value && activeProposal.value.status !== 'rejected') {
+    toast.error(t('student.toast.already_has_active'));
+    return;
+  }
   isEditingProposal.value = false;
   newProposal.value = { ...emptyProposal };
   proposalErrors.value = {};

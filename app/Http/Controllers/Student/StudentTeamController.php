@@ -109,7 +109,12 @@ class StudentTeamController extends Controller
         }
 
         $hasActive = $newStudent->proposals()
-            ->where('submission_status', 'submitted')
+            ->where(function ($q) {
+                $q->where(function ($sub) {
+                    $sub->where('submission_status', 'submitted')
+                        ->whereIn('review_status', ['pending', 'revision_requested']);
+                })->orWhere('review_status', 'accepted');
+            })
             ->where('proposals.proposal_id', '!=', $proposal->proposal_id)
             ->exists();
         if ($hasActive) {

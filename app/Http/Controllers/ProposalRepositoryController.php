@@ -6,6 +6,7 @@ use App\Models\Proposal;
 use App\Models\SimilarityResult;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class ProposalRepositoryController extends Controller
 {
@@ -19,68 +20,62 @@ class ProposalRepositoryController extends Controller
         $user = $request->user();
         $departmentId = $user->department_id ?? optional($user->student)->department_id;
 
-        // Determine the start of the current semester to exclude active unreviewed proposals
-        $currentMonth = now()->month;
-        $currentYear = now()->year;
+        $search = trim((string) $request->query('search', ''));
+        $year   = trim((string) $request->query('year', ''));
 
-        if ($currentMonth <= 6) {
-            $semesterStart = now()->setDate($currentYear, 1, 1)->startOfDay();
-        } else {
-            $semesterStart = now()->setDate($currentYear, 7, 1)->startOfDay();
-        }
+        $cacheKey = "repo_proposals_{$departmentId}_" . md5($search . '_' . $year);
 
-        $query = Proposal::where(function ($q) use ($semesterStart) {
-            $q->where('submission_status', 'archived')
-              ->orWhere(function ($sub) use ($semesterStart) {
-                  $sub->where('created_at', '<', $semesterStart)
-                      ->whereIn('review_status', ['accepted', 'rejected']);
-              });
-        })->with(['latestVersion', 'department', 'students']);
+        $data = Cache::remember($cacheKey, 30, function () use ($departmentId, $search, $year) {
+            $query = Proposal::where('review_status', '!=', 'rejected')
+                ->where(function ($q) {
+                    $q->where('submission_status', 'archived')
+                      ->orWhere('review_status', 'accepted');
+                })
+                ->with(['latestVersion', 'department', 'students']);
 
-        // Scope to the user's department if available
-        if ($departmentId) {
-            $query->where('department_id', $departmentId);
-        }
+            // Scope to the user's department if available
+            if ($departmentId) {
+                $query->where('department_id', $departmentId);
+            }
 
-        // Search filter: title, tags, technologies
-        if ($request->filled('search')) {
-            $search = $request->query('search');
-            $query->whereHas('latestVersion', function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('tags', 'like', "%{$search}%")
-                  ->orWhere('technologies_used', 'like', "%{$search}%")
-                  ->orWhere('problem', 'like', "%{$search}%");
-            });
-        }
+            // Search filter: title, tags, technologies
+            if ($search !== '') {
+                $query->whereHas('latestVersion', function ($q) use ($search) {
+                    $q->where('title', 'like', "%{$search}%")
+                      ->orWhere('tags', 'like', "%{$search}%")
+                      ->orWhere('technologies_used', 'like', "%{$search}%")
+                      ->orWhere('problem', 'like', "%{$search}%");
+                });
+            }
 
-        // Year filter
-        if ($request->filled('year')) {
-            $query->whereYear('created_at', $request->query('year'));
-        }
+            // Year filter
+            if ($year !== '') {
+                $query->whereYear('created_at', $year);
+            }
 
-        $proposals = $query->latest()->get();
+            $proposals = $query->latest()->limit(100)->get();
 
-        // Available years for this department only
-        $years = Proposal::where(function ($q) use ($semesterStart) {
-                $q->where('submission_status', 'archived')
-                  ->orWhere(function ($sub) use ($semesterStart) {
-                      $sub->where('created_at', '<', $semesterStart)
-                          ->whereIn('review_status', ['accepted', 'rejected']);
-                  });
-            })
-            ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
-            ->pluck('created_at')
-            ->map(fn($date) => $date ? $date->format('Y') : null)
-            ->filter()
-            ->unique()
-            ->values()
-            ->sortDesc()
-            ->toArray();
+            // Available years for this department only (direct SQL distinct)
+            $years = Proposal::where('review_status', '!=', 'rejected')
+                ->where(function ($q) {
+                    $q->where('submission_status', 'archived')
+                      ->orWhere('review_status', 'accepted');
+                })
+                ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
+                ->selectRaw('DISTINCT EXTRACT(YEAR FROM created_at)::integer as yr')
+                ->orderByDesc('yr')
+                ->pluck('yr')
+                ->filter()
+                ->values()
+                ->toArray();
 
-        return response()->json([
-            'proposals' => $proposals->map(fn($p) => $this->transformProposal($p)),
-            'years'     => $years,
-        ]);
+            return [
+                'proposals' => $proposals->map(fn($p) => $this->transformProposal($p)),
+                'years'     => $years,
+            ];
+        });
+
+        return response()->json($data);
     }
 
     /**

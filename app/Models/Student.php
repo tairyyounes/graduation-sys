@@ -52,11 +52,12 @@ class Student extends Model
                     ->withTimestamps();
     }
 
-    /** The open (non-archived) proposal where this student already has a teammate, if any. */
+    /** The open (non-archived and not rejected) proposal where this student already has a teammate, if any. */
     public function pairedProposal(): ?Proposal
     {
         return $this->proposals()
             ->where('submission_status', '!=', 'archived')
+            ->where('review_status', '!=', 'rejected')
             ->has('students', '>=', 2)
             ->first();
     }
@@ -66,6 +67,7 @@ class Student extends Model
     {
         return $this->proposals()
             ->where('submission_status', '!=', 'archived')
+            ->where('review_status', '!=', 'rejected')
             ->whereHas('pendingInvitees')
             ->first();
     }

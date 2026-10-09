@@ -541,7 +541,8 @@
       "request_sent": "تم إرسال طلب المشاركة.",
       "request_cancelled": "تم إلغاء طلب المشاركة.",
       "invitation_accepted": "انضممت إلى الفريق.",
-      "invitation_declined": "تم رفض طلب المشاركة."
+      "invitation_declined": "تم رفض طلب المشاركة.",
+      "already_has_active": "لديك بالفعل مقترح نشط قيد المراجعة أو تم قبوله، ولا يمكنك تقديم مقترح جديد."
     },
     "team": {
       "title": "أعضاء الفريق",

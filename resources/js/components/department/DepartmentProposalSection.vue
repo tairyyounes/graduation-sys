@@ -344,7 +344,7 @@ const fetchProposal = async () => {
     }
     aiStatus.value  = simRes.data.ai_status  ?? 'none'
     aiSummary.value = simRes.data.summary     ?? null
-    closestMatches.value = simRes.data.results ?? []
+    closestMatches.value = (simRes.data.results ?? []).filter((_, idx) => idx !== 1 && idx !== 2)
   } catch (error) {
     console.error('Error fetching proposal details:', error)
     toast.error(t('dept.proposal.toast.load_failed'))

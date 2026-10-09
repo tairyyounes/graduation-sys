@@ -503,6 +503,9 @@ const highestOverlapDim = computed(() => {
 const filteredMatches = computed(() => {
   let list = props.topMatches || []
 
+  // Exclude 2nd and 3rd proposal (indices 1 and 2) from display
+  list = list.filter((_, idx) => idx !== 1 && idx !== 2)
+
   // Apply Risk Tier Filter — m.score is a formatted "63%" string (not
   // numeric), which silently broke every comparison below (NaN >= 60 is
   // always false). m.final_score is the real number; use that.

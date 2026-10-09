@@ -80,6 +80,7 @@ class AiSimilarityService
     {
         return Proposal::query()
             ->with(['latestVersion', 'department'])
+            ->where('review_status', '!=', 'rejected')
             ->where(function ($q) {
                 $q->where('submission_status', 'archived')
                   ->orWhere('review_status', 'accepted');

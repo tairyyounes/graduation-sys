@@ -541,7 +541,8 @@
       "request_sent": "Team request sent.",
       "request_cancelled": "Team request cancelled.",
       "invitation_accepted": "You joined the team.",
-      "invitation_declined": "Team request declined."
+      "invitation_declined": "Team request declined.",
+      "already_has_active": "You already have an active or accepted proposal and cannot submit a new one."
     },
     "team": {
       "title": "Team Members",

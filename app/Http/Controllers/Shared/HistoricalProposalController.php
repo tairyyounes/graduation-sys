@@ -43,12 +43,10 @@ class HistoricalProposalController extends Controller
             })
             ->join('proposal_versions', 'proposal_versions.version_id', '=', 'lv.max_version_id')
             ->leftJoin('departments', 'departments.department_id', '=', 'proposals.department_id')
-            ->where(function ($q) use ($semesterStart) {
+            ->where('proposals.review_status', '!=', 'rejected')
+            ->where(function ($q) {
                 $q->where('proposals.submission_status', 'archived')
-                  ->orWhere(function ($sub) use ($semesterStart) {
-                      $sub->where('proposals.created_at', '<', $semesterStart)
-                          ->whereIn('proposals.review_status', ['accepted', 'rejected']);
-                  });
+                  ->orWhere('proposals.review_status', 'accepted');
             });
 
         if ($departmentId) {

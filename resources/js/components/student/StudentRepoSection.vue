@@ -247,6 +247,13 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 
+// Module-level cache so switching to this view is instantaneous
+let repoCache = {
+  proposals: null,
+  years: null,
+  deptName: '',
+};
+
 const props = defineProps({
   activeProposal: {
     type: Object,
@@ -256,10 +263,10 @@ const props = defineProps({
 
 const emit = defineEmits(['compare']);
 
-const proposals      = ref([]);
-const years          = ref([]);
-const departmentName = ref('');
-const loading        = ref(false);
+const proposals      = ref(repoCache.proposals || []);
+const years          = ref(repoCache.years || []);
+const departmentName = ref(repoCache.deptName || '');
+const loading        = ref(!repoCache.proposals || repoCache.proposals.length === 0);
 const showModal      = ref(false);
 const selectedProposal = ref(null);
 
@@ -272,11 +279,16 @@ let debounceTimeout = null;
 
 function debounceSearch() {
   clearTimeout(debounceTimeout);
-  debounceTimeout = setTimeout(() => fetchProposals(), 350);
+  debounceTimeout = setTimeout(() => fetchProposals(), 300);
 }
 
-async function fetchProposals() {
-  loading.value = true;
+async function fetchProposals(forceLoading = false) {
+  const isDefaultFilter = !filters.value.search && !filters.value.year;
+
+  if (forceLoading || proposals.value.length === 0) {
+    loading.value = true;
+  }
+
   try {
     const params = new URLSearchParams();
     if (filters.value.search) params.append('search', filters.value.search);
@@ -291,6 +303,12 @@ async function fetchProposals() {
       // Derive department name from first result (all results are same dept)
       if (proposals.value.length && !departmentName.value) {
         departmentName.value = proposals.value[0].department || '';
+      }
+
+      if (isDefaultFilter) {
+        repoCache.proposals = proposals.value;
+        repoCache.years = years.value;
+        repoCache.deptName = departmentName.value;
       }
     }
   } catch (err) {
@@ -320,5 +338,7 @@ function getTags(str) {
   return str.split(',').map(t => t.trim()).filter(Boolean);
 }
 
-onMounted(() => fetchProposals());
+onMounted(() => {
+  fetchProposals();
+});
 </script>
