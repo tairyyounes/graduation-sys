@@ -353,7 +353,7 @@ class DepartmentProposalController extends Controller
         // See StudentProposalController::similarity() for why stale
         // 'pending' rows (an interrupted check) must be treated as failed
         // rather than left as a permanent, unrecoverable spinner state.
-        $staleCutoff = now()->subMinutes(3);
+        $staleCutoff = now()->subMinutes(15);
         $hasStalePending = $allResults->contains(
             fn($r) => $r->ai_status === 'pending' && $r->updated_at && $r->updated_at->lt($staleCutoff)
         );
@@ -367,7 +367,7 @@ class DepartmentProposalController extends Controller
         // Do NOT re-dispatch for 'no_comparisons' — there is nothing to compare against.
         if ($aiStatus === 'failed' || $aiStatus === 'none') {
             try {
-                CheckProposalSimilarity::dispatch($proposal->load('department'), $latestVersion);
+                CheckProposalSimilarity::enqueue($proposal->load('department'), $latestVersion);
             } catch (\Throwable $e) {
                 // On a sync queue a failing AI call would bubble up as a 500 and
                 // break the department view. Swallow it so the endpoint still

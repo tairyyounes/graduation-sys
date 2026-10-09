@@ -319,7 +319,7 @@ class StudentProposalController extends Controller
             ->exists();
         if ($latestVersion && !$alreadyChecked) {
             try {
-                CheckProposalSimilarity::dispatch($proposal->load('department'), $latestVersion);
+                CheckProposalSimilarity::enqueue($proposal->load('department'), $latestVersion);
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::warning('Similarity check on submit failed: ' . $e->getMessage());
             }
@@ -574,7 +574,7 @@ class StudentProposalController extends Controller
         // an infinite "analysis running" spinner with no way out. Treat a
         // pending row older than this as stale so it can self-heal into a
         // retriable 'failed' state instead of hanging indefinitely.
-        $staleCutoff = now()->subMinutes(3);
+        $staleCutoff = now()->subMinutes(15);
         $hasStalePending = $allResults->contains(
             fn($r) => $r->ai_status === 'pending' && $r->updated_at && $r->updated_at->lt($staleCutoff)
         );
@@ -590,7 +590,7 @@ class StudentProposalController extends Controller
         $forceRecheck = $request->query('recheck') === 'true';
         if ($forceRecheck || $aiStatus === 'failed' || $aiStatus === 'none') {
             try {
-                CheckProposalSimilarity::dispatch($proposal->load('department'), $latestVersion);
+                CheckProposalSimilarity::enqueue($proposal->load('department'), $latestVersion);
             } catch (\Throwable $e) {
                 // On a sync queue a failing AI call would bubble up as a 500 and
                 // leave the page blank. Swallow it so the endpoint still returns a
