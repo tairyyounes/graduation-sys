@@ -12,17 +12,17 @@
     },
     {
       "name": "ai",
-      "runtimeExecutable": "py",
+      "runtimeExecutable": "C:/Users/tairy/AppData/Local/Python/pythoncore-3.10-64/python.exe",
       "runtimeArgs": [
         "-m",
         "uvicorn",
         "server_dense:app",
         "--port",
-        "8002",
+        "8000",
         "--app-dir",
-        "C:/Users/User/Desktop/dense_api"
+        "C:/Users/tairy/Desktop/dense_api_tairy/dense_api"
       ],
-      "port": 8002
+      "port": 8000
     }
   ]
 }
