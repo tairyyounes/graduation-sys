@@ -313,6 +313,9 @@ class DepartmentProposalController extends Controller
                     ->causedBy($user)
                     ->log("proposal rejected by {$user->full_name}");
 
+                // Rejected proposals leave the comparison corpus (their data
+                // and history stay in the system).
+                SyncAiCorpus::dispatch();
                 $message = "تم رفض المقترح.";
             }
 
@@ -353,7 +356,7 @@ class DepartmentProposalController extends Controller
         // See StudentProposalController::similarity() for why stale
         // 'pending' rows (an interrupted check) must be treated as failed
         // rather than left as a permanent, unrecoverable spinner state.
-        $staleCutoff = now()->subMinutes(3);
+        $staleCutoff = now()->subMinutes(15);
         $hasStalePending = $allResults->contains(
             fn($r) => $r->ai_status === 'pending' && $r->updated_at && $r->updated_at->lt($staleCutoff)
         );
@@ -367,7 +370,7 @@ class DepartmentProposalController extends Controller
         // Do NOT re-dispatch for 'no_comparisons' — there is nothing to compare against.
         if ($aiStatus === 'failed' || $aiStatus === 'none') {
             try {
-                CheckProposalSimilarity::dispatch($proposal->load('department'), $latestVersion);
+                CheckProposalSimilarity::enqueue($proposal->load('department'), $latestVersion);
             } catch (\Throwable $e) {
                 // On a sync queue a failing AI call would bubble up as a 500 and
                 // break the department view. Swallow it so the endpoint still
@@ -448,6 +451,13 @@ class DepartmentProposalController extends Controller
                                                  ?? ($raw['project_id'] ?? null),
                     'title'                   => $title,
                     'domain'                  => $domain,
+                    'problem'                 => optional($res->comparedVersion)->problem ?? ($raw['problem'] ?? null),
+                    'solution'                => optional($res->comparedVersion)->solution ?? ($raw['solution'] ?? null),
+                    'objectives'              => optional($res->comparedVersion)->objectives ?? ($raw['objectives'] ?? null),
+                    'functions'               => optional($res->comparedVersion)->functions ?? ($raw['functions'] ?? null),
+                    'tags'                    => optional($res->comparedVersion)->tags ?? ($raw['tags'] ?? null),
+                    'tech'                    => optional($res->comparedVersion)->technologies_used ?? ($raw['technologies_used'] ?? null),
+                    'author'                  => optional(optional(optional($res->comparedVersion)->proposal)->students)->first()?->full_name,
                     'score'                   => $finalPct . '%',
                     'final_score'             => $finalPct,
                     'problem_similarity'      => $res->problem_similarity      !== null ? round($res->problem_similarity      * 100, 1) : null,

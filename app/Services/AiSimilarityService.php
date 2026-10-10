@@ -29,7 +29,7 @@ class AiSimilarityService
         int $topK = 5
     ): array {
         @set_time_limit(120);
-        $baseUrl = rtrim(config('services.dense_api.url', env('DENSE_API_URL', 'http://127.0.0.1:8002')), '/');
+        $baseUrl = rtrim(config('services.dense_api.url', env('DENSE_API_URL', 'http://127.0.0.1:8000')), '/');
 
         $this->ensureServerRunning($baseUrl);
 
@@ -43,6 +43,9 @@ class AiSimilarityService
             'technologies_used' => $version->technologies_used ?? '',
             'department'       => $departmentName,
             'top_k'            => $topK,
+            // Only accepted/archived proposals belong in the index; those
+            // reach it through syncCorpus(), not through every check.
+            'add_to_index'     => false,
         ];
 
         if ($excludeId !== null) {
@@ -73,8 +76,14 @@ class AiSimilarityService
     }
 
     /**
-     * Proposals the AI engine compares new submissions against: historical
-     * imports (archived) and accepted proposals stored in this system.
+     * Proposals the AI engine compares new submissions against (see
+     * docs/similarity-scope-plan.md):
+     *  - accepted proposals, including historical imports (archived+accepted);
+     *  - proposals submitted and still under review (pending or revision
+     *    requested), so two students submitting the same idea close together
+     *    are caught before either is decided.
+     * Drafts, student-archived drafts and rejected proposals are left out;
+     * a rejected proposal keeps all its data, it just stops being compared.
      */
     public static function corpusQuery()
     {
@@ -82,9 +91,31 @@ class AiSimilarityService
             ->with(['latestVersion', 'department'])
             ->where('review_status', '!=', 'rejected')
             ->where(function ($q) {
-                $q->where('submission_status', 'archived')
+                $q->where('submission_status', 'submitted')
                   ->orWhere('review_status', 'accepted');
             });
+    }
+
+    /**
+     * Bring the AI engine's copy of the corpus up to date and wait for it, so
+     * the check that follows already compares against every proposal in
+     * scope (including one submitted seconds ago). The engine only
+     * re-encodes new or changed proposals, so this is usually instant.
+     */
+    public function syncCorpusAndWait(int $timeoutSeconds = 60): void
+    {
+        $status = $this->corpusStatus();
+        if ($status === null) {
+            return;
+        }
+        if (empty($status['syncing'])) {
+            $this->syncCorpus();
+        }
+        $deadline = time() + $timeoutSeconds;
+        do {
+            usleep(500_000);
+            $status = $this->corpusStatus();
+        } while ($status !== null && !empty($status['syncing']) && time() < $deadline);
     }
 
     /**
@@ -104,7 +135,7 @@ class AiSimilarityService
                     continue;
                 }
                 $proposals[] = [
-                    'project_id'        => $p->proposal_id,
+                    'project_id'        => (string) $p->proposal_id,
                     'title'             => $v->title ?? '',
                     'problem'           => $v->problem ?? '',
                     'solution'          => $v->solution ?? '',
@@ -112,12 +143,12 @@ class AiSimilarityService
                     'functions'         => $v->functions ?? '',
                     'tags'              => $v->tags ?? '',
                     'technologies_used' => $v->technologies_used ?? '',
-                    'domain'            => optional($p->department)->department_name ?? '',
+                    'department'        => optional($p->department)->department_name ?? '',
                 ];
             }
         }, 'proposal_id');
 
-        $response = Http::timeout(60)->post("{$baseUrl}/corpus/sync", ['proposals' => $proposals]);
+        $response = Http::timeout(60)->post("{$baseUrl}/corpus/sync", ['projects' => $proposals]);
         if ($response->failed()) {
             throw new \RuntimeException("AI corpus sync failed: HTTP {$response->status()} {$response->body()}");
         }
@@ -153,8 +184,12 @@ class AiSimilarityService
         }
 
         // One launcher at a time; concurrent requests just wait for health.
+        // uvicorn only opens its port after startup finishes, which can take
+        // many minutes when the index is rebuilt. A server that is still
+        // starting looks "down", so check for its process before launching a
+        // second copy that would compete for the same CPU, memory and port.
         $lock = Cache::lock('ai-server-start', 180);
-        if ($lock->get()) {
+        if (!$this->serverProcessExists() && $lock->get()) {
             $port   = parse_url($baseUrl, PHP_URL_PORT) ?: 8000;
             $python = config('services.dense_api.python', 'py');
             $log    = storage_path('logs/ai-server.log');
@@ -182,6 +217,17 @@ class AiSimilarityService
         Log::error('AiSimilarityService: AI server did not become ready in time.');
     }
 
+    private function serverProcessExists(): bool
+    {
+        $out = shell_exec(
+            'powershell -NoProfile -NonInteractive -Command "'
+            . '@(Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like \'*server_dense*\' -and $_.Name -eq \'python.exe\' }).Count'
+            . '"'
+        );
+
+        return (int) trim((string) $out) > 0;
+    }
+
     private function isHealthy(string $baseUrl): bool
     {
         try {
@@ -189,47 +235,5 @@ class AiSimilarityService
         } catch (\Throwable) {
             return false;
         }
-    }
-
-    /**
-     * Call the FastAPI recommendations engine for alternative suggestions.
-     */
-    public function getRecommendations(
-        ProposalVersion $version,
-        string $departmentName,
-        ?string $excludeId = null
-    ): array {
-        @set_time_limit(120);
-        $baseUrl = rtrim(config('services.dense_api.url', env('DENSE_API_URL', 'http://127.0.0.1:8002')), '/');
-
-        $payload = [
-            'title'            => $version->title ?? '',
-            'problem'          => $version->problem ?? '',
-            'solution'         => $version->solution ?? '',
-            'functions'        => $version->functions ?? '',
-            'objectives'       => $version->objectives ?? '',
-            'tags'             => $version->tags ?? '',
-            'technologies_used' => $version->technologies_used ?? '',
-            'department'       => $departmentName,
-            'top_k'            => 3,
-        ];
-
-        if ($excludeId !== null) {
-            $payload['exclude_project_id'] = $excludeId;
-        }
-
-        try {
-            $response = Http::timeout(120)
-                ->post("{$baseUrl}/recommend", $payload);
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            Log::error("AiSimilarityService recommendations failed: " . $e->getMessage());
-            return [];
-        }
-
-        if ($response->failed()) {
-            return [];
-        }
-
-        return $response->json()['results'] ?? [];
     }
 }

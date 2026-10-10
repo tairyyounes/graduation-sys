@@ -255,7 +255,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import LanguageSwitcher from './common/LanguageSwitcher.vue';
 import ChangePasswordModal from './common/ChangePasswordModal.vue';
 import StudentOverviewSection from './student/StudentOverviewSection.vue';
@@ -540,8 +540,19 @@ async function fetchDecision(proposalId) {
   }
 }
 
+// While a check is queued/running the endpoint reports 'pending'; poll it
+// so the results appear on their own instead of waiting for a manual reload.
+const SIMILARITY_POLL_MS = 3000;
+let similarityPollTimer = null;
+function stopSimilarityPoll() {
+  clearTimeout(similarityPollTimer);
+  similarityPollTimer = null;
+}
+onBeforeUnmount(stopSimilarityPoll);
+
 async function fetchSimilarity(proposalId, recheck = false) {
   if (!proposalId) return;
+  stopSimilarityPoll();
   // Guard against duplicate concurrent AI checks for the same proposal.
   // This was a real bug: navigating to the report set currentView, which
   // triggers the currentView watcher's own fetchSimilarity() call, while a
@@ -567,6 +578,9 @@ async function fetchSimilarity(proposalId, recheck = false) {
     }
   } finally {
     isFetchingSimilarity.value = false;
+  }
+  if (similarityAiStatus.value === 'pending') {
+    similarityPollTimer = setTimeout(() => fetchSimilarity(proposalId), SIMILARITY_POLL_MS);
   }
 }
 

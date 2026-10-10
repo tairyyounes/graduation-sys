@@ -6,11 +6,12 @@ use App\Models\Proposal;
 use App\Models\ProposalVersion;
 use App\Models\SimilarityResult;
 use App\Services\AiSimilarityService;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 
-class CheckProposalSimilarity implements ShouldQueue
+class CheckProposalSimilarity implements ShouldQueue, ShouldBeUnique
 {
     use Queueable;
 
@@ -24,12 +25,43 @@ class CheckProposalSimilarity implements ShouldQueue
      */
     public array $backoff = [10, 30];
 
+    /**
+     * Release the uniqueness lock after this long even if the worker died,
+     * so a crashed check can never block a version forever.
+     */
+    public int $uniqueFor = 900;
+
     // ─── Constructor ────────────────────────────────────────────────────────
 
     public function __construct(
         public readonly Proposal        $proposal,
         public readonly ProposalVersion $version
     ) {}
+
+    /**
+     * Only one queued check per version. The similarity endpoints run on
+     * every page load; without this each load queued another duplicate.
+     */
+    public function uniqueId(): string
+    {
+        return (string) $this->version->version_id;
+    }
+
+    /**
+     * Record a 'pending' sentinel row and queue the check. Until the worker
+     * picks the job up the version has no result rows at all, which the
+     * endpoints read as "never checked" and dispatch again; the sentinel
+     * makes them report 'pending' instead.
+     */
+    public static function enqueue(Proposal $proposal, ProposalVersion $version): void
+    {
+        SimilarityResult::updateOrCreate(
+            ['proposal_version_id' => $version->version_id, 'compared_version_id' => $version->version_id],
+            ['ai_status' => 'pending', 'similarity_score' => 0]
+        );
+
+        static::dispatch($proposal, $version);
+    }
 
     // ─── Handle ─────────────────────────────────────────────────────────────
 
@@ -60,13 +92,15 @@ class CheckProposalSimilarity implements ShouldQueue
         // ── 1. Mark existing results as pending (clean slate) ──────────────
         SimilarityResult::where('proposal_version_id', $versionId)->update(['ai_status' => 'pending']);
 
-        // If the AI engine has never received this system's proposals (fresh
-        // install / cache wiped), start a sync so later checks compare against
-        // them. This check itself still runs against the fallback corpus.
+        // Make sure the AI engine compares against the current corpus before
+        // checking: a sync still running (e.g. started by a submission or a
+        // review decision) is waited for, and a count mismatch (proposal
+        // added, rejected, cache wiped) triggers one. Only changed proposals
+        // are re-encoded, so this normally takes well under a second.
         $status = $service->corpusStatus();
-        if ($status !== null && ($status['system_projects'] ?? 0) === 0 && empty($status['syncing'])
-            && AiSimilarityService::corpusQuery()->exists()) {
-            SyncAiCorpus::dispatch();
+        if ($status !== null && (!empty($status['syncing'])
+            || ($status['system_projects'] ?? 0) !== AiSimilarityService::corpusQuery()->count())) {
+            $service->syncCorpusAndWait();
         }
 
         try {

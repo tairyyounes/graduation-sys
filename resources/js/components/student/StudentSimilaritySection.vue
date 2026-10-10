@@ -201,7 +201,7 @@
                 <div class="min-w-0 flex-1 space-y-0.5">
                   <div class="flex flex-wrap items-center gap-2">
                     <p class="truncate text-sm font-semibold text-slate-900">
-                      <span v-if="m.details_hidden" class="italic text-slate-500 font-normal">🔒 {{ $t('student.simreport.hidden_privacy') }}</span>
+                      <span v-if="m.details_hidden && !m.show_title" class="italic text-slate-500 font-normal">🔒 {{ $t('student.simreport.hidden_privacy') }}</span>
                       <template v-else>{{ m.title }}</template>
                     </p>
                     <span v-if="i === 0 && activeFilter === 'all' && !searchQuery" class="rounded-full bg-teal-100 px-2 py-0.5 text-[10px] font-bold text-teal-800">

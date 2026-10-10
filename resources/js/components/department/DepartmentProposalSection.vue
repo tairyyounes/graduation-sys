@@ -301,7 +301,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import { useToast } from 'vue-toastification'
@@ -344,11 +344,18 @@ const closestMatches = ref([])
 const aiStatus = ref('none')       // 'pending' | 'success' | 'failed' | 'none'
 const aiSummary = ref(null)        // breakdown summary from /similarity endpoint
 
+// While the similarity check is queued/running the endpoint reports
+// 'pending'; reload until it finishes so results appear without a refresh.
+const SIMILARITY_POLL_MS = 3000
+let similarityPollTimer = null
+onBeforeUnmount(() => clearTimeout(similarityPollTimer))
+
 onMounted(async () => {
   fetchProposal()
 })
 
 const fetchProposal = async () => {
+  clearTimeout(similarityPollTimer)
   try {
     const [propRes, simRes] = await Promise.all([
       axios.get(`/department/proposals/${route.params.id}`),
@@ -368,6 +375,9 @@ const fetchProposal = async () => {
   } catch (error) {
     console.error('Error fetching proposal details:', error)
     toast.error(t('dept.proposal.toast.load_failed'))
+  }
+  if (aiStatus.value === 'pending') {
+    similarityPollTimer = setTimeout(fetchProposal, SIMILARITY_POLL_MS)
   }
 }
 

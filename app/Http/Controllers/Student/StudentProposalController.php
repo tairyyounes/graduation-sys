@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProposalRequest;
 use App\Http\Requests\UpdateProposalRequest;
 use App\Jobs\CheckProposalSimilarity;
+use App\Jobs\SyncAiCorpus;
 use App\Models\Proposal;
 use App\Models\ProposalVersion;
 use App\Models\Decision;
@@ -308,6 +309,12 @@ class StudentProposalController extends Controller
             ->causedBy($request->user())
             ->log('proposal submitted');
 
+        // A submitted proposal joins the comparison corpus right away, so
+        // proposals submitted later (even minutes later) are compared with it
+        // before either is reviewed. Resubmissions refresh it with the latest
+        // submitted version.
+        SyncAiCorpus::dispatch();
+
         // Dispatch AI similarity check — runs synchronously if QUEUE_CONNECTION=sync,
         // or in the background when using a real queue driver. This is a secondary
         // step: if the AI service is down it must not fail the submission itself.
@@ -319,7 +326,7 @@ class StudentProposalController extends Controller
             ->exists();
         if ($latestVersion && !$alreadyChecked) {
             try {
-                CheckProposalSimilarity::dispatch($proposal->load('department'), $latestVersion);
+                CheckProposalSimilarity::enqueue($proposal->load('department'), $latestVersion);
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::warning('Similarity check on submit failed: ' . $e->getMessage());
             }
@@ -574,7 +581,7 @@ class StudentProposalController extends Controller
         // an infinite "analysis running" spinner with no way out. Treat a
         // pending row older than this as stale so it can self-heal into a
         // retriable 'failed' state instead of hanging indefinitely.
-        $staleCutoff = now()->subMinutes(3);
+        $staleCutoff = now()->subMinutes(15);
         $hasStalePending = $allResults->contains(
             fn($r) => $r->ai_status === 'pending' && $r->updated_at && $r->updated_at->lt($staleCutoff)
         );
@@ -590,7 +597,7 @@ class StudentProposalController extends Controller
         $forceRecheck = $request->query('recheck') === 'true';
         if ($forceRecheck || $aiStatus === 'failed' || $aiStatus === 'none') {
             try {
-                CheckProposalSimilarity::dispatch($proposal->load('department'), $latestVersion);
+                CheckProposalSimilarity::enqueue($proposal->load('department'), $latestVersion);
             } catch (\Throwable $e) {
                 // On a sync queue a failing AI call would bubble up as a 500 and
                 // leave the page blank. Swallow it so the endpoint still returns a
@@ -629,6 +636,14 @@ class StudentProposalController extends Controller
             ]);
         }
 
+        // Another student's proposal that is submitted but not yet accepted is
+        // compared on its full content, but shown to this student as title +
+        // score only, to protect that student's idea while it is under review.
+        $isInProgressOther = fn($compared) => $compared
+            && $compared->proposal_id !== $proposal->proposal_id
+            && $compared->submission_status === 'submitted'
+            && $compared->review_status !== 'accepted';
+
         // ── Build the best-match summary for the top card ──────────────────
         $topResult = $allResults->where('ai_status', 'success')->first();
 
@@ -646,7 +661,7 @@ class StudentProposalController extends Controller
                 $isCurrentYearConfirmed = $isCurrentYear && $isAccepted;
             }
 
-            if ($isCurrentYearConfirmed) {
+            if ($isCurrentYearConfirmed || $isInProgressOther($comparedProposal)) {
                 $summary = [
                     'final_score'             => $finalPct,
                     'problem_similarity'      => null,
@@ -656,7 +671,9 @@ class StudentProposalController extends Controller
                     'tags_similarity'         => null,
                     'technologies_similarity' => null,
                     'verdict'                 => $topResult->verdict,
-                    'explanation'             => __('messages.similarity.hidden'),
+                    'explanation'             => $isCurrentYearConfirmed
+                        ? __('messages.similarity.hidden')
+                        : __('messages.similarity.hidden_in_review'),
                     'details_hidden'          => true,
                 ];
             } else {
@@ -679,7 +696,7 @@ class StudentProposalController extends Controller
         $results = $allResults
             ->where('ai_status', 'success')
             ->filter(fn($r) => !($r->compared_version_id === $r->proposal_version_id && ($r->final_score === null || $r->final_score == 0 || $r->verdict === 'No Matches' || $r->verdict === 'No Comparisons')))
-            ->map(function ($res) use ($proposal) {
+            ->map(function ($res) use ($proposal, $isInProgressOther) {
                 $comparedProposal = optional($res->comparedVersion)->proposal;
                 $isCurrentYearConfirmed = false;
                 if ($comparedProposal && $comparedProposal->proposal_id !== $proposal->proposal_id) {
@@ -697,10 +714,12 @@ class StudentProposalController extends Controller
                     ? round($res->final_score * 100, 1)
                     : ($res->similarity_score ?? 0);
 
-                if ($isCurrentYearConfirmed) {
+                if ($isCurrentYearConfirmed || $isInProgressOther($comparedProposal)) {
                     return [
                         'id'                      => null,
                         'title'                   => $title,
+                        // In-review proposals keep their real title visible.
+                        'show_title'              => !$isCurrentYearConfirmed,
                         'domain'                  => $domain,
                         'score'                   => $finalPct . '%',
                         'final_score'             => $finalPct,
@@ -711,7 +730,9 @@ class StudentProposalController extends Controller
                         'tags_similarity'         => null,
                         'technologies_similarity' => null,
                         'verdict'                 => $res->verdict,
-                        'explanation'             => __('messages.similarity.hidden'),
+                        'explanation'             => $isCurrentYearConfirmed
+                            ? __('messages.similarity.hidden')
+                            : __('messages.similarity.hidden_in_review'),
                         'year'                    => optional(optional($res->comparedVersion)->created_at)->format('Y') ?? now()->year,
                         'details_hidden'          => true,
                     ];
@@ -743,31 +764,13 @@ class StudentProposalController extends Controller
                 ];
             })->values();
 
-        // AI Recommendations
-        $recommendations = [];
-        if ($aiStatus === 'success') {
-            $recResults = app(\App\Services\AiSimilarityService::class)->getRecommendations(
-                version:        $latestVersion,
-                departmentName: $proposal->department->department_name ?? 'General',
-                excludeId:      (string) $proposal->proposal_id
-            );
-
-            foreach ($recResults as $rec) {
-                $sim = $rec['similarity'] ?? [];
-                $recommendations[] = [
-                    'title'       => $rec['title'] ?? 'Alternative Project',
-                    'domain'      => $rec['domain'] ?? 'N/A',
-                    'explanation' => $rec['explanation'] ?? '',
-                    'relevance'   => round(($sim['final_similarity'] ?? 0) * 100, 1) . '%',
-                ];
-            }
-        }
-
         return response()->json([
             'ai_status' => $aiStatus,
             'summary'   => $summary,
             'results'   => $results,
-            'recommendations' => $recommendations,
+            // The AI engine has no /recommend endpoint; kept empty so the
+            // frontend's (hidden-when-empty) recommendations section still works.
+            'recommendations' => [],
             'analyzed_at' => optional($topResult)->updated_at,
             'message'   => 'Similarity analysis retrieved successfully.',
         ]);
