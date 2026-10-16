@@ -67,10 +67,6 @@ class StudentProposalController extends Controller
                 'supervisor_name' => $request->supervisor_name,
             ]);
 
-            if ($request->hasFile('supervisor_approval')) {
-                $proposal->storeSupervisorApproval($request->file('supervisor_approval'));
-            }
-
             ProposalVersion::create([
                 'proposal_id' => $proposal->proposal_id,
                 'version_number' => 1,
@@ -221,10 +217,8 @@ class StudentProposalController extends Controller
         $validator = \Illuminate\Support\Facades\Validator::make($latestVersion->toArray() + [
             'tech' => $latestVersion->technologies_used,
             'supervisor_name' => $proposal->supervisor_name,
-            'supervisor_approval' => $proposal->hasSupervisorApproval() ? $proposal->supervisor_approval_path : null,
         ], [
             'supervisor_name' => ['required', 'string', 'max:150'],
-            'supervisor_approval' => ['required'],
             'title' => [
                 'required',
                 'string',
@@ -289,7 +283,6 @@ class StudentProposalController extends Controller
             'tech.string' => 'The technologies must be a string.',
             'supervisor_name.required' => __('messages.supervisor.name_required'),
             'supervisor_name.max' => __('messages.supervisor.name_max'),
-            'supervisor_approval.required' => __('messages.supervisor.approval_required'),
         ]);
 
         if ($validator->fails()) {
@@ -421,46 +414,12 @@ class StudentProposalController extends Controller
     }
 
     /**
-     * Preview (inline) or download (?download=1) the signed supervisor approval.
-     */
-    public function supervisorApproval(Request $request, Proposal $proposal)
-    {
-        if (!$this->isMember($request, $proposal)) {
-            return response()->json(['message' => 'Unauthorized.'], 403);
-        }
-
-        if (!$proposal->hasSupervisorApproval()) {
-            return response()->json(['message' => __('messages.supervisor.approval_missing')], 404);
-        }
-
-        return $proposal->supervisorApprovalResponse($request->boolean('download'));
-    }
-
-    /**
-     * The blank, printable supervisor approval form (static A4 PDF).
-     */
-    public function supervisorApprovalTemplate()
-    {
-        return response()->download(
-            resource_path('templates/supervisor-approval-form.pdf'),
-            __('messages.supervisor.template_filename'),
-            ['Content-Type' => 'application/pdf']
-        );
-    }
-
-    /**
-     * Apply the supervisor name and approval document changes from the form.
+     * Apply the supervisor name from the form.
      */
     private function syncSupervisorDetails(Request $request, Proposal $proposal): void
     {
         if ($request->exists('supervisor_name')) {
             $proposal->update(['supervisor_name' => $request->supervisor_name]);
-        }
-
-        if ($request->hasFile('supervisor_approval')) {
-            $proposal->storeSupervisorApproval($request->file('supervisor_approval'));
-        } elseif ($request->boolean('remove_supervisor_approval')) {
-            $proposal->removeSupervisorApproval();
         }
     }
 
@@ -829,7 +788,6 @@ class StudentProposalController extends Controller
             // New flags for front‑end UI
             'can_edit' => $proposal->review_status === 'revision_requested',
             'supervisor_name' => $proposal->supervisor_name ?? '',
-            'supervisor_approval' => $proposal->supervisorApprovalMeta('/student/proposals'),
             'approval_pdf_url' => $proposal->approval_pdf_path ? \Illuminate\Support\Facades\Storage::url($proposal->approval_pdf_path) : null,
         ];
     }

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use App\Support\StudentAccount;
 use Illuminate\Validation\Rule;
 
 class StudentImportController extends Controller
@@ -156,7 +157,8 @@ class StudentImportController extends Controller
             'Content-Disposition' => 'attachment; filename="students_template.csv"',
         ];
 
-        $columns = ['student_number', 'full_name', 'email', 'semester', 'password', 'is_active'];
+        // Email and password are derived from the student number, so they are not template columns.
+        $columns = ['student_number', 'full_name', 'semester', 'is_active'];
 
         $callback = function () use ($columns) {
             $file = fopen('php://output', 'w');
@@ -175,7 +177,6 @@ class StudentImportController extends Controller
         'full_name'      => ['full_name', 'name', 'student_name', 'student name', 'الاسم', 'اسم الطالب', 'الاسم الكامل', 'اسم_الطالب', 'الاسم_الرباعي', 'الاسم الثلاثي', 'اسم الطالب ثلاثي', 'اسم الطالب رباعي', 'اسم'],
         'email'          => ['email', 'official_email', 'student_email', 'البريد', 'البريد الالكتروني', 'البريد_الالكتروني', 'الإيميل', 'الايميل'],
         'semester'       => ['semester', 'term', 'الفصل', 'الفصل الدراسي', 'الفصل_الدراسي', 'السمستر', 'المستوى', 'السداسي'],
-        'password'       => ['password', 'pass', 'كلمة المرور', 'كلمة_المرور', 'الرمز السري', 'الباسوورد', 'باسوورد', 'الرمز', 'رمز المرور'],
         'is_active'      => ['is_active', 'status', 'active', 'الحالة', 'مفعل', 'نشط'],
     ];
 
@@ -271,13 +272,12 @@ class StudentImportController extends Controller
         // If first line wasn't header, rewind to include it as a data row
         if (!$isHeaderRow) {
             rewind($handle);
-            // Default positional mapping: 0 => student_number, 1 => full_name, 2 => email, 3 => semester, 4 => password
+            // Default positional mapping: 0 => student_number, 1 => full_name, 2 => email, 3 => semester
             $mappedIndexes = [
                 'student_number' => 0,
                 'full_name'      => 1,
                 'email'          => 2,
                 'semester'       => 3,
-                'password'       => 4,
             ];
         }
 
@@ -296,19 +296,15 @@ class StudentImportController extends Controller
                 continue;
             }
 
+            // An email given in the file is kept as-is so a mismatch with the student number gets reported.
             $email = isset($mappedIndexes['email']) ? strtolower(trim((string)($data[$mappedIndexes['email']] ?? ''))) : '';
             if ($email === '' && $studentNumber !== '') {
-                $email = "{$studentNumber}@cctt.edu.ly";
+                $email = StudentAccount::emailFor($studentNumber);
             }
 
             $semester = isset($mappedIndexes['semester']) ? (int)trim((string)($data[$mappedIndexes['semester']] ?? '')) : 8;
             if ($semester < 1 || $semester > 8) {
                 $semester = 8;
-            }
-
-            $password = isset($mappedIndexes['password']) ? trim((string)($data[$mappedIndexes['password']] ?? '')) : '';
-            if ($password === '') {
-                $password = $studentNumber;
             }
 
             $isActive = true;
@@ -324,10 +320,10 @@ class StudentImportController extends Controller
                 'full_name'      => $fullName,
                 'email'          => $email,
                 'semester'       => $semester,
-                'password'       => $password,
                 'is_active'      => $isActive,
                 'exists'         => false,
             ];
+            $row['errors'] = $this->importRowErrors($row);
 
             $rows[] = $row;
             if ($email !== '') $emailsToCheck[] = $email;
@@ -375,45 +371,27 @@ class StudentImportController extends Controller
 
         foreach ($students as $index => $student) {
             $studentNumber = preg_replace('/[^\d]/', '', trim((string)($student['student_number'] ?? '')));
-            $fullName = trim((string)($student['full_name'] ?? ''));
             $email = strtolower(trim((string)($student['email'] ?? '')));
+            if ($email === '' && $studentNumber !== '') {
+                $email = StudentAccount::emailFor($studentNumber);
+            }
             $semester = (int)($student['semester'] ?? 8);
             if ($semester < 1 || $semester > 8) $semester = 8;
-            $password = trim((string)($student['password'] ?? ''));
-            if ($password === '') {
-                $password = $studentNumber;
-            }
-            $isActive = (bool)($student['is_active'] ?? true);
 
-            if ($email === '' && $studentNumber !== '') {
-                $email = "{$studentNumber}@cctt.edu.ly";
-            }
+            $row = [
+                'student_number' => $studentNumber,
+                'full_name'      => trim(preg_replace('/\s+/u', ' ', (string)($student['full_name'] ?? ''))),
+                'email'          => $email,
+                'semester'       => $semester,
+                'is_active'      => (bool)($student['is_active'] ?? true),
+            ];
 
-            $rowErrors = [];
-            if ($studentNumber === '' || strlen($studentNumber) !== 6) {
-                $rowErrors[] = 'Student number must be exactly 6 digits.';
-            }
-            if ($fullName === '') {
-                $rowErrors[] = 'Full name is required.';
-            }
-            if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $rowErrors[] = 'Valid email is required.';
-            }
-            if (strlen($password) < 6) {
-                $rowErrors[] = 'Password must be at least 6 characters.';
-            }
-
+            $rowErrors = $this->importRowErrors($row);
             if (!empty($rowErrors)) {
                 $errors["row_$index"] = $rowErrors;
             } else {
-                $validStudents[] = [
-                    'student_number' => $studentNumber,
-                    'full_name'      => $fullName,
-                    'email'          => $email,
-                    'semester'       => $semester,
-                    'password'       => $password,
-                    'is_active'      => $isActive,
-                ];
+                // The initial password is always the student number.
+                $validStudents[] = $row + ['password' => $studentNumber];
             }
         }
 
@@ -457,14 +435,18 @@ class StudentImportController extends Controller
                     ->first();
 
                 if ($existUser) {
-                    $existUser->restore();
-                    $existUser->update([
+                    // A live account keeps its password; only a re-created (trashed) one gets the default again.
+                    $userData = [
                         'full_name'     => $student['full_name'],
-                        'password'      => Hash::make($student['password']),
                         'role'          => 'student',
                         'department_id' => $departmentId,
                         'is_active'     => $student['is_active'],
-                    ]);
+                    ];
+                    if ($existUser->trashed()) {
+                        $userData['password'] = Hash::make($student['password']);
+                    }
+                    $existUser->restore();
+                    $existUser->update($userData);
                 } else {
                     \App\Models\User::create([
                         'full_name'     => $student['full_name'],
@@ -494,6 +476,37 @@ class StudentImportController extends Controller
     }
 
     /**
+     * Validation for one imported student row — the same rules as the manual add form.
+     *
+     * @return string[] translated error messages (empty when the row is valid)
+     */
+    private function importRowErrors(array $row): array
+    {
+        $errors = [];
+        $studentNumber = (string) $row['student_number'];
+
+        if ($studentNumber === '') {
+            $errors[] = __('validation.custom.student_number.required');
+        } elseif (!preg_match('/^\d{6}$/', $studentNumber)) {
+            $errors[] = __('validation.custom.student_number.digits');
+        }
+
+        if ($row['full_name'] === '') {
+            $errors[] = __('validation.custom.full_name.required');
+        } elseif (!preg_match('/^[\pL\s]+$/u', $row['full_name'])) {
+            $errors[] = __('validation.custom.full_name.regex');
+        }
+
+        if ($row['email'] === '' || !filter_var($row['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors[] = __('validation.custom.email.email');
+        } elseif (preg_match('/^\d{6}$/', $studentNumber) && !StudentAccount::emailMatchesNumber($row['email'], $studentNumber)) {
+            $errors[] = __('validation.custom.email.student_number_mismatch');
+        }
+
+        return $errors;
+    }
+
+    /**
      * Update a student and their corresponding user account.
      */
     public function update(Request $request, $studentId): JsonResponse
@@ -509,13 +522,34 @@ class StudentImportController extends Controller
             return response()->json(['message' => 'Student not found.'], 404);
         }
 
+        // The email is not editable: it always follows the student number.
+        $studentNumber = trim((string) $request->input('student_number'));
+        $request->merge([
+            'student_number' => $studentNumber,
+            'email' => $request->filled('email')
+                ? strtolower(trim((string) $request->input('email')))
+                : StudentAccount::emailFor($studentNumber),
+        ]);
+
         $validated = $request->validate([
             'student_number' => ['required', 'digits:6', Rule::unique('students', 'student_number')->ignore($student->student_id, 'student_id')],
             'full_name' => ['required', 'string', 'max:255', 'regex:/^[\pL\s]+$/u'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($student->official_email, 'email')],
-            'semester' => ['nullable', 'integer'],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('users', 'email')->ignore($student->official_email, 'email'),
+                StudentAccount::emailMatchRule($studentNumber),
+            ],
+            'semester' => ['nullable', 'integer', 'min:1', 'max:8'],
             'is_active' => ['required', 'boolean'],
-            'password' => ['nullable', 'string', 'min:6'],
+        ], [
+            'student_number.required' => __('validation.custom.student_number.required'),
+            'student_number.digits' => __('validation.custom.student_number.digits'),
+            'student_number.unique' => __('validation.custom.student_number.unique'),
+            'full_name.required' => __('validation.custom.full_name.required'),
+            'full_name.regex' => __('validation.custom.full_name.regex'),
+            'email.unique' => __('validation.custom.email.unique'),
         ]);
 
         DB::beginTransaction();
@@ -526,19 +560,16 @@ class StudentImportController extends Controller
                     'student_number' => $validated['student_number'],
                     'full_name' => $validated['full_name'],
                     'official_email' => $validated['email'],
-                    'semester' => $validated['semester'],
+                    'semester' => $validated['semester'] ?? $student->semester,
                     'is_active' => $validated['is_active'],
                 ]);
 
+            // The password is deliberately left alone: only the student can change it (via reset).
             $userData = [
                 'full_name' => $validated['full_name'],
                 'email' => $validated['email'],
                 'is_active' => $validated['is_active'],
             ];
-
-            if (!empty($validated['password'])) {
-                $userData['password'] = Hash::make($validated['password']);
-            }
 
             // Update user associated with old official_email
             DB::table('users')

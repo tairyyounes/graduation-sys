@@ -19,7 +19,7 @@
         </button>
       </div>
 
-      <form class="space-y-4" @submit.prevent="$emit('submit')">
+      <form class="space-y-4" novalidate @submit.prevent="onSubmit">
         <div>
           <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('dept.students.full_name') }}</label>
           <input
@@ -27,22 +27,40 @@
             type="text"
             maxlength="50"
             class="w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm outline-none transition focus:ring-2"
-            :class="errors.full_name ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-500/20'"
+            :class="fieldError('full_name') ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-500/20'"
             required
+            @input="touch('full_name')"
+            @blur="touch('full_name')"
           />
-          <p v-if="errors.full_name" class="mt-1 text-xs text-red-600">{{ errors.full_name[0] }}</p>
+          <p v-if="fieldError('full_name')" class="mt-1 text-xs text-red-600">{{ fieldError('full_name') }}</p>
         </div>
 
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ $t('dept.students.email') }}</label>
+          <label class="mb-1.5 flex flex-wrap items-center justify-between text-sm font-medium text-slate-700">
+            <span>{{ $t('dept.students.email') }}</span>
+            <span v-if="isStudent" class="text-xs text-slate-400 font-normal">({{ $t('dept.student_modal.email_auto') }})</span>
+          </label>
           <input
+            v-if="isStudent"
+            :value="form.email"
+            type="email"
+            readonly
+            tabindex="-1"
+            dir="ltr"
+            class="w-full cursor-not-allowed rounded-lg border bg-slate-50 px-3 py-2.5 text-sm text-slate-600 shadow-sm outline-none"
+            :class="fieldError('email') ? 'border-red-300' : 'border-slate-200'"
+          />
+          <input
+            v-else
             v-model="form.email"
             type="email"
             class="w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm outline-none transition focus:ring-2"
-            :class="errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-500/20'"
+            :class="fieldError('email') ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-500/20'"
             required
+            @input="touch('email')"
+            @blur="touch('email')"
           />
-          <p v-if="errors.email" class="mt-1 text-xs text-red-600">{{ errors.email[0] }}</p>
+          <p v-if="fieldError('email')" class="mt-1 text-xs text-red-600">{{ fieldError('email') }}</p>
         </div>
 
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -66,12 +84,15 @@
             <input
               v-model="form.student_number"
               type="text"
+              inputmode="numeric"
               maxlength="6"
               class="w-full rounded-lg border px-3 py-2.5 text-sm shadow-sm outline-none transition focus:ring-2"
-              :class="errors.student_number ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-500/20'"
+              :class="fieldError('student_number') ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-500/20'"
               required
+              @input="touch('student_number')"
+              @blur="touch('student_number')"
             />
-            <p v-if="errors.student_number" class="mt-1 text-xs text-red-600">{{ errors.student_number[0] }}</p>
+            <p v-if="fieldError('student_number')" class="mt-1 text-xs text-red-600">{{ fieldError('student_number') }}</p>
           </div>
 
           <div v-if="form.role !== 'admin'" :class="form.role === 'student' ? '' : 'sm:col-span-2'">
@@ -104,7 +125,11 @@
           </div>
         </div>
 
-        <div>
+        <p v-if="isStudent" class="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
+          {{ isEditing ? $t('dept.student_modal.password_locked') : $t('dept.student_modal.password_default') }}
+        </p>
+
+        <div v-else>
           <label class="mb-1.5 block text-sm font-medium text-slate-700">
             {{ $t('dept.members.password') }} {{ isEditing ? $t('dept.members.password_hint') : '' }}
           </label>
@@ -134,14 +159,14 @@
             v-if="!isEditing"
             type="button"
             class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-400"
-            @click="$emit('clear')"
+            @click="onClear"
           >
             {{ $t('dept.student_modal.clear') }}
           </button>
           <button
             type="submit"
             class="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 disabled:opacity-50"
-            :disabled="submitting"
+            :disabled="submitting || hasVisibleErrors"
           >
             {{ submitting ? $t('common.saving') : isEditing ? $t('dept.student_modal.save_changes') : $t('admin.user_modal.create') }}
           </button>
@@ -152,7 +177,11 @@
 </template>
 
 <script setup>
-defineProps({
+import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { studentEmailFor, validateStudent } from '../../validation/studentValidation'
+
+const props = defineProps({
   isOpen: {
     type: Boolean,
     required: true,
@@ -179,5 +208,68 @@ defineProps({
   },
 })
 
-defineEmits(['close', 'submit', 'clear'])
+const emit = defineEmits(['close', 'submit', 'clear'])
+
+const { t } = useI18n()
+
+const isStudent = computed(() => props.form.role === 'student')
+const fields = computed(() => (isStudent.value ? ['student_number', 'full_name', 'email'] : ['full_name', 'email']))
+
+const touched = ref({})
+// Server errors are kept per field until that field is edited again.
+const serverErrors = ref({})
+
+const liveErrors = computed(() => validateStudent(props.form, t, fields.value))
+
+const touch = (field) => {
+  touched.value[field] = true
+  delete serverErrors.value[field]
+  if (field === 'student_number') {
+    touched.value.email = true
+    delete serverErrors.value.email
+  }
+}
+
+const fieldError = (field) => {
+  if (touched.value[field] && liveErrors.value[field]) return liveErrors.value[field][0]
+  return serverErrors.value[field]?.[0] ?? null
+}
+
+const hasVisibleErrors = computed(() => fields.value.some((field) => fieldError(field)))
+
+// A student's email is never typed: it always follows the student number.
+const syncStudentEmail = () => {
+  if (isStudent.value) props.form.email = studentEmailFor(props.form.student_number)
+}
+
+watch(() => [props.form.student_number, props.form.role], syncStudentEmail, { immediate: true })
+
+watch(
+  () => props.errors,
+  (errors) => {
+    serverErrors.value = { ...errors }
+  },
+  { immediate: true },
+)
+
+watch(
+  () => props.isOpen,
+  (open) => {
+    if (open) {
+      touched.value = {}
+      syncStudentEmail()
+    }
+  },
+)
+
+const onSubmit = () => {
+  fields.value.forEach((field) => (touched.value[field] = true))
+  if (Object.keys(liveErrors.value).length > 0) return
+  emit('submit')
+}
+
+const onClear = () => {
+  touched.value = {}
+  emit('clear')
+}
 </script>

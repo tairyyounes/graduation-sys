@@ -345,25 +345,18 @@ const emptyProposal = {
   similarity: null,
   date: '',
   supervisor_name: '',
-  supervisor_approval: null,        // stored document (from the API)
-  supervisor_approval_file: null,   // newly picked File, uploaded on save
-  remove_supervisor_approval: false,
 };
 
 const PROPOSAL_FIELDS = ['title', 'problem', 'solution', 'functions', 'objectives', 'tags', 'tech', 'supervisor_name'];
 
-// Proposal fields + supervisor approval as multipart form data — the optional
-// team list is sent separately via /invite.
+// Proposal fields as multipart form data — the optional team list is sent
+// separately via /invite.
 function proposalPayload(proposal = newProposal.value, { isUpdate = false } = {}) {
   const body = new FormData();
   PROPOSAL_FIELDS.forEach(field => body.append(field, proposal[field] ?? ''));
-  if (proposal.supervisor_approval_file) {
-    body.append('supervisor_approval', proposal.supervisor_approval_file);
-  }
   if (isUpdate) {
     // PHP only parses multipart bodies on POST, so spoof the PUT.
     body.append('_method', 'PUT');
-    body.append('remove_supervisor_approval', proposal.remove_supervisor_approval ? '1' : '0');
   }
   return body;
 }
@@ -918,8 +911,6 @@ function openEditProposalFlow(proposal) {
   newProposal.value = {
     ...proposal,
     supervisor_name: proposal.supervisor_name ?? '',
-    supervisor_approval_file: null,
-    remove_supervisor_approval: false,
   };
   proposalErrors.value = {};
   showProposalModal.value = false;

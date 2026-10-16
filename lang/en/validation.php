@@ -106,6 +106,7 @@ return [
             'regex' => 'The email format is invalid.',
             'unique' => 'The email has already been taken.',
             'student_format' => 'Student email must be in the format xxxxxx@cctt.edu.ly',
+            'student_number_mismatch' => 'The number in the email does not match the student number.',
             'member_format' => 'Department member email must be in @cctt.edu.ly format',
         ],
         'role' => [

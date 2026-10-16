@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Models\User;
+use App\Support\StudentAccount;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Http\Requests\AddingUserRequest;
@@ -162,6 +163,18 @@ class UserManagementController extends Controller
         $oldStudent = Student::withTrashed()->where('official_email', $user->email)->first();
         $oldStudentId = $oldStudent ? $oldStudent->student_id : null;
 
+        // A student's email is derived from the student number and their password is never set here.
+        if ($request->role === 'student') {
+            $studentNumber = trim((string) $request->input('student_number'));
+            $request->merge([
+                'student_number' => $studentNumber,
+                'email' => $request->filled('email')
+                    ? strtolower(trim((string) $request->input('email')))
+                    : StudentAccount::emailFor($studentNumber),
+            ]);
+            $request->offsetUnset('password');
+        }
+
         $validated = $request->validate([
             'full_name' => [
                 'required',
@@ -183,7 +196,8 @@ class UserManagementController extends Controller
                     } else if (in_array($request->role, ['department_member', 'department_head']) && !preg_match('/^[A-Za-z0-9._%+-]+@cctt\.edu\.ly$/', $value)) {
                         $fail(__('validation.custom.email.member_format'));
                     }
-                }
+                },
+                ...($request->role === 'student' ? [StudentAccount::emailMatchRule($request->student_number)] : []),
             ],
             'role' => ['required', Rule::in(['admin', 'student', 'department_member', 'department_head'])],
             'department_id' => [

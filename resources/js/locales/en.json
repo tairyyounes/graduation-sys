@@ -351,7 +351,7 @@
       "parsing": "Parsing…",
       "preview_csv": "Preview CSV",
       "staged": "Staged for Import",
-      "staged_desc": "Review the parsed students. Existing students are highlighted in red and will be ignored. You can edit names and emails before confirming.",
+      "staged_desc": "Review the parsed students. Existing students are highlighted in red and will be skipped. The email is generated from the student number and the default password is the student number.",
       "student_number": "Student number",
       "full_name": "Full name",
       "email": "Email",
@@ -384,15 +384,17 @@
         "unexpected": "An unexpected error occurred.",
         "delete_failed": "Unable to delete student.",
         "deleted": "Student deleted successfully."
-      }
+      },
+      "fix_errors": "Fix the errors shown before confirming."
     },
     "student_modal": {
       "edit": "Edit student",
       "official_email": "Official Email",
       "clear": "Clear",
       "save_changes": "Save changes",
-      "password_hint": "Optional - defaults to student number",
-      "password_leave_blank": "Leave blank to keep current password"
+      "email_auto": "Generated automatically from the student number",
+      "password_default": "Students sign in the first time with their student number as the password.",
+      "password_locked": "A student's password cannot be changed here; only the student can change it."
     },
     "compare": {
       "back": "Back to proposal",
@@ -409,11 +411,7 @@
       "back": "Back to queue",
       "supervisor_title": "Academic Supervisor",
       "supervisor_name": "Supervisor name",
-      "supervisor_approval": "Signed supervisor approval",
-      "supervisor_preview": "Preview",
-      "supervisor_download": "Download",
       "supervisor_not_provided": "Not provided",
-      "supervisor_no_approval": "The students have not uploaded the approval form.",
       "overall_similarity": "Overall similarity",
       "error": "Error",
       "ai": "AI",
@@ -722,30 +720,12 @@
       "team_hint": "Student numbers of your teammates, separated by commas (up to 2).",
       "supervisor": {
         "section": "Academic Supervisor Details",
-        "section_hint": "Download and print the approval form, have your supervisor fill in and sign it, then upload it here. Optional when saving a draft; required when submitting the proposal.",
         "name": "Academic supervisor name",
         "name_ph": "e.g. Dr. Ahmed Mohamed Ali",
-        "download_template": "Download Supervisor Approval Form (PDF)",
-        "upload": "Upload Signed Supervisor Approval",
-        "upload_hint": "Accepted formats: PDF, JPG, JPEG or PNG — max 5 MB.",
-        "choose_file": "Choose file",
-        "replace": "Replace",
-        "remove": "Remove",
-        "preview": "Preview",
-        "download": "Download",
-        "new_file": "New file — uploaded when you save",
-        "uploaded_on": "Uploaded on {date}",
-        "will_remove": "The file will be removed when you save.",
-        "undo_remove": "Undo",
         "not_provided": "Not provided",
-        "no_file": "No approval form uploaded yet.",
-        "approval_doc": "Supervisor approval form",
         "errors": {
           "name_required": "The academic supervisor name is required to submit the proposal.",
-          "name_max": "The academic supervisor name cannot exceed 150 characters.",
-          "file_required": "The signed supervisor approval form must be uploaded to submit the proposal.",
-          "file_type": "The supervisor approval form must be a PDF, JPG, JPEG or PNG file.",
-          "file_size": "The supervisor approval form cannot be larger than 5 MB."
+          "name_max": "The academic supervisor name cannot exceed 150 characters."
         }
       },
       "update": "Update Proposal",
@@ -884,5 +864,16 @@
     "save_password": "Save Password",
     "password_updated_success": "Password changed successfully.",
     "update_failed": "Failed to update password. Please check your inputs."
+  },
+  "validation": {
+    "student": {
+      "number_required": "Student number is required.",
+      "number_digits": "Student number must be exactly 6 digits.",
+      "name_required": "Full name is required.",
+      "name_letters": "Full name may only contain letters and spaces.",
+      "email_invalid": "Enter a valid email address.",
+      "email_mismatch": "The number in the email does not match the student number.",
+      "semester_range": "Semester must be between 1 and 8."
+    }
   }
 }

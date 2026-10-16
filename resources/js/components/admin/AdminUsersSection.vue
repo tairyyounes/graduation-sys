@@ -404,7 +404,8 @@ const submitUserForm = async () => {
       password: userForm.password,
     }
 
-    if (isEditingUser.value && !payload.password) {
+    // A student's password is the student number on creation and is never changed from here.
+    if (payload.role === 'student' || (isEditingUser.value && !payload.password)) {
       delete payload.password
     }
 

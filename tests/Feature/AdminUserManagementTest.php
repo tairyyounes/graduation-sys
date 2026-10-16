@@ -49,7 +49,7 @@ test('admin can fetch users list and departments', function () {
 test('admin can create a new student user and linked student record', function () {
     $payload = [
         'full_name' => 'Ali Ahmed',
-        'email' => 'ali123@cctt.edu.ly',
+        'email' => '221001@cctt.edu.ly',
         'role' => 'student',
         'department_id' => $this->department->department_id,
         'student_number' => '221001',
@@ -64,7 +64,7 @@ test('admin can create a new student user and linked student record', function (
         'message' => 'User created successfully.',
         'user' => [
             'name' => 'Ali Ahmed',
-            'email' => 'ali123@cctt.edu.ly',
+            'email' => '221001@cctt.edu.ly',
             'role' => 'student',
             'departmentId' => $this->department->department_id,
             'department' => 'Computer Science',
@@ -75,12 +75,12 @@ test('admin can create a new student user and linked student record', function (
     ]);
 
     $this->assertDatabaseHas('users', [
-        'email' => 'ali123@cctt.edu.ly',
+        'email' => '221001@cctt.edu.ly',
         'role' => 'student',
     ]);
 
     $this->assertDatabaseHas('students', [
-        'official_email' => 'ali123@cctt.edu.ly',
+        'official_email' => '221001@cctt.edu.ly',
         'student_number' => '221001',
     ]);
 });

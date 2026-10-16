@@ -76,15 +76,6 @@
               <p class="text-[11px] text-slate-400">{{ $t('dept.proposal.supervisor_name') }}</p>
               <p class="text-sm font-medium text-slate-800">{{ selectedProposal.supervisor_name || $t('dept.proposal.supervisor_not_provided') }}</p>
             </div>
-            <div>
-              <p class="text-[11px] text-slate-400">{{ $t('dept.proposal.supervisor_approval') }}</p>
-              <div v-if="selectedProposal.supervisor_approval" class="mt-1 flex flex-wrap items-center gap-2">
-                <span class="text-sm font-medium text-slate-800 truncate max-w-[14rem]" :title="selectedProposal.supervisor_approval.name" dir="auto">{{ selectedProposal.supervisor_approval.name }}</span>
-                <a :href="selectedProposal.supervisor_approval.preview_url" target="_blank" rel="noopener" class="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors">{{ $t('dept.proposal.supervisor_preview') }}</a>
-                <a :href="selectedProposal.supervisor_approval.download_url" class="rounded-md border border-teal-600 bg-white px-2.5 py-1 text-xs font-medium text-teal-700 hover:bg-teal-50 transition-colors">{{ $t('dept.proposal.supervisor_download') }}</a>
-              </div>
-              <p v-else class="text-sm text-amber-600">{{ $t('dept.proposal.supervisor_no_approval') }}</p>
-            </div>
           </div>
         </div>
       </article>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\StudentAccount;
 use Illuminate\Foundation\Http\FormRequest;
 
 class AddingUserRequest extends FormRequest
@@ -29,6 +30,14 @@ class AddingUserRequest extends FormRequest
         }
         if ($this->has('student_number')) {
             $this->merge(['student_number' => trim((string)$this->student_number)]);
+        }
+
+        // A student's email and initial password are derived from the student number, never typed in.
+        if ($this->role === 'student' && $this->filled('student_number')) {
+            if (!$this->filled('email')) {
+                $this->merge(['email' => StudentAccount::emailFor($this->student_number)]);
+            }
+            $this->merge(['password' => $this->student_number]);
         }
 
         // Auto-assign department_id when missing for non-admin users (e.g. department head creating a student/member)
@@ -76,7 +85,8 @@ class AddingUserRequest extends FormRequest
                     } else if (in_array($this->role, ['department_member', 'department_head']) && !preg_match('/^[A-Za-z0-9._%+-]+@cctt\.edu\.ly$/', $value)) {
                         $fail(__('validation.custom.email.member_format'));
                     }
-                }
+                },
+                ...($this->role === 'student' ? [StudentAccount::emailMatchRule($this->student_number)] : []),
             ],
 
             // Department ID — required for students, department members, and department heads

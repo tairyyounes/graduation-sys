@@ -64,33 +64,52 @@
                 <th class="px-4 py-3 font-semibold">{{ $t('dept.students.student_number') }}</th>
                 <th class="px-4 py-3 font-semibold">{{ $t('dept.students.full_name') }}</th>
                 <th class="px-4 py-3 font-semibold">{{ $t('dept.students.email') }}</th>
-                <th class="px-4 py-3 font-semibold">{{ $t('fields.password') }}</th>
                 <th class="px-4 py-3 font-semibold text-center">{{ $t('fields.actions') }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-teal-50">
               <tr v-for="(student, index) in stagedStudents" :key="index" :class="student.exists ? 'bg-red-50/50' : 'hover:bg-slate-50'">
-                <td class="px-4 py-3">
+                <td class="px-4 py-3 align-top">
                   <span v-if="student.exists" class="inline-flex items-center rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/10">{{ $t('dept.students.already_exists') }}</span>
                   <span v-else class="inline-flex items-center rounded-md bg-green-100 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">{{ $t('dept.students.ready') }}</span>
+                  <p v-for="message in student.serverErrors || []" :key="message" class="mt-1 max-w-[12rem] text-xs text-red-600">{{ message }}</p>
                 </td>
-                <td class="px-4 py-3">
-                  <input v-if="!student.exists" v-model="student.student_number" type="text" class="w-28 rounded border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500" />
+                <td class="px-4 py-3 align-top">
+                  <template v-if="!student.exists">
+                    <input
+                      v-model="student.student_number"
+                      type="text"
+                      inputmode="numeric"
+                      maxlength="6"
+                      class="w-28 rounded px-2 py-1 text-sm shadow-sm"
+                      :class="stagedError(student, 'student_number') ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-500'"
+                      @input="onStagedNumberInput(student)"
+                    />
+                    <p v-if="stagedError(student, 'student_number')" class="mt-1 text-xs text-red-600">{{ stagedError(student, 'student_number') }}</p>
+                  </template>
                   <span v-else class="text-slate-500 line-through">{{ student.student_number }}</span>
                 </td>
-                <td class="px-4 py-3">
-                  <input v-if="!student.exists" v-model="student.full_name" type="text" class="w-full rounded border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500" />
+                <td class="px-4 py-3 align-top">
+                  <template v-if="!student.exists">
+                    <input
+                      v-model="student.full_name"
+                      type="text"
+                      class="w-full rounded px-2 py-1 text-sm shadow-sm"
+                      :class="stagedError(student, 'full_name') ? 'border-red-300 focus:border-red-500 focus:ring-red-500' : 'border-slate-300 focus:border-teal-500 focus:ring-teal-500'"
+                      @input="student.serverErrors = null"
+                    />
+                    <p v-if="stagedError(student, 'full_name')" class="mt-1 text-xs text-red-600">{{ stagedError(student, 'full_name') }}</p>
+                  </template>
                   <span v-else class="text-slate-500 line-through">{{ student.full_name }}</span>
                 </td>
-                <td class="px-4 py-3">
-                  <input v-if="!student.exists" v-model="student.email" type="email" class="w-full rounded border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500" />
+                <td class="px-4 py-3 align-top">
+                  <template v-if="!student.exists">
+                    <span class="text-slate-600" dir="ltr">{{ student.email }}</span>
+                    <p v-if="stagedError(student, 'email')" class="mt-1 text-xs text-red-600">{{ stagedError(student, 'email') }}</p>
+                  </template>
                   <span v-else class="text-slate-500 line-through">{{ student.email }}</span>
                 </td>
-                <td class="px-4 py-3">
-                  <input v-if="!student.exists" v-model="student.password" type="text" class="w-28 rounded border-slate-300 px-2 py-1 text-sm shadow-sm focus:border-teal-500 focus:ring-teal-500" />
-                  <span v-else class="text-slate-400 text-xs">—</span>
-                </td>
-                <td class="px-4 py-3 text-center">
+                <td class="px-4 py-3 text-center align-top">
                   <button @click="stagedStudents.splice(index, 1)" class="text-red-500 hover:text-red-700 transition" :title="$t('dept.students.remove_row')">
                     <svg class="h-4 w-4 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                   </button>
@@ -100,10 +119,11 @@
           </table>
         </div>
 
-        <div class="mt-5 flex justify-end">
+        <div class="mt-5 flex flex-col items-end gap-2">
+          <p v-if="stagedHasErrors" class="text-sm text-red-600">{{ $t('dept.students.fix_errors') }}</p>
           <button
             class="inline-flex items-center justify-center rounded-lg bg-teal-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-teal-700 transition disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 shadow-sm"
-            :disabled="confirmingImport"
+            :disabled="confirmingImport || stagedHasErrors"
             @click="confirmImport"
           >
             {{ confirmingImport ? $t('dept.students.saving') : $t('dept.students.confirm_add') }}
@@ -238,6 +258,7 @@ import { useToast } from 'vue-toastification'
 import { useI18n } from 'vue-i18n'
 import DepartmentStudentModal from './DepartmentStudentModal.vue'
 import DeleteConfirmationModal from '../common/DeleteConfirmationModal.vue'
+import { studentEmailFor, validateStudent } from '../../validation/studentValidation'
 
 const toast = useToast()
 const { t } = useI18n()
@@ -250,6 +271,20 @@ const uploadingCsv = ref(false)
 
 const stagedStudents = ref([])
 const confirmingImport = ref(false)
+
+// Live validation of the staged CSV rows, using the same rules as the server.
+const stagedError = (student, field) => validateStudent(student, t)[field]?.[0] ?? null
+const stagedHasErrors = computed(() =>
+  stagedStudents.value.some(
+    (student) => !student.exists && (Object.keys(validateStudent(student, t)).length > 0 || student.serverErrors?.length),
+  ),
+)
+
+// Editing the number regenerates the email, so the two always match.
+const onStagedNumberInput = (student) => {
+  student.email = studentEmailFor(student.student_number)
+  student.serverErrors = null
+}
 
 // Searching & Pagination
 const searchQuery = ref('')
@@ -292,7 +327,6 @@ const studentForm = reactive({
   student_number: '',
   full_name: '',
   email: '',
-  password: '',
   semester: 8,
   is_active: true,
 })
@@ -394,6 +428,10 @@ const confirmImport = async () => {
     const data = await response.json()
     if (!response.ok) {
         if (data.errors) {
+            // Errors come back keyed "row_<index>" in the order the rows were sent.
+            validStudents.forEach((student, index) => {
+              student.serverErrors = data.errors[`row_${index}`] ?? null
+            })
             toast.error(t('dept.students.toast.validation_failed'))
         } else {
             throw new Error(data.message || t('dept.students.toast.import_failed'))
@@ -417,7 +455,6 @@ const clearStudentForm = () => {
   studentForm.student_number = ''
   studentForm.full_name = ''
   studentForm.email = ''
-  studentForm.password = ''
   studentForm.semester = 8
   studentForm.is_active = true
 }
@@ -437,7 +474,6 @@ const openEditModal = (student) => {
   studentForm.student_number = student.student_number
   studentForm.full_name = student.full_name
   studentForm.email = student.official_email
-  studentForm.password = ''
   studentForm.semester = student.semester
   studentForm.is_active = student.is_active
   isStudentModalOpen.value = true
@@ -451,15 +487,11 @@ const submitStudentForm = async () => {
   submittingStudentForm.value = true
   formErrors.value = {}
 
-  // Inject required properties for AddingUserRequest
+  // The server derives the password from the student number on creation and never changes it on edit.
   const payload = {
       ...studentForm,
+      email: studentEmailFor(studentForm.student_number),
       role: 'student',
-      password: studentForm.password ? studentForm.password : (isEditingStudent.value ? undefined : studentForm.student_number)
-  }
-
-  if (isEditingStudent.value && !studentForm.password) {
-      delete payload.password
   }
 
   try {
