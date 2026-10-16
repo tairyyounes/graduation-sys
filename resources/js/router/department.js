@@ -32,6 +32,12 @@ const routes = [
     meta: { page: 'decisions' }
   },
   {
+    path: '/department/dashboard/leave-requests',
+    name: 'DepartmentLeaveRequests',
+    component: () => import('../components/department/DepartmentLeaveRequestsSection.vue'),
+    meta: { page: 'leave-requests' }
+  },
+  {
     path: '/department/dashboard/students',
     name: 'DepartmentStudents',
     component: () => import('../components/department/DepartmentStudentsSection.vue'),

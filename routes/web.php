@@ -77,6 +77,11 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{proposal}/team', [\App\Http\Controllers\Student\StudentTeamController::class, 'getTeam']);
             Route::post('/{proposal}/invite', [\App\Http\Controllers\Student\StudentTeamController::class, 'invite']);
             Route::delete('/{proposal}/invite', [\App\Http\Controllers\Student\StudentTeamController::class, 'cancelInvite']);
+
+            // Leaving the team: direct without an active proposal, otherwise a request to the department.
+            Route::post('/{proposal}/leave', [\App\Http\Controllers\Student\StudentTeamController::class, 'leave']);
+            Route::post('/{proposal}/leave-request', [\App\Http\Controllers\Student\StudentTeamController::class, 'requestLeave']);
+            Route::delete('/{proposal}/leave-request', [\App\Http\Controllers\Student\StudentTeamController::class, 'cancelLeaveRequest']);
         });
 
         // Team requests received by the logged-in student
@@ -113,6 +118,10 @@ Route::middleware(['auth'])->group(function () {
         ->prefix('/department')
         ->group(function () {
             Route::post('/proposals/{proposal}/grant-revision', [DepartmentProposalController::class, 'grantExtraRevision']);
+
+            // Students' requests to leave a team with an active proposal
+            Route::get('/leave-requests', [\App\Http\Controllers\Department\TeamLeaveRequestController::class, 'index'])->name('department.leave-requests.index');
+            Route::post('/leave-requests/{leaveRequest}/decide', [\App\Http\Controllers\Department\TeamLeaveRequestController::class, 'decide'])->name('department.leave-requests.decide');
             Route::get('/students', [StudentImportController::class, 'index'])->name('department.students.index');
             Route::post('/students', [StudentImportController::class, 'store'])->name('department.students.store');
             Route::get('/students/template', [StudentImportController::class, 'downloadTemplate'])->name('department.students.template');

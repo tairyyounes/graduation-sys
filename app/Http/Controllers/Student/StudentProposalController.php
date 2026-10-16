@@ -357,6 +357,11 @@ class StudentProposalController extends Controller
             return response()->json(['message' => 'Only archived proposals can be restored.'], 422);
         }
 
+        // A proposal cancelled by the department (approved leave request) stays cancelled.
+        if ($proposal->is_locked) {
+            return response()->json(['message' => __('messages.team.locked')], 422);
+        }
+
         // Prevent restore if the student already has an active submitted or accepted proposal
         $hasActiveOrAccepted = $student->proposals()
             ->where(function ($q) {
@@ -395,6 +400,11 @@ class StudentProposalController extends Controller
         // Security: Student cannot delete submitted proposals
         if ($proposal->submission_status === 'submitted') {
             return response()->json(['message' => 'Cannot delete a submitted proposal.'], 403);
+        }
+
+        // Kept as the record of the department's decision on a leave request.
+        if ($proposal->isCancelledByLeave()) {
+            return response()->json(['message' => __('messages.team.locked')], 403);
         }
 
         $proposal->delete(); // This will cascade delete versions and members if foreign keys are set to cascade
@@ -785,6 +795,8 @@ class StudentProposalController extends Controller
             'similarity' => $similarity,
             'team_size' => $proposal->students()->count(),
             'has_pending_request' => $proposal->pendingInvitees()->exists(),
+            'cancelled_by_leave' => $proposal->isCancelledByLeave(),
+            'has_pending_leave' => $proposal->leaveRequests()->where('status', 'pending')->exists(),
             // New flags for front‑end UI
             'can_edit' => $proposal->review_status === 'revision_requested',
             'supervisor_name' => $proposal->supervisor_name ?? '',

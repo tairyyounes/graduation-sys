@@ -302,7 +302,8 @@
     "students": "Students",
     "members": "Department Members",
     "committees": "Review Committees",
-    "previous_proposals": "Previous Proposals"
+    "previous_proposals": "Previous Proposals",
+    "leave_requests": "Team leave requests"
   },
   "risk": {
     "low": "Low Risk",
@@ -512,6 +513,31 @@
         "delete_failed": "Unable to delete member.",
         "deleted": "Member deleted successfully."
       }
+    },
+    "leave": {
+      "title": "Team leave requests",
+      "description": "Students asking to leave a team that has an active proposal. Rejecting keeps the team and proposal as they are; approving cancels the proposal for the whole team.",
+      "empty_title": "No leave requests",
+      "empty_desc": "When a student asks to leave a team with an active proposal, the request appears here.",
+      "from": "{name} ({number})",
+      "project": "Project: {title}",
+      "reason": "Reason",
+      "team": "Team members",
+      "sent_at": "Sent on {date}",
+      "decided": "Decided by {name} on {date}",
+      "approve_hint": "Approving cancels the proposal and every team member must submit a new one.",
+      "approve": "Approve & cancel proposal",
+      "reject": "Reject request",
+      "confirm_approve": "Are you sure? The proposal will be cancelled for every team member.",
+      "confirm_reject": "Reject this leave request? The team and proposal stay as they are.",
+      "proposal_cancelled": "Cancelled",
+      "load_failed": "Could not load leave requests.",
+      "decide_failed": "Could not save the decision.",
+      "status": {
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      }
     }
   },
   "similarity": {
@@ -563,7 +589,7 @@
       "restored": "Proposal restored to draft.",
       "restore_error": "Error restoring proposal.",
       "enter_reg_number": "Please enter a registration number.",
-      "need_active_proposal": "You need an active proposal to invite team members.",
+      "need_active_proposal": "You must create a project proposal (a draft is enough) before sending team requests.",
       "member_added": "Member added.",
       "invite_error": "Error inviting member.",
       "request_sent": "Team request sent.",
@@ -590,11 +616,14 @@
       "incoming_from": "{name} ({number}) wants you as a teammate",
       "incoming_project": "Project: {title}",
       "accept": "Accept",
-      "decline": "Decline"
+      "decline": "Decline",
+      "no_team_title": "You are not in a team",
+      "no_team_desc": "A team is built around a proposal. Start a new proposal (a draft is enough) and then send team requests to your classmates, or wait for a classmate's team request to appear here.",
+      "no_team_action": "Start a new proposal"
     },
     "invite": {
       "title": "Send Team Request",
-      "description": "Enter your teammate's registration number. A team has up to 3 students, and each teammate joins only after accepting the request.",
+      "description": "Please enter the registration number of the student you wish to invite. A project team consists of at most three students, and a student is added to the team only after accepting the request.",
       "reg_placeholder": "e.g. 2023055",
       "send": "Send Request"
     },
@@ -633,7 +662,9 @@
     "card": {
       "archived": "Archived",
       "match": "{percent}% Match",
-      "unchecked": "Unchecked"
+      "unchecked": "Unchecked",
+      "cancelled": "Cancelled",
+      "cancelled_hint": "The department cancelled this proposal after approving a team leave request. You need to submit a new proposal."
     },
     "compare": {
       "back": "Back to Repository",
@@ -845,6 +876,27 @@
       "step_extracting": "Step 1/3: Extracting textual & semantic features...",
       "step_embedding": "Step 2/3: Computing vector embeddings & similarity matrix...",
       "step_analyzing": "Step 3/3: Evaluating cross-repository overlap & recommendations..."
+    },
+    "leave": {
+      "leave_button": "Withdraw from team",
+      "request_button": "Submit a team withdrawal request",
+      "direct_hint": "Your team has no active proposal, so you may withdraw from the team directly.",
+      "request_hint": "Your team has an active proposal; withdrawing therefore requires the department head's approval, and approval cancels the proposal for all team members.",
+      "confirm": "Are you sure you want to withdraw from the team?",
+      "form_title": "Graduation Project Team Withdrawal Request",
+      "form_desc": "This request will be referred to the department head for a decision. If approved, the current proposal is cancelled for all team members and each member must submit a new proposal.",
+      "reason_label": "Reasons for withdrawal",
+      "reason_placeholder": "Please explain the reasons for your request to withdraw from the team…",
+      "reason_required": "Please state the reasons for your withdrawal request.",
+      "send_request": "Submit request",
+      "status_pending": "Under review",
+      "my_request_pending": "Your withdrawal request is under review by the department.",
+      "teammate_request_pending": "{name} ({number}) has submitted a request to withdraw from the team; it is under review by the department.",
+      "withdraw": "Withdraw request",
+      "left": "You have withdrawn from the team.",
+      "requested": "Your withdrawal request has been submitted to the department.",
+      "withdrawn": "Your withdrawal request has been cancelled.",
+      "error": "Something went wrong, please try again."
     }
   },
   "layout": {

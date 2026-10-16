@@ -10,7 +10,8 @@
             <div class="flex items-center gap-3 mb-1">
               <span v-if="type === 'active'" class="inline-flex items-center rounded-md bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-700 ring-1 ring-inset ring-teal-700/10">{{ $t('student.overview.active_proposal') }}</span>
               <span v-if="type === 'draft'" class="inline-flex items-center rounded-md bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-500/20">{{ $t('student.modal.draft_idea') }}</span>
-              <span v-if="type === 'archived'" class="inline-flex items-center rounded-md bg-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-500/20">{{ $t('student.card.archived') }}</span>
+              <span v-if="type === 'archived' && proposal.cancelled_by_leave" class="inline-flex items-center rounded-md bg-red-100 px-2.5 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">{{ $t('student.card.cancelled') }}</span>
+              <span v-else-if="type === 'archived'" class="inline-flex items-center rounded-md bg-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 ring-1 ring-inset ring-slate-500/20">{{ $t('student.card.archived') }}</span>
               <span v-if="proposal.status" class="inline-flex items-center rounded-md bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20">{{ proposal.status }}</span>
             </div>
             <h3 class="text-2xl font-bold text-slate-900">{{ proposal.title }}</h3>
@@ -123,6 +124,9 @@
             </button>
           </template>
 
+          <p v-else-if="type === 'archived' && proposal.cancelled_by_leave" class="text-sm text-red-700">
+            {{ $t('student.card.cancelled_hint') }}
+          </p>
           <template v-else-if="type === 'archived'">
             <button @click="$emit('delete', proposal)" class="inline-flex justify-center rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 shadow-sm hover:bg-red-50 focus:outline-none transition-colors">
               {{ $t('common.delete') }}

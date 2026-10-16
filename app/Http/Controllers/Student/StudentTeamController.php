@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Proposal;
 use App\Models\Student;
+use App\Models\TeamLeaveRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -46,9 +47,31 @@ class StudentTeamController extends Controller
             ->orderByDesc('project_members.updated_at')
             ->first(['students.full_name', 'students.student_number', 'project_members.invitation_status', 'project_members.updated_at']);
 
+        $pendingLeave = $proposal->leaveRequests()
+            ->where('status', 'pending')
+            ->with('student:student_id,full_name,student_number')
+            ->latest()
+            ->get()
+            ->map(fn (TeamLeaveRequest $leave) => [
+                'id' => $leave->id,
+                'name' => $leave->student->full_name ?? null,
+                'regNumber' => $leave->student->student_number ?? null,
+                'reason' => $leave->reason,
+                'date' => $leave->created_at,
+                'mine' => $leave->student_id === $student->student_id,
+            ])
+            ->values();
+
         return response()->json([
             'members' => $members,
             'max_size' => self::MAX_TEAM_SIZE,
+            // Direct leave only without an active proposal; otherwise the department decides.
+            'leave' => [
+                'mode' => $members->count() < 2
+                    ? 'none'
+                    : ($proposal->isActive() ? 'request' : 'direct'),
+                'pending' => $pendingLeave,
+            ],
             'request' => $teamRequest && $members->count() < self::MAX_TEAM_SIZE ? [
                 'name' => $teamRequest->full_name,
                 'regNumber' => $teamRequest->student_number,
@@ -272,6 +295,138 @@ class StudentTeamController extends Controller
             ->log('team request declined');
 
         return response()->json(['message' => __('messages.team.declined')]);
+    }
+
+    /**
+     * Leaves a team whose proposal is not active yet (no proposal sent, or only
+     * a draft). No department involvement: the student is removed right away and
+     * the remaining teammates keep the draft.
+     */
+    public function leave(Request $request, Proposal $proposal): JsonResponse
+    {
+        $student = $request->user()->student;
+        if (!$student || !$this->isMember($proposal, $student)) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+        if ($proposal->isActive()) {
+            return response()->json(['message' => __('messages.leave.needs_request')], 422);
+        }
+        if ($proposal->students()->count() < 2) {
+            return response()->json(['message' => __('messages.leave.alone')], 422);
+        }
+
+        DB::transaction(function () use ($proposal, $student) {
+            $wasOwner = DB::table('project_members')
+                ->where('proposal_id', $proposal->proposal_id)
+                ->where('student_id', $student->student_id)
+                ->value('member_role') === 'owner';
+
+            DB::table('project_members')
+                ->where('proposal_id', $proposal->proposal_id)
+                ->where('student_id', $student->student_id)
+                ->delete();
+
+            // The draft stays with the remaining teammates; the longest-standing one owns it.
+            if ($wasOwner) {
+                DB::table('project_members')
+                    ->where('proposal_id', $proposal->proposal_id)
+                    ->where('invitation_status', 'accepted')
+                    ->orderBy('joined_at')
+                    ->orderBy('project_member_id')
+                    ->limit(1)
+                    ->update(['member_role' => 'owner', 'updated_at' => now()]);
+            }
+        });
+
+        activity()
+            ->performedOn($proposal)
+            ->causedBy($request->user())
+            ->log('student left the team');
+
+        return response()->json(['message' => __('messages.leave.left')]);
+    }
+
+    /**
+     * Asks the department to let the student leave a team whose proposal is
+     * active (submitted and in review, or accepted). A reason is mandatory.
+     */
+    public function requestLeave(Request $request, Proposal $proposal): JsonResponse
+    {
+        $student = $request->user()->student;
+        if (!$student || !$this->isMember($proposal, $student)) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+        if (!$proposal->isActive()) {
+            return response()->json(['message' => __('messages.leave.use_direct')], 422);
+        }
+
+        $request->validate([
+            'reason' => ['required', 'string', 'max:1000'],
+        ], [
+            'reason.required' => __('messages.leave.reason_required'),
+            'reason.string' => __('messages.leave.reason_required'),
+            'reason.max' => __('messages.leave.reason_max'),
+        ]);
+        $reason = trim($request->reason);
+        if ($reason === '') {
+            return response()->json([
+                'message' => __('messages.leave.reason_required'),
+                'errors' => ['reason' => [__('messages.leave.reason_required')]],
+            ], 422);
+        }
+
+        $leave = DB::transaction(function () use ($proposal, $student, $reason) {
+            $exists = TeamLeaveRequest::where('proposal_id', $proposal->proposal_id)
+                ->where('student_id', $student->student_id)
+                ->where('status', 'pending')
+                ->lockForUpdate()
+                ->exists();
+            if ($exists) {
+                return null;
+            }
+
+            return TeamLeaveRequest::create([
+                'proposal_id' => $proposal->proposal_id,
+                'student_id' => $student->student_id,
+                'reason' => $reason,
+                'status' => 'pending',
+            ]);
+        });
+
+        if (!$leave) {
+            return response()->json(['message' => __('messages.leave.already_requested')], 422);
+        }
+
+        activity()
+            ->performedOn($proposal)
+            ->causedBy($request->user())
+            ->log('team leave requested');
+
+        return response()->json(['message' => __('messages.leave.requested')], 201);
+    }
+
+    /** Withdraws the student's own pending leave request. */
+    public function cancelLeaveRequest(Request $request, Proposal $proposal): JsonResponse
+    {
+        $student = $request->user()->student;
+        if (!$student || !$this->isMember($proposal, $student)) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $deleted = TeamLeaveRequest::where('proposal_id', $proposal->proposal_id)
+            ->where('student_id', $student->student_id)
+            ->where('status', 'pending')
+            ->delete();
+        if (!$deleted) {
+            return response()->json(['message' => __('messages.leave.missing')], 404);
+        }
+
+        activity()
+            ->performedOn($proposal)
+            ->causedBy($request->user())
+            ->log('team leave request withdrawn');
+
+        return response()->json(['message' => __('messages.leave.withdrawn')]);
     }
 
     private function isMember(Proposal $proposal, Student $student): bool

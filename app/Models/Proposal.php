@@ -61,6 +61,28 @@ class Proposal extends Model
                     ->withTimestamps();
     }
 
+    public function leaveRequests(): HasMany
+    {
+        return $this->hasMany(TeamLeaveRequest::class, 'proposal_id', 'proposal_id');
+    }
+
+    /**
+     * Submitted and still in review, or accepted. A member cannot leave such a
+     * team directly; they must ask the department.
+     */
+    public function isActive(): bool
+    {
+        return $this->review_status === 'accepted'
+            || ($this->submission_status === 'submitted' && $this->review_status !== 'rejected');
+    }
+
+    /** Cancelled by the department after approving a member's leave request. */
+    public function isCancelledByLeave(): bool
+    {
+        return $this->submission_status === 'archived'
+            && $this->leaveRequests()->where('status', 'approved')->exists();
+    }
+
     /** Edits allowed after the initial submission: 2 by default, plus any extras granted by the department. */
     public function maxEdits(): int
     {

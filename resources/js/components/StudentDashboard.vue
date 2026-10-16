@@ -161,6 +161,12 @@
             :max-size="teamMaxSize"
             :team-request="teamRequest"
             :invitations="teamInvitations"
+            :has-team="!!teamProposal"
+            :leave="teamLeave"
+            @new-proposal="openNewProposal"
+            :submit-leave-request="requestLeaveTeam"
+            @leave-team="leaveTeam"
+            @cancel-leave-request="cancelLeaveRequest"
             @open-invite="openInviteModal"
             @cancel-request="cancelTeamRequest"
             @accept-invitation="respondToInvitation($event, 'accept')"
@@ -393,6 +399,7 @@ const teamMembers = ref([]);
 const teamMaxSize = ref(3);
 const teamRequest = ref(null);     // latest request sent from this team (pending / rejected)
 const teamInvitations = ref([]);   // requests received, waiting for this student's answer
+const teamLeave = ref(null);       // { mode: 'direct' | 'request' | 'none', pending: [...] }
 // The proposal the team belongs to: the submitted one if any, otherwise the
 // draft that already has a teammate or a pending request, otherwise the
 // newest draft — so a team can be built before submitting.
@@ -457,7 +464,67 @@ async function fetchTeam(proposalId) {
     teamMembers.value = data.members;
     teamMaxSize.value = data.max_size ?? 3;
     teamRequest.value = data.request ?? null;
+    teamLeave.value = data.leave ?? null;
   }
+}
+
+// Reloads the proposals and the team they belong to (or clears it when the
+// student is no longer in any team, e.g. right after leaving).
+async function refreshTeam() {
+  await fetchProposals();
+  if (teamProposal.value) {
+    await fetchTeam(teamProposal.value.id);
+  } else {
+    teamMembers.value = [];
+    teamRequest.value = null;
+    teamLeave.value = null;
+  }
+}
+
+async function leaveTeam() {
+  if (!teamProposal.value) return;
+  const res = await fetch(`/student/proposals/${teamProposal.value.id}/leave`, {
+    method: 'POST',
+    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.ok) {
+    toast.success(data.message || t('student.leave.left'));
+  } else {
+    toast.error(data.message || t('student.leave.error'));
+  }
+  await refreshTeam();
+}
+
+async function requestLeaveTeam(reason) {
+  if (!teamProposal.value) return t('student.leave.error');
+  const res = await fetch(`/student/proposals/${teamProposal.value.id}/leave-request`, {
+    method: 'POST',
+    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reason })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    return data.errors?.reason?.[0] || data.message || t('student.leave.error');
+  }
+  toast.success(data.message || t('student.leave.requested'));
+  await refreshTeam();
+  return null;
+}
+
+async function cancelLeaveRequest() {
+  if (!teamProposal.value) return;
+  const res = await fetch(`/student/proposals/${teamProposal.value.id}/leave-request`, {
+    method: 'DELETE',
+    headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' }
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.ok) {
+    toast.success(data.message || t('student.leave.withdrawn'));
+  } else {
+    toast.error(data.message || t('student.leave.error'));
+  }
+  await refreshTeam();
 }
 
 async function fetchInvitations() {

@@ -18,7 +18,10 @@
         {{ proposal.title }}
       </h3>
 
-      <span v-if="type === 'archived'" class="ms-3 inline-flex items-center rounded-full bg-slate-200 px-2.5 py-0.5 text-xs font-medium text-slate-700">
+      <span v-if="type === 'archived' && proposal.cancelled_by_leave" class="ms-3 inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">
+        {{ $t('student.card.cancelled') }}
+      </span>
+      <span v-else-if="type === 'archived'" class="ms-3 inline-flex items-center rounded-full bg-slate-200 px-2.5 py-0.5 text-xs font-medium text-slate-700">
         {{ $t('student.card.archived') }}
       </span>
       <template v-else>

@@ -38,6 +38,22 @@ return [
         'cancelled'          => 'Team request cancelled.',
     ],
 
+    'leave' => [
+        'needs_request'      => 'Your team already has an active proposal. Send a leave request to the department instead.',
+        'use_direct'         => 'Your team has no active proposal, so you can leave the team directly.',
+        'alone'              => 'You are the only member of this team.',
+        'left'               => 'You left the team.',
+        'reason_required'    => 'Please write the reason for leaving the team.',
+        'reason_max'         => 'The reason must not be longer than 1000 characters.',
+        'already_requested'  => 'You already have a pending leave request for this team.',
+        'requested'          => 'Your leave request was sent to the department.',
+        'withdrawn'          => 'Your leave request was withdrawn.',
+        'missing'            => 'This leave request is no longer available.',
+        'already_decided'    => 'This leave request has already been decided.',
+        'approved'           => 'Leave request approved. The proposal was cancelled and every team member must submit a new proposal.',
+        'rejected'           => 'Leave request rejected. The team and the proposal stay as they are.',
+    ],
+
     'supervisor' => [
         'name_required'        => 'The academic supervisor name is required to submit the proposal.',
         'name_max'             => 'The academic supervisor name cannot exceed 150 characters.',
