@@ -15,7 +15,7 @@ class PasswordController extends Controller
      */
     public function update(Request $request): JsonResponse|RedirectResponse
     {
-        $validated = $request->validate([
+        $validated = $request->validateWithBag('updatePassword', [
             'current_password' => ['required', 'current_password'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
         ]);

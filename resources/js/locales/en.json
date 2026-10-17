@@ -293,7 +293,8 @@
     "overview": "Overview",
     "users": "Users",
     "departments": "Departments",
-    "activity": "Activity logs"
+    "activity": "Activity logs",
+    "backups": "System Backups"
   },
   "deptnav": {
     "overview": "Overview",
@@ -917,6 +918,7 @@
     "password_updated_success": "Password changed successfully.",
     "update_failed": "Failed to update password. Please check your inputs."
   },
+<<<<<<< Updated upstream
   "validation": {
     "student": {
       "number_required": "Student number is required.",
@@ -926,6 +928,112 @@
       "email_invalid": "Enter a valid email address.",
       "email_mismatch": "The number in the email does not match the student number.",
       "semester_range": "Semester must be between 1 and 8."
+=======
+  "backups": {
+    "title": "Automated & Manual Backups",
+    "subtitle": "Manage PostgreSQL database dumps, uploaded documents, retention schedules, and point-in-time restorations.",
+    "card": {
+      "status": "Backup Health",
+      "healthy": "Healthy & Up to date",
+      "warning": "Backup Overdue (> 25h)",
+      "last_backup": "Last Backup",
+      "never": "No backups created yet",
+      "total_archives": "Total Archives",
+      "storage_used": "Storage Used",
+      "destination_disk": "Storage Disk",
+      "running_job": "Operation in Progress",
+      "job_type": "Job Type"
+    },
+    "actions": {
+      "create": "Create Backup",
+      "refresh": "Refresh",
+      "restore": "Restore",
+      "download": "Download",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "confirm_delete": "Delete Backup",
+      "confirm_restore": "Confirm Restore"
+    },
+    "create_modal": {
+      "title": "Create Manual Backup",
+      "subtitle": "Choose backup scope. The job will be dispatched to the background queue.",
+      "type_label": "Backup Scope",
+      "full_title": "Full Backup (Database + Uploaded Files)",
+      "full_desc": "Backs up PostgreSQL database dump and all user uploaded files (supervisor approvals, student submissions).",
+      "db_title": "Database Only",
+      "db_desc": "Generates a compressed PostgreSQL database dump only.",
+      "files_title": "Uploaded Files Only",
+      "files_desc": "Backs up files in storage/app/public without database tables.",
+      "start_button": "Start Backup Job"
+    },
+    "delete_modal": {
+      "title": "Delete Backup Archive",
+      "warning": "Are you sure you want to permanently delete this backup archive? This action cannot be undone.",
+      "file": "File:",
+      "disk": "Disk:"
+    },
+    "restore_modal": {
+      "title": "Restore Database & Uploads",
+      "danger_heading": "CRITICAL WARNING: HIGH-RISK OPERATION",
+      "danger_text": "Restoring will replace the current database with data from this archive. Ongoing student revisions may be overwritten, and active sessions will be terminated. An automated safety backup will be generated immediately before restore starts.",
+      "target_file": "Selected Archive",
+      "password_label": "Admin Password",
+      "password_ph": "Enter your admin password",
+      "phrase_instruction": "Type the word RESTORE below to unlock the restore button:",
+      "phrase_ph": "RESTORE",
+      "button": "Execute System Restore"
+    },
+    "table": {
+      "file_name": "Archive Name",
+      "size": "Size",
+      "date": "Date & Time",
+      "disk": "Disk",
+      "actions": "Actions",
+      "empty": "No backup archives found on this disk.",
+      "empty_desc": "Click 'Create Backup' to generate your first manual backup."
+    },
+    "logs": {
+      "title": "Backup & Restore Audit Logs",
+      "subtitle": "Complete audit trail of automated schedules and manual operations.",
+      "type": "Operation",
+      "status": "Status",
+      "details": "Details",
+      "operator": "Operator",
+      "duration": "Duration",
+      "time": "Time",
+      "error_msg": "Error Message",
+      "empty": "No audit logs recorded yet."
+    },
+    "status_badge": {
+      "pending": "Pending",
+      "running": "Running",
+      "success": "Success",
+      "failed": "Failed"
+    },
+    "type_badge": {
+      "backup": "Backup",
+      "cleanup": "Cleanup",
+      "restore": "Restore",
+      "download": "Download",
+      "delete": "Delete"
+    },
+    "toast": {
+      "backup_started": "Backup job has been queued in the background.",
+      "backup_completed": "Backup created successfully: {file}",
+      "backup_failed": "Backup failed: {error}",
+      "restore_started": "Restore job queued. Maintenance mode will be activated.",
+      "restore_completed": "Restoration completed successfully!",
+      "restore_failed": "Restore failed: {error}",
+      "delete_success": "Backup deleted successfully.",
+      "delete_failed": "Failed to delete backup.",
+      "password_incorrect": "Incorrect password provided."
+    },
+    "maintenance": {
+      "title": "System Restore In Progress",
+      "subtitle": "The system is currently undergoing scheduled restoration in maintenance mode.",
+      "retrying": "Checking if restore has completed... (Attempt {attempt})",
+      "retry_now": "Check Status Now"
+>>>>>>> Stashed changes
     }
   }
 }

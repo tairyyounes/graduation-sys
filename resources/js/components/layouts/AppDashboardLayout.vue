@@ -29,15 +29,26 @@
           <p class="mb-4 px-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{{ navTitle }}</p>
           <ul class="space-y-1.5">
             <li v-for="item in navItems" :key="item.key">
+              <a
+                v-if="item.href"
+                :href="item.href"
+                class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left rtl:text-right text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+                :class="activeKey === item.key ? 'bg-teal-50 text-teal-800 shadow-sm ring-1 ring-teal-500/10' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+                @click="sidebarOpen = false"
+              >
+                <span :class="[activeKey === item.key ? 'text-teal-600' : 'text-slate-400 group-hover:text-slate-600']" v-html="item.icon"></span>
+                <span>{{ item.label }}</span>
+              </a>
               <router-link
+                v-else
                 :to="{ name: item.routeName }"
                 class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left rtl:text-right text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
                 active-class="bg-teal-50 text-teal-800 shadow-sm ring-1 ring-teal-500/10"
                 exact-active-class="bg-teal-50 text-teal-800 shadow-sm ring-1 ring-teal-500/10"
-                :class="$route.name !== item.routeName ? 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' : ''"
+                :class="(!route || route.name !== item.routeName) ? 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' : ''"
                 @click="sidebarOpen = false"
               >
-                <span :class="[$route.name === item.routeName ? 'text-teal-600' : 'text-slate-400 group-hover:text-slate-600']" v-html="item.icon"></span>
+                <span :class="[route && route.name === item.routeName ? 'text-teal-600' : 'text-slate-400 group-hover:text-slate-600']" v-html="item.icon"></span>
                 <span>{{ item.label }}</span>
               </router-link>
             </li>
@@ -118,11 +129,12 @@
         <div class="lg:hidden text-2xl font-bold text-slate-900 tracking-tight mb-6">{{ currentTitle }}</div>
 
         <slot name="alerts" />
-        <router-view v-slot="{ Component }">
+        <router-view v-if="route && route.name" v-slot="{ Component }">
           <transition name="fade">
             <component :is="Component" />
           </transition>
         </router-view>
+        <slot v-else />
       </main>
     </div>
 
@@ -171,11 +183,31 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  activePageKey: {
+    type: String,
+    default: '',
+  },
 })
 
-const route = useRoute()
+// Safely obtain route if vue-router is active
+let route = null
+try {
+  route = useRoute()
+} catch {
+  route = null
+}
+
+const activeKey = computed(() => {
+  if (props.activePageKey) return props.activePageKey
+  if (route && route.name) {
+    const item = props.navItems.find(i => i.routeName === route.name)
+    if (item) return item.key
+  }
+  return ''
+})
+
 const currentTitle = computed(() => {
-  const activeItem = props.navItems.find(i => i.routeName === route.name)
+  const activeItem = props.navItems.find(i => (props.activePageKey && i.key === props.activePageKey) || (route && i.routeName === route.name))
   return activeItem ? activeItem.label : props.navTitle
 })
 

@@ -49,5 +49,11 @@ class AppServiceProvider extends ServiceProvider
 
             return $transport;
         });
+
+        \Illuminate\Support\Facades\Gate::define('manage-backups', function (\App\Models\User $user) {
+            return $user->role === 'admin';
+        });
+
+        \Illuminate\Support\Facades\Event::subscribe(\App\Listeners\BackupEventSubscriber::class);
     }
 }

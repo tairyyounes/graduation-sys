@@ -568,8 +568,24 @@ function tone(verdict, fallbackPercent = null) {
   return { text: 'text-teal-600', bar: 'bg-teal-500' }
 }
 
-function openSideBySideModal(match) {
-  selectedCompareMatch.value = match
+async function openSideBySideModal(match) {
+  selectedCompareMatch.value = match   // العنوان والنسبة يظهروا فوراً
+
+  try {
+    const res = await fetch(`/repository/${match.id}/compare`, {
+      headers: { Accept: 'application/json' },
+    })
+    if (!res.ok) return
+
+    const data = await res.json()
+
+    // لو المستخدم سكّر النافذة أو فتح مشروع ثاني قبل ما يوصل الرد
+    if (selectedCompareMatch.value?.id !== match.id) return
+
+    selectedCompareMatch.value = { ...match, ...data.compared }
+  } catch (err) {
+    console.error('Error fetching compared project:', err)
+  }
 }
 
 function copyRecommendation(rec) {

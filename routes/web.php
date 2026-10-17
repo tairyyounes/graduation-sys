@@ -51,6 +51,15 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/', [HistoricalProposalController::class, 'store']);
             Route::post('/import', [HistoricalProposalController::class, 'import']);
         });
+
+        Route::prefix('/admin/backups')->middleware('can:manage-backups')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\BackupController::class, 'index'])->name('admin.backups.index');
+            Route::post('/', [\App\Http\Controllers\Admin\BackupController::class, 'create'])->middleware('throttle:10,1')->name('admin.backups.create');
+            Route::get('/status/{log}', [\App\Http\Controllers\Admin\BackupController::class, 'status'])->name('admin.backups.status');
+            Route::get('/download', [\App\Http\Controllers\Admin\BackupController::class, 'download'])->middleware('password.confirm')->name('admin.backups.download');
+            Route::delete('/', [\App\Http\Controllers\Admin\BackupController::class, 'destroy'])->middleware('password.confirm')->name('admin.backups.destroy');
+            Route::post('/restore', [\App\Http\Controllers\Admin\BackupController::class, 'restore'])->middleware(['password.confirm', 'throttle:5,1'])->name('admin.backups.restore');
+        });
     });
 
     Route::middleware('role:student')->group(function () {

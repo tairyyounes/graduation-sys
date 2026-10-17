@@ -29,7 +29,7 @@ class AiSimilarityService
         int $topK = 5
     ): array {
         @set_time_limit(120);
-        $baseUrl = rtrim(config('services.dense_api.url', env('DENSE_API_URL', 'http://127.0.0.1:8000')), '/');
+        $baseUrl = rtrim(config('services.dense_api.url', env('DENSE_API_URL', 'http://127.0.0.1:8002')), '/');
 
         $this->ensureServerRunning($baseUrl);
 
@@ -125,7 +125,7 @@ class AiSimilarityService
      */
     public function syncCorpus(): array
     {
-        $baseUrl = rtrim(config('services.dense_api.url', env('DENSE_API_URL', 'http://127.0.0.1:8000')), '/');
+        $baseUrl = rtrim(config('services.dense_api.url', env('DENSE_API_URL', 'http://127.0.0.1:8002')), '/');
 
         $proposals = [];
         self::corpusQuery()->chunkById(500, function ($chunk) use (&$proposals) {
@@ -162,7 +162,7 @@ class AiSimilarityService
      */
     public function corpusStatus(): ?array
     {
-        $baseUrl = rtrim(config('services.dense_api.url', env('DENSE_API_URL', 'http://127.0.0.1:8000')), '/');
+        $baseUrl = rtrim(config('services.dense_api.url', env('DENSE_API_URL', 'http://127.0.0.1:8002')), '/');
         try {
             $response = Http::timeout(5)->get("{$baseUrl}/corpus/status");
             return $response->successful() ? $response->json() : null;
@@ -190,7 +190,7 @@ class AiSimilarityService
         // second copy that would compete for the same CPU, memory and port.
         $lock = Cache::lock('ai-server-start', 180);
         if (!$this->serverProcessExists() && $lock->get()) {
-            $port   = parse_url($baseUrl, PHP_URL_PORT) ?: 8000;
+            $port   = parse_url($baseUrl, PHP_URL_PORT) ?: 8002;
             $python = config('services.dense_api.python', 'py');
             $log    = storage_path('logs/ai-server.log');
             Log::info("AiSimilarityService: AI server down, starting it from {$dir}");

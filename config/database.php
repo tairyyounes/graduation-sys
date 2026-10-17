@@ -97,6 +97,11 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
+            'dump' => [
+                'dump_binary_path' => env('DB_DUMP_PATH', 'C:/Program Files/PostgreSQL/18/bin'),
+                'use_single_transaction' => true,
+                'add_extra_option' => '--no-owner --no-acl',
+            ],
         ],
 
         'sqlsrv' => [

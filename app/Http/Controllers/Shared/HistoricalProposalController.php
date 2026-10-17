@@ -413,7 +413,7 @@ class HistoricalProposalController extends Controller
 
         return response()->json([
             'code' => 'imported',
-            'message' => sprintf('%d proposals imported successfully.', count($valid)),
+            'message' => sprintf('%d proposals imported successfully. 0 failed.', count($valid)),
             'imported' => count($valid),
             'has_header' => $hasHeader,
         ], 200);

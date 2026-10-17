@@ -56,13 +56,17 @@ class ProposalRepositoryController extends Controller
             $proposals = $query->latest()->limit(100)->get();
 
             // Available years for this department only (direct SQL distinct)
+            $yearSelect = \Illuminate\Support\Facades\DB::getDriverName() === 'sqlite'
+                ? "DISTINCT CAST(strftime('%Y', created_at) AS INTEGER) as yr"
+                : 'DISTINCT EXTRACT(YEAR FROM created_at)::integer as yr';
+
             $years = Proposal::where('review_status', '!=', 'rejected')
                 ->where(function ($q) {
                     $q->where('submission_status', 'archived')
                       ->orWhere('review_status', 'accepted');
                 })
                 ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
-                ->selectRaw('DISTINCT EXTRACT(YEAR FROM created_at)::integer as yr')
+                ->selectRaw($yearSelect)
                 ->orderByDesc('yr')
                 ->pluck('yr')
                 ->filter()

@@ -57,3 +57,19 @@ Artisan::command('ai:sync-corpus', function (\App\Services\AiSimilarityService $
     $this->info('Started: ' . json_encode($result));
     $this->comment('Encoding runs in the background on the AI server; check progress with GET /corpus/status.');
 })->purpose('Sync the system proposals into the AI comparison corpus');
+
+\Illuminate\Support\Facades\Schedule::command('backup:clean')
+    ->dailyAt('01:00')
+    ->withoutOverlapping()
+    ->onOneServer();
+
+\Illuminate\Support\Facades\Schedule::command('backup:run')
+    ->dailyAt('01:30')
+    ->withoutOverlapping()
+    ->onOneServer();
+
+\Illuminate\Support\Facades\Schedule::command('backup:monitor')
+    ->dailyAt('03:00')
+    ->withoutOverlapping()
+    ->onOneServer();
+
