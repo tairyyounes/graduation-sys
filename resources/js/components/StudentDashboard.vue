@@ -668,7 +668,7 @@ async function saveAsDraft() {
       currentView.value = 'Project Workspace';
       workspaceTab.value = 'Draft Ideas';
     } else {
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (data.errors) {
         proposalErrors.value = data.errors;
       }
@@ -694,7 +694,7 @@ async function saveAndConfirmProposal() {
     });
 
     if (!res.ok) {
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (data.errors) {
         proposalErrors.value = data.errors;
       }
@@ -702,7 +702,7 @@ async function saveAndConfirmProposal() {
       return;
     }
 
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     const proposalId = data.proposal?.id;
 
     if (!proposalId) {
@@ -779,7 +779,7 @@ async function saveAndConfirmProposal() {
       currentView.value = 'Project Workspace';
       workspaceTab.value = 'Active Proposal';
     } else {
-      const submitData = await submitRes.json();
+      const submitData = await submitRes.json().catch(() => ({}));
       if (submitData.errors) {
         proposalErrors.value = submitData.errors;
       }
@@ -806,7 +806,7 @@ async function updateProposal(proposal) {
     closeProposalDetails();
     fetchProposals();
   } else {
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (data.errors) {
       proposalErrors.value = data.errors;
     }
@@ -880,7 +880,7 @@ async function confirmDraftProposal(proposal) {
     fetchProposals();
     workspaceTab.value = 'Active Proposal';
   } else {
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     toast.error(data.message || t('student.toast.submit_error'));
   }
 }
